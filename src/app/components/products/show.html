@@ -1,0 +1,31 @@
+<div class="container">
+<div class="row">
+@for(p of shows; track $index){
+    <div class="col">
+<div class="mb-4 p-8 flex items-center justify-center">
+    <p-card [style]="{ width: '25rem', overflow: 'hidden' }">
+        <ng-template #header>
+            <img alt="Card" class="w-full cardImg" 
+         [src]="p.imageUrl || 'timeBank.png'" 
+         style="height: 200px; object-fit: cover;"/>
+        </ng-template>
+        <ng-template #title> {{p.title}} </ng-template>
+        <ng-template #subtitle> {{showSrv.categoryById(p.categoryId)}} </ng-template>
+        <ng-template #footer>
+            <div class="flex gap-4 mt-1 buttons">
+                <p-button icon="pi pi-cart-arrow-down" class="w-full" styleClass="w-full" />
+                <p-button icon="pi pi-ellipsis-h" class="w-full" styleClass="w-full" (click)=openShow(p.id)/>
+            </div>
+        </ng-template>
+    </p-card>
+<div class="flex justify-center">
+    <p-drawer [header]=pTitle [(visible)]="visible" [fullScreen]="true">
+        <app-show-show [showId] = pId ></app-show-show>
+    </p-drawer>
+</div>
+</div>
+    </div>
+}
+</div>
+</div>
+<app-add-show (showReady)=addShow($event)></app-add-show>

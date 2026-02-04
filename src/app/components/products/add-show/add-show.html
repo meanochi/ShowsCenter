@@ -1,0 +1,79 @@
+<div class=" flex justify-center gap-4">
+    <p-button (click)="showDialog()" label="הוסף מופע" />
+    <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem'}" class="dialog">
+        <ng-template #header>
+            <div class="inline-flex items-center justify-center gap-2">
+                <span class="font-bold whitespace-nowrap">{{userName}}</span>
+            </div>
+        </ng-template>
+        <span class="text-surface-500 dark:text-surface-400 block mb-8">הוסף מופע חדש</span>
+        <div class="flex items-center gap-4 mb-4">
+            <p-floatlabel variant="on">
+                <input pInputText  id="title" class="flex-auto" autocomplete="off" [(ngModel)]=title />
+                <label for="title" class="font-semibold w-24">שם המופע</label>
+            </p-floatlabel>
+        </div>
+        <div class="flex items-center gap-4 mb-2">
+            <p-floatlabel class="w-full md:w-56" variant="on">
+                <p-select [(ngModel)]="categoryId" [editable]="true" inputId="on_label" autocomplete="off" [options]="categories" optionValue="id" optionLabel="name" class="w-full" />
+                <label for="on_label">קטגוריה</label>
+            </p-floatlabel>
+        </div>
+        <div class="mb-6">
+            <p-floatlabel variant="on">
+                <textarea pTextarea rows="5" cols="30" style="resize: none" class="w-full"  id="desc" [(ngModel)]=description ></textarea>
+                <label for="desc">תיאור</label>
+            </p-floatlabel>
+        </div>
+
+                <div class="flex items-center gap-6 mb-2">
+                <p-floatlabel variant="on">
+                <p-inputnumber [(ngModel)]="beginsAt" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal" spinnerMode="horizontal" [step]="0.5">
+                    <ng-template #incrementbuttonicon>
+                        <span class="pi pi-plus"></span>
+                    </ng-template>
+                    <ng-template #decrementbuttonicon>
+                        <span class="pi pi-minus"></span>
+                    </ng-template>
+                    </p-inputnumber>
+                <label for="horizontal"> </label>
+                </p-floatlabel>
+        </div>
+<div class="flex items-center gap-4 mb-4">
+    <p-floatlabel variant="on">
+        <p-fileUpload
+        #fileUpload 
+            mode="basic" 
+            chooseLabel="בחר תמונה"
+            accept="image/*" 
+            maxFileSize="1000000"
+            [auto]="true" 
+            [customUpload]="true"
+            (onSelect)="onFileSelected($event)"
+            [showUploadButton]="false"
+            [showCancelButton]="false"
+            fileLimit="1">
+        </p-fileUpload>
+    </p-floatlabel>
+</div>
+
+<div *ngIf="imagePreviewUrl" class="mt-3 relative flex flex-column items-center">
+        <img [src]="imagePreviewUrl" class="rounded-circle shadow-lg" 
+             style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--primary-color);">
+        
+        <p-button 
+            icon="pi pi-times" 
+            severity="danger" 
+            [rounded]="true" 
+            [text]="true"
+            size="small"
+            label="מחק תמונה"
+            (onClick)="removeImage(fileUpload)">
+        </p-button>
+    </div>
+        <ng-template #footer>
+            <p-button label="Cancel" [text]="true" severity="secondary" (click)="visible = false" />
+            <p-button label="Save" [outlined]="true" severity="secondary" (click)="visible = false" (click)="addShow()" />
+        </ng-template>
+    </p-dialog>
+</div>

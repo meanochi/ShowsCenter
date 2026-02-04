@@ -1,0 +1,31 @@
+<div class="top row">
+    <div class="prodDetails col row">
+        <div class="img col">
+        <img alt="Card" class="w-full cardImg" 
+         [src]="showProd.imageUrl || 'timeBank.png'" 
+         style="height: 400px; object-fit: cover;"/>
+        </div>
+        <div class="details col">
+            <h2>{{showProd.title}}</h2>
+            <h5>קטגוריה: {{showSrv.categoryById(showProd.categoryId)}}</h5>
+            <h4>{{showProd.description}}</h4>
+            <p-button icon="pi pi-cart-arrow-down" class="w-full" styleClass="w-full" />
+        </div>
+    </div>
+    <div class="otherFromProvider col">
+        <div class="profile">
+        </div>     
+        <div class="prodsFromProvider">
+                <h3>מוצרים נוספים של משתמש זה:</h3>
+            @for(p of showSrv.showsFromProvider(showProd.providerId);track $index){
+                <p>{{p.title}}</p>
+            }
+        </div>
+    </div>
+</div>
+<div class="otherFromCategory row">
+    <h3>מוצרים נוספים בקטגוריה:</h3>
+            @for(p of showSrv.showsFromCategory(showProd.categoryId);track $index){
+                <p>{{p.title}}</p>
+            }
+</div>
