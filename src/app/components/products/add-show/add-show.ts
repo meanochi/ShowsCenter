@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, input, Output, signal } from '@angular/core';
 import { Section, Sector, Show, TargetAudience } from '../../../models/show-model';
 import { CommonModule } from '@angular/common';
 import {FormsModule} from '@angular/forms'
@@ -27,6 +27,8 @@ import { Provider } from '../../../models/provider-model';
   styleUrl: './add-show.scss',
 })
 export class AddShow {
+  readonly TargetAudience = TargetAudience;
+  readonly Sector = Sector;
   targetAudienceOptions = Object.keys(TargetAudience)
     .filter(key => isNaN(Number(key))) // מסנן את האינדקסים המספריים
     .map(key => ({
@@ -37,14 +39,14 @@ export class AddShow {
     categorySrv: CategorySrvice  = inject(CategorySrvice)
     categories: Category[] = this.categorySrv.categories
     providerSrv: ProviderService  = inject(ProviderService)
-    providers: Provider[] = this.providerSrv.providers
+    providers: Provider[] = this.providerSrv.loadProviders()
     id: number =0;
     title: string = '';
     date: Date = new Date();
     beginsAt: string = '';
     duration: number = 0;
     audience?: TargetAudience;
-    sector? : Sector;
+    sector?: Sector;
     description: string ='';
     imageUrl: string | null = null;
     providerId: number =0;
@@ -57,24 +59,23 @@ export class AddShow {
     imagePreviewUrl: string | ArrayBuffer | null = null;
     selectedFile:any;
     visible: boolean = false;
+    selectedSector: string = '';
     today: Date = new Date().getDate() as unknown as Date;
     checked: boolean[]=[true,false,false,false] 
+
+    imagePreviewSignal = signal<string | ArrayBuffer | null>(null);
+    
     showDialog() {
         this.visible = true;
     }
     ngOnInit(){
+    this.providers  = this.providerSrv.loadProviders()
     this.targetAudienceOptions = Object.keys(TargetAudience)
     .filter(key => isNaN(Number(key))) // מסנן את האינדקסים המספריים
     .map(key => ({
         label: TargetAudience[key as keyof typeof TargetAudience],
         value: key
     }))
-      this.providerSrv.addProvider("טלי אברהמי", "https://serviced.co.il/wp-content/uploads/2022/01/white-%D7%A6%D7%95%D7%A8-%D7%A7%D7%A9%D7%A8-%D7%A9%D7%99%D7%A8%D7%95%D7%AA-%D7%9C%D7%A7%D7%95%D7%97%D7%95%D7%AA-%D7%98%D7%9C%D7%99-%D7%90%D7%91%D7%A8%D7%94%D7%9E%D7%99.jpg")
-      this.providerSrv.addProvider("שלום וגשל", "https://vagshal-mp.com/wp-content/uploads/2024/08/Logo_2022-02-300x169.png")
-      this.providerSrv.addProvider("בתיה", "https://www.kol-graph.co.il/images/site/home/clientlogo/clientlogo16.png")
-      this.categorySrv.addCategory("הקרנה")
-      this.categorySrv.addCategory("הרצאה")
-      this.categorySrv.addCategory("הופעה מוזיקלית")
     }
     @Output()
     showReady: EventEmitter<Show> = new EventEmitter<Show>();
@@ -95,8 +96,8 @@ export class AddShow {
       this.show.date = this.date
       this.show.beginsAt = this.beginsAt
       this.show.duration = this.duration
-      this.show.audience = this.audience
-      this.show.sector = this.sector
+      this.show.audience = this.audience || TargetAudience.ADULTS
+      this.show.sector = this.sector || Sector.WOMEN
       this.show.description = this.description
       this.show.imageUrl = this.imagePreviewUrl as string
       this.show.providerId = this.providerId
@@ -123,6 +124,9 @@ export class AddShow {
       this.leftBalMap = new SeatMap(0, Section.LEFT_BALCONY);
       this.rightBalMap = new SeatMap(0, Section.RIGHT_BALCONY);
       this.centerBalMap = new SeatMap(0, Section.CENTER_BALCONY);
+      this.imagePreviewSignal.set(null)
+      this.checked.fill(false,1)
+      this.providerId = 0
       this.show = new Show();
     }
   onFileSelected(event: any): void{
@@ -132,15 +136,22 @@ export class AddShow {
           this.imageUrl = file;
           const reader = new FileReader();
         reader.onload = () => {
-            this.imagePreviewUrl = reader.result;
+          this.imagePreviewSignal.set(reader.result);
+          this.imagePreviewUrl = reader.result;
         };
         reader.readAsDataURL(file);
   }
 }
   removeImage(fileUpload: FileUpload) {
-    this.imagePreviewUrl = null;
+    this.imagePreviewSignal.set(null);
     this.imageUrl = null;
     fileUpload.clear(); 
 }
+sectorOptions = Object.keys(Sector)
+  .filter(key => isNaN(Number(key)))
+  .map(key => ({
+    label: Sector[key as keyof typeof Sector],
+    value: Sector[key as keyof typeof Sector] // כאן אנחנו שומרים את הערך ("גברים"), לא את המפתח (MEN)
+  }));
 
 }

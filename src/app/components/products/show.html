@@ -1,7 +1,13 @@
 @if (!isManager()) {
   <div class="col-12">
     <h3>אירועים קרובים:</h3>
-    <p-carousel [value]="shows" [numVisible]="3" [numScroll]="1" [circular]="true">
+    <p-carousel
+      [value]="shows"
+      [numVisible]="4"
+      [numScroll]="1"
+      [circular]="true"
+      [responsiveOptions]="responsiveOptions"
+    >
       <ng-template let-p pTemplate="item">
         <div class="mb-4 p-8 flex items-center justify-center">
           <p-card styleClass="flex flex-column h-full">
@@ -26,9 +32,7 @@
               </div></ng-template
             >
             <ng-template #content>
-              <div class="col-6">
-                {{ p.audience }}
-              </div>
+              {{ $any(TargetAudience)[p.audience] }}
             </ng-template>
             <ng-template #footer>
               <div class="flex gap-4 buttons">
@@ -71,7 +75,7 @@
             placeholder="חפש מופע..."
             [(ngModel)]="searchTerm"
             (input)="onSearch()"
-            class = "w-full"
+            class="w-full"
           />
         </p-iconField>
       </div>
@@ -106,22 +110,25 @@
               </div></ng-template
             >
             <ng-template #content>
-              <div class="col-6">
-                {{ p.audience }}
+              <div class="col-12 grid gap-2">
+                <span class="bg-blue-50 text-blue-700 px-2 py-1 border-round">{{
+                  p.audience
+                }}</span>
+                <span class="bg-pink-50 text-pink-700 px-2 py-1 border-round">{{ p.sector }}</span>
               </div>
             </ng-template>
             <ng-template #footer>
               <div class="flex gap-4 buttons">
+                <p-button
+                  icon="pi pi-ellipsis-h"
+                  class="w-full"
+                  styleClass="w-full"
+                  (click)="openShow(p.id)"
+                />
                 @if (isManager()) {
                   <p-button icon="pi pi-times" class="w-full" styleClass="w-full" />
                   <p-button icon="pi pi-pencil" class="w-full" styleClass="w-full" />
                 } @else {
-                  <p-button
-                    icon="pi pi-ellipsis-h"
-                    class="w-full"
-                    styleClass="w-full"
-                    (click)="openShow(p.id)"
-                  />
                   <p-button
                     label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
                     icon="pi pi-cart-arrow-down"

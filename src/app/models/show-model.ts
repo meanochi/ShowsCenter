@@ -10,9 +10,10 @@ export enum TargetAudience {
 }
 
 export enum Sector {
-    MEN = 'נשים',
-    WOMEN = 'גברים',    
-    FAMILIES = 'משפחות'
+    MEN ='גברים',
+    WOMEN = 'נשים',    
+    FAMILIES = 'משפחות',
+    TRY = 'tryy'
 }
 
 export enum Section {
@@ -28,8 +29,8 @@ export class Show {
     date: Date = new Date();
     beginsAt: string = '';
     duration: number = 0;
-    audience?: TargetAudience;
-    sector? : Sector;
+    audience: TargetAudience  = TargetAudience.ADULTS;
+    sector: Sector = Sector.WOMEN;
     description: string ='';
     imageUrl: string | null = null;
     providerId: number =0;

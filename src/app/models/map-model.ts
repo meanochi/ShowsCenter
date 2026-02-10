@@ -8,6 +8,7 @@ export class SeatMap{
     constructor(p:number, section:Section){
         if(p===0){
             this.price = null as unknown as number;
+            this.section = section
         } else{
         this.price = p;
         }

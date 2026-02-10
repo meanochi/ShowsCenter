@@ -24,13 +24,8 @@ import { InputIconModule } from 'primeng/inputicon';
   styleUrl: './show.scss',
 })
 export class ShowsComponent {
-  targetAudienceOptions = Object.keys(TargetAudience)
-    .filter(key => isNaN(Number(key))) // מסנן את האינדקסים המספריים
-    .map(key => ({
-        label: TargetAudience[key as keyof typeof TargetAudience],
-        value: key
-    }))
-  targetAudience = TargetAudience;
+  readonly TargetAudience = TargetAudience;
+  readonly Sector = Sector;
   showSrv:ShowsService = inject(ShowsService);
   shows: Show[] = this.showSrv.shows;
   pro:Show = new Show();
@@ -38,13 +33,14 @@ export class ShowsComponent {
   pId :number =0
   pTitle:string ='';
   categories: Category[] = inject(CategorySrvice).categories;
-  audiences:TargetAudience[]=this.showSrv.audiences
+  audiences: TargetAudience[]=this.showSrv.audiences
   sectors:Sector[]=this.showSrv.sectors
   selectedCategories: any[] = [];
   selectedAudiences: any[] = [];
   priceRange: number[] = [0, 1000];
   selectedSectors: any[] = [];
   searchTerm:string=''
+  responsiveOptions:any
   addShow(p: Show){
     p.id = this.shows.length +1;
     this.showSrv.addShow(p);
@@ -54,14 +50,33 @@ export class ShowsComponent {
     this.shows = this.showSrv.shows
   }
   ngOnInit() {
+        this.responsiveOptions = [
+      {
+          breakpoint: '1024px',
+          numVisible: 3,
+          numScroll: 3
+      },
+      {
+          breakpoint: '768px',
+          numVisible: 2,
+          numScroll: 2
+      },
+      {
+          breakpoint: '560px',
+          numVisible: 1,
+          numScroll: 1
+      }
+    ];
   }
   openShow(id:number){
     this.pId = id;
     this.pTitle = this.showSrv.findShow(id)?.title || '';
     this.visible = true;
+    console.log(this.showSrv.findShow(id));
+    
   }
   isManager(){
-    return false;
+    return true;
   }
   toChoosePlace(id:number){
 
