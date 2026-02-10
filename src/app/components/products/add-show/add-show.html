@@ -1,45 +1,156 @@
-<div class=" flex justify-center gap-4">
+<div  #container class=" flex justify-center gap-4" >
     <p-button (click)="showDialog()" label="הוסף מופע" />
     <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem'}" class="dialog">
         <ng-template #header>
             <div class="inline-flex items-center justify-center gap-2">
-                <span class="font-bold whitespace-nowrap">{{userName}}</span>
+                <span class="font-bold whitespace-nowrap">הוסף מופע חדש</span>
             </div>
         </ng-template>
-        <span class="text-surface-500 dark:text-surface-400 block mb-8">הוסף מופע חדש</span>
-        <div class="flex items-center gap-4 mb-4">
+        <div class="flex items-center gap-4 mb-2 mt-1">
             <p-floatlabel variant="on">
-                <input pInputText  id="title" class="flex-auto" autocomplete="off" [(ngModel)]=title />
-                <label for="title" class="font-semibold w-24">שם המופע</label>
+                <input pInputText  id="title" style = "width: 31ch;" class="flex-auto" autocomplete="off" [(ngModel)]=title />
+                <label for="title" class="w-24">שם המופע</label>
             </p-floatlabel>
         </div>
-        <div class="flex items-center gap-4 mb-2">
+        <div class="flex items-center gap-4 mb-2" style = "max-width: 31ch;">
             <p-floatlabel class="w-full md:w-56" variant="on">
-                <p-select [(ngModel)]="categoryId" [editable]="true" inputId="on_label" autocomplete="off" [options]="categories" optionValue="id" optionLabel="name" class="w-full" />
+                <p-select [(ngModel)]="categoryId"  inputId="on_label" autocomplete="off" [options]="categories" optionValue="id" optionLabel="name" class="w-full" />
                 <label for="on_label">קטגוריה</label>
             </p-floatlabel>
         </div>
-        <div class="mb-6">
+        <div class="flex items-center gap-4 mb-2">
             <p-floatlabel variant="on">
                 <textarea pTextarea rows="5" cols="30" style="resize: none" class="w-full"  id="desc" [(ngModel)]=description ></textarea>
                 <label for="desc">תיאור</label>
             </p-floatlabel>
         </div>
-
-                <div class="flex items-center gap-6 mb-2">
-                <p-floatlabel variant="on">
-                <p-inputnumber [(ngModel)]="beginsAt" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal" spinnerMode="horizontal" [step]="0.5">
-                    <ng-template #incrementbuttonicon>
-                        <span class="pi pi-plus"></span>
-                    </ng-template>
-                    <ng-template #decrementbuttonicon>
-                        <span class="pi pi-minus"></span>
-                    </ng-template>
-                    </p-inputnumber>
-                <label for="horizontal"> </label>
-                </p-floatlabel>
+                <div class="flex items-center gap-4 mb-2" style = "max-width: 31ch;">
+            <p-floatlabel class="w-full md:w-56" variant="on">
+                <p-select [(ngModel)]="audience"  inputId="aud" autocomplete="on" [options]="targetAudienceOptions" optionValue="value" optionLabel="label" class="w-full" />
+                <label for="aud">קהל יעד</label>
+            </p-floatlabel>
         </div>
-<div class="flex items-center gap-4 mb-4">
+        <div class="card flex justify-center mb-2">
+            <div class="flex flex-wrap gap-3">
+                <div class="flex items-center gap-1">
+                    <p-radiobutton name="sector" value="Men" [(ngModel)]="sector" inputId="ingredient1" />
+                    <label for="ingredient1" class="ml-2 align-items-center">גברים</label>
+                </div>
+                <div class="flex items-center gap-1">
+                    <p-radiobutton name="sector" value="Women" [(ngModel)]="sector" inputId="ingredient2" />
+                    <label for="ingredient2" class="ml-2">נשים</label>
+                </div>
+                <div class="flex items-center gap-1">
+                    <p-radiobutton name="sector" value="Families" [(ngModel)]="sector" inputId="ingredient3" />
+                    <label for="ingredient3" class="ml-2">משפחות</label>
+                </div>
+            </div>
+        </div>
+        <div class="card flex justify-center gap-4 mb-2">
+             <p-floatlabel variant="on">
+                <p-datepicker [(ngModel)]="date" inputId="fordate" showIcon iconDisplay="input" dateFormat="dd/mm/yy"/>
+                <label for="fordate">תאריך</label>
+            </p-floatlabel>
+        </div>
+        
+        <div class="flex items-center gap-4 mb-2">
+            <p-floatlabel variant="on">
+                <p-datepicker 
+                    [(ngModel)]="beginsAt" 
+                    [timeOnly]="true" 
+                    hourFormat="24"
+                    [showIcon]="true"
+                    iconDisplay="input"
+                    appendTo="container"
+                    inputId="time_input">
+                    <ng-template #inputicon let-clickCallBack="clickCallBack">
+                        <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
+                    </ng-template>
+                </p-datepicker>
+                <label for="time_input">שעת המופע</label>
+            </p-floatlabel>
+        </div>
+                <div class="flex items-center gap-4 mb-2">
+            <p-floatlabel variant="on">
+                <p-datepicker 
+                    [(ngModel)]="duration" 
+                    [timeOnly]="true" 
+                    hourFormat="24"
+                    [showIcon]="true"
+                    iconDisplay="input"
+                    appendTo="container"
+                    inputId="time_input">
+                    <ng-template #inputicon let-clickCallBack="clickCallBack">
+                        <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
+                    </ng-template>
+                </p-datepicker>
+                <label for="time_input">משך זמן</label>
+            </p-floatlabel>
+        </div>
+        <div class="flex items-center gap-2 mb-2">
+        <div class="card flex justify-center align-items-center">
+            <p-toggleswitch [(ngModel)]="checked[0]"/>
+        </div>
+        <p-floatlabel variant="on">
+                <p-inputnumber id="hallmap" prefix="₪" [(ngModel)]="hallMap.price" autocomplete="off"/>
+                <label for="hallmap">מחיר מקום באולם</label>
+        </p-floatlabel>
+    </div>
+        <div class="flex items-center gap-2 mb-2">
+        <div class="card flex justify-center align-items-center">
+            <p-toggleswitch [(ngModel)]="checked[1]" />
+        </div>
+        <p-floatlabel variant="on">
+                <p-inputnumber id="centerbalmap" prefix="₪" [(ngModel)]="centerBalMap.price" autocomplete="off" [disabled]="!checked[1]"/>
+                <label for="centerbalmap">מחיר מקום ביציע מרכזי</label>
+        </p-floatlabel>
+    </div>
+        <div class="flex items-center gap-2 mb-2">
+        <div class="card flex justify-center align-items-center">
+            <p-toggleswitch [(ngModel)]="checked[2]" />
+        </div>
+        <p-floatlabel variant="on">
+                <p-inputnumber id="rightbalmap" prefix="₪" [(ngModel)]="rightBalMap.price" autocomplete="off" [disabled]="!checked[2]"/>
+                <label for="rightbalmap">מחיר מקום ביציע ימין</label>
+        </p-floatlabel>
+    </div>
+            <div class="flex items-center gap-2 mb-2">
+        <div class="card flex justify-center align-items-center">
+            <p-toggleswitch [(ngModel)]="checked[3]" />
+        </div>
+        <p-floatlabel variant="on">
+                <p-inputnumber id="leftbalmap" prefix="₪" [(ngModel)]="leftBalMap.price" autocomplete="off" [disabled]="!checked[3]"/>
+                <label for="leftbalmap">מחיר מקום ביציע שמאל</label>
+        </p-floatlabel>
+    </div>
+        <div class="card flex justify-center">
+        <p-floatlabel class="md:w-56" variant="on" style ="min-width: 31ch;">
+            <p-select [options]="providers" [(ngModel)]="providerId" optionLabel="name" class="w-full md:w-56">
+                <ng-template #selectedItem let-selectedOption>
+                    <div class="flex items-center gap-2" *ngIf="selectedOption">
+                        <img [src]= selectedOption.profileImageUrl style="width: 18px" />
+                        <div>{{ selectedOption.name }}</div>
+                    </div>
+                </ng-template>
+                <ng-template let-provider #item>
+                    <div class="flex items-center gap-2">
+                        <img [src]= provider.profileImageUrl style="width: 18px" />
+                        <div>{{ provider.name }}</div>
+                    </div>
+                </ng-template>
+                <ng-template #dropdownicon>
+                    <i class="pi pi-user"></i>
+                </ng-template>
+                <ng-template #footer>
+                    <div class="p-1">
+                        <p-button label="הוסף חדש" fluid severity="secondary" text size="small" icon="pi pi-plus" />
+                    </div>
+                </ng-template>
+            </p-select>
+            <label for="on_label">מפיק</label>
+            </p-floatlabel>
+        </div>
+<div class="flex items-center">
     <p-floatlabel variant="on">
         <p-fileUpload
         #fileUpload 

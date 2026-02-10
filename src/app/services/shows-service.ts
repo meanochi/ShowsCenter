@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { find } from 'rxjs';
 import { Category } from '../models/category-model';
 import { CategorySrvice } from './category-srvice';
-import { Show } from '../models/show-model';
+import { Sector, Show, TargetAudience } from '../models/show-model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +10,8 @@ import { Show } from '../models/show-model';
 export class ShowsService {
   shows: Show[] = [];
   categories: Category[] = inject(CategorySrvice).categories;
-
+  audiences:TargetAudience[]=Object.values(TargetAudience)
+  sectors:Sector[]=Object.values(Sector)
   constructor() {
     this.loadShows();
   }

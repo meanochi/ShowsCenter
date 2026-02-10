@@ -1,31 +1,73 @@
-<div class="top row">
-    <div class="prodDetails col row">
-        <div class="img col">
-        <img alt="Card" class="w-full cardImg" 
-         [src]="showProd.imageUrl || 'timeBank.png'" 
-         style="height: 400px; object-fit: cover;"/>
-        </div>
-        <div class="details col">
-            <h2>{{showProd.title}}</h2>
-            <h5>קטגוריה: {{showSrv.categoryById(showProd.categoryId)}}</h5>
-            <h4>{{showProd.description}}</h4>
-            <p-button icon="pi pi-cart-arrow-down" class="w-full" styleClass="w-full" />
-        </div>
+<div class="" dir="rtl">
+  
+  <div class="grid grid-nogutter surface-section shadow-2 border-round-xl overflow-hidden">
+    
+    <div class="col-12 md:col-6 p-0 relative">
+      <img [src]="showProd.imageUrl || 'timeBank.png'"
+ alt="תמונת מופע" class="w-full h-full object-cover" style="min-height: 300px; max-height: 450px;">
     </div>
-    <div class="otherFromProvider col">
-        <div class="profile">
-        </div>     
-        <div class="prodsFromProvider">
-                <h3>מוצרים נוספים של משתמש זה:</h3>
-            @for(p of showSrv.showsFromProvider(showProd.providerId);track $index){
-                <p>{{p.title}}</p>
-            }
+
+    <div class="col-12 md:col-6 p-4 flex flex-column justify-content-between">
+      
+      <div class="text-center md:text-right mb-4">
+        <h1 class="text-4xl font-bold text-900 mb-2">{{showProd.title}}</h1>
+        <div class="text-xl font-bold text-700 mb-1">
+          <i class="pi pi-calendar ml-2"></i>{{ showProd.date | date: 'dd.MM.yyyy' }}
         </div>
+        <div class="text-lg text-600 mb-2">
+          <i class="pi pi-clock ml-2"></i>{{ showProd.beginsAt | date: 'HH:mm' }} - {{ endTime | date: 'HH:mm' }}
+        </div>
+        <div class="text-700 mb-3">{{showProd.description}}</div>
+        
+        <div class="flex align-items-center justify-content-center md:justify-content-start gap-3 text-primary font-bold">
+          <span>מתאים ל:</span>
+          <span class="bg-blue-50 text-blue-700 px-2 py-1 border-round">{{showProd.audience}}</span>
+          <span class="bg-pink-50 text-pink-700 px-2 py-1 border-round">{{showProd.sector}}</span>
+        </div>
+      </div>
+
+      <div class="flex align-items-center justify-content-center md:justify-content-start mb-4">
+        <span class="font-bold ml-2">מאת:</span>
+        <!-- <p-avatar [image]="showProd.imageUrl" shape="circle" size="large" class="ml-2"></p-avatar> -->
+        <span class="text-lg">{{providers[showProd.providerId]?.name}}</span>
+      </div>
+
+      <div class="flex flex-column md:flex-row-reverse align-items-center justify-content-between gap-3 border-top-1 surface-border pt-4">
+        
+        <div class="flex flex-column align-items-center text-center w-full md:w-auto">
+          <div class="text-2xl text-blue-600 font-bold mb-2 font-mono">
+            05:06:05:20
+          </div>
+          <span class="text-sm text-500 mb-3">עד המופע נשארו עוד</span>
+          
+          <button pButton label="להשתתפות במופע" icon="pi pi-arrow-left" class="p-button-outlined p-button-lg w-full"></button>
+        </div>
+
+        <div class="flex gap-2 w-full md:w-auto justify-content-center">
+          <div *ngFor="let price of prices" class="surface-card border-1 surface-border border-round p-3 text-center cursor-pointer hover:surface-100 transition-colors flex-1" style="min-width: 80px;">
+            <div class="text-sm text-500 mb-1">יציע:</div>
+            <div class="text-xl font-bold text-900 mb-1">{{showProd.hallMap.price}}$</div>
+            <div class="text-xs text-green-600">נותרו עוד {{showProd.duration}}</div>
+          </div>
+        </div>
+
+      </div>
     </div>
-</div>
-<div class="otherFromCategory row">
-    <h3>מוצרים נוספים בקטגוריה:</h3>
-            @for(p of showSrv.showsFromCategory(showProd.categoryId);track $index){
-                <p>{{p.title}}</p>
-            }
+  </div>
+
+  <div class="mt-6">
+    <h2 class="text-2xl font-bold text-800 mb-3 pr-2 border-right-3 border-primary">עוד בקטגוריה</h2>
+    
+    <!-- <p-carousel [value]="relatedEvents" [numVisible]="4" [numScroll]="1" [circular]="true" [responsiveOptions]="responsiveOptions">
+      <ng-template let-item pTemplate="item">
+        <div class="border-1 surface-border border-round m-2 text-center p-3 shadow-1 h-full surface-card">
+          <div class="mb-3 relative bg-gray-100 border-round" style="height: 120px;">
+            <img [src]="item.image" class="w-full h-full object-cover border-round">
+          </div>
+          <div class="font-bold text-700">{{ item.name }}</div>
+        </div>
+      </ng-template>
+    </p-carousel>
+  </div> -->
+
 </div>

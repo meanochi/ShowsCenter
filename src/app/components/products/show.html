@@ -1,31 +1,207 @@
-<div class="container">
-<div class="row">
-@for(p of shows; track $index){
-    <div class="col">
-<div class="mb-4 p-8 flex items-center justify-center">
-    <p-card [style]="{ width: '25rem', overflow: 'hidden' }">
-        <ng-template #header>
-            <img alt="Card" class="w-full cardImg" 
-         [src]="p.imageUrl || 'timeBank.png'" 
-         style="height: 200px; object-fit: cover;"/>
-        </ng-template>
-        <ng-template #title> {{p.title}} </ng-template>
-        <ng-template #subtitle> {{showSrv.categoryById(p.categoryId)}} </ng-template>
-        <ng-template #footer>
-            <div class="flex gap-4 mt-1 buttons">
-                <p-button icon="pi pi-cart-arrow-down" class="w-full" styleClass="w-full" />
-                <p-button icon="pi pi-ellipsis-h" class="w-full" styleClass="w-full" (click)=openShow(p.id)/>
-            </div>
-        </ng-template>
-    </p-card>
-<div class="flex justify-center">
-    <p-drawer [header]=pTitle [(visible)]="visible" [fullScreen]="true">
-        <app-show-show [showId] = pId ></app-show-show>
-    </p-drawer>
-</div>
-</div>
-    </div>
+@if (!isManager()) {
+  <div class="col-12">
+    <h3>אירועים קרובים:</h3>
+    <p-carousel [value]="shows" [numVisible]="3" [numScroll]="1" [circular]="true">
+      <ng-template let-p pTemplate="item">
+        <div class="mb-4 p-8 flex items-center justify-center">
+          <p-card styleClass="flex flex-column h-full">
+            <ng-template #header>
+              <img
+                alt="Card"
+                class="w-full cardImg"
+                [src]="p.imageUrl && typeof p.imageUrl === 'string' ? p.imageUrl : 'timeBank.png'"
+                style="height: 200px; object-fit: cover"
+              />
+            </ng-template>
+            <ng-template #title>
+              {{ showSrv.categoryById(p.categoryId) }}
+              @if (showSrv.categoryById(p.categoryId)) {
+                :
+              }
+              {{ p.title }}
+            </ng-template>
+            <ng-template #subtitle
+              ><div class="flex-grow-1 col-6">
+                {{ p.beginsAt | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
+              </div></ng-template
+            >
+            <ng-template #content>
+              <div class="col-6">
+                {{ p.audience }}
+              </div>
+            </ng-template>
+            <ng-template #footer>
+              <div class="flex gap-4 buttons">
+                <p-button
+                  icon="pi pi-ellipsis-h"
+                  class="w-full"
+                  styleClass="w-full"
+                  (click)="openShow(p.id)"
+                />
+                <p-button
+                  label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
+                  icon="pi pi-cart-arrow-down"
+                  class="mb-1"
+                  styleClass="w-full"
+                  (click)="toChoosePlace(p.id)"
+                />
+              </div>
+            </ng-template>
+          </p-card>
+          <div class="flex justify-center">
+            <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
+              <app-show-show [showId]="pId"></app-show-show>
+            </p-drawer>
+          </div>
+        </div>
+      </ng-template>
+    </p-carousel>
+  </div>
 }
+<div class="grid">
+  <div class="col-9">
+    <h3>כל האירועים:</h3>
+    <div class="grid flex w-full mr-auto gap-2">
+      <div class="w-full flex-1">
+        <p-iconField iconPosition="left" class="searchBox">
+          <p-inputIcon styleClass="pi pi-search" />
+          <input
+            type="text"
+            pInputText
+            placeholder="חפש מופע..."
+            [(ngModel)]="searchTerm"
+            (input)="onSearch()"
+            class = "w-full"
+          />
+        </p-iconField>
+      </div>
+      @if (isManager()) {
+        <div class="mr-auto">
+          <app-add-show (showReady)="addShow($event)"></app-add-show>
+        </div>
+      }
+    </div>
+    <div class="grid p-3">
+      @for (p of shows; track $index) {
+        <div class="col-12 md:col-6 lg:col-4 xl:col-3 p-3">
+          <p-card styleClass="flex flex-column h-full">
+            <ng-template #header>
+              <img
+                alt="Card"
+                class="w-full cardImg"
+                [src]="p.imageUrl && typeof p.imageUrl === 'string' ? p.imageUrl : 'timeBank.png'"
+                style="height: 200px; object-fit: cover"
+              />
+            </ng-template>
+            <ng-template #title>
+              {{ showSrv.categoryById(p.categoryId) }}
+              @if (showSrv.categoryById(p.categoryId)) {
+                :
+              }
+              {{ p.title }}
+            </ng-template>
+            <ng-template #subtitle
+              ><div class="flex-grow-1 col-6">
+                {{ p.beginsAt | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
+              </div></ng-template
+            >
+            <ng-template #content>
+              <div class="col-6">
+                {{ p.audience }}
+              </div>
+            </ng-template>
+            <ng-template #footer>
+              <div class="flex gap-4 buttons">
+                @if (isManager()) {
+                  <p-button icon="pi pi-times" class="w-full" styleClass="w-full" />
+                  <p-button icon="pi pi-pencil" class="w-full" styleClass="w-full" />
+                } @else {
+                  <p-button
+                    icon="pi pi-ellipsis-h"
+                    class="w-full"
+                    styleClass="w-full"
+                    (click)="openShow(p.id)"
+                  />
+                  <p-button
+                    label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
+                    icon="pi pi-cart-arrow-down"
+                    class="mb-1"
+                    styleClass="w-full"
+                    (click)="toChoosePlace(p.id)"
+                  />
+                }
+              </div>
+            </ng-template>
+          </p-card>
+          <div class="flex justify-center">
+            <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
+              <app-show-show [showId]="pId"></app-show-show>
+            </p-drawer>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="card p-3">
+      <h5>טווח מחירים: {{ priceRange[0] }}₪ - {{ priceRange[1] }}₪</h5>
+      <p-slider
+        [(ngModel)]="priceRange"
+        [range]="true"
+        [min]="0"
+        [max]="1000"
+        (onChange)="filterByPrice()"
+        styleClass="w-full"
+      >
+      </p-slider>
+    </div>
+    <div class="flex flex-column gap-3 mb-5 p-2 border-1 surface-border border-round">
+      <h3>סינון לפי קטגוריות:</h3>
+      @for (category of categories; track category.id) {
+        <div class="flex align-items-center">
+          <p-checkbox
+            name="group1"
+            [value]="category.id"
+            [(ngModel)]="selectedCategories"
+            [inputId]="category.id.toString()"
+            (onChange)="filterShowsByCategories()"
+          >
+          </p-checkbox>
+          <label [for]="category.id.toString()" class="ml-2"> {{ category.name }} </label>
+        </div>
+      }
+    </div>
+    <div class="flex flex-column gap-3 mb-5 p-4 border-1 surface-border border-round">
+      <h3>סינון לפי קהל יעד:</h3>
+      @for (a of audiences; track a) {
+        <div class="flex align-items-center">
+          <p-checkbox
+            name="group1"
+            [value]="a"
+            [(ngModel)]="selectedAudiences"
+            [inputId]="a.toString()"
+            (onChange)="filterShowsByAudiences()"
+          >
+          </p-checkbox>
+          <label [for]="a" class="ml-2"> {{ a }} </label>
+        </div>
+      }
+    </div>
+    <div class="flex flex-column gap-3 mb-5 p-4 border-1 surface-border border-round">
+      <h3>סינון לפי מגזר:</h3>
+      @for (s of sectors; track s) {
+        <div class="flex align-items-center">
+          <p-checkbox
+            name="group1"
+            [value]="s"
+            [(ngModel)]="selectedSectors"
+            [inputId]="s.toString()"
+            (onChange)="filterShowsBySectors()"
+          >
+          </p-checkbox>
+          <label [for]="s" class="ml-2"> {{ s }} </label>
+        </div>
+      }
+    </div>
+  </div>
 </div>
-</div>
-<app-add-show (showReady)=addShow($event)></app-add-show>

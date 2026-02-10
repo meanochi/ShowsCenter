@@ -3,10 +3,14 @@ import { Seat } from "./seat-model";
 
 export class SeatMap{
     section: Section = Section.HALL;
-    price: number=0;
+    price: number = null as unknown as number;
     map:Seat[][] =[];
-    constructor(p:number){
+    constructor(p:number, section:Section){
+        if(p===0){
+            this.price = null as unknown as number;
+        } else{
         this.price = p;
+        }
         let r=0;
         let c =0;
         switch (this.section) {

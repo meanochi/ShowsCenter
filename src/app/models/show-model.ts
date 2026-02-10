@@ -1,24 +1,25 @@
+import { min } from "rxjs/internal/operators/min";
 import { SeatMap } from "./map-model";
 
 export enum TargetAudience {
-    PRESCHOOL = 'Pre-school',
-    CHILDREN = 'Children',    
-    YOUTH = 'Youth',       
-    ADULTS = 'Adults',
-    SENIORS = 'Seniors'
+    PRESCHOOL = '🧸 גיל הרך',
+    CHILDREN = '🪁 ילדים',    
+    YOUTH = '🎧 נוער',       
+    ADULTS = '☕ מבוגרים',
+    SENIORS = '🧶 גיל הזהב'
 }
 
 export enum Sector {
-    MEN = 'Men',
-    WOMEN = 'Women',    
-    FAMILIES = 'Families'
+    MEN = 'נשים',
+    WOMEN = 'גברים',    
+    FAMILIES = 'משפחות'
 }
 
 export enum Section {
-    HALL = 'Main Hall',
-    RIGHT_BALCONY = 'Right Balcony',    
-    LEFT_BALCONY = 'Left Balcony',
-    CENTER_BALCONY = 'Center Balcony'
+    HALL = 'אולם',
+    RIGHT_BALCONY = 'יציע ימין',    
+    LEFT_BALCONY = 'יציע שמאל',
+    CENTER_BALCONY = 'יציע מרכז'
 }
 
 export class Show {
@@ -33,8 +34,10 @@ export class Show {
     imageUrl: string | null = null;
     providerId: number =0;
     categoryId: number =0;
-    hallMap?:SeatMap;
-    leftBalMap?:SeatMap;
-    rightBalMap?:SeatMap;
-    centerBalMap?:SeatMap;
+    hallMap:SeatMap = new SeatMap(0, Section.HALL);
+    leftBalMap:SeatMap =new SeatMap(0, Section.LEFT_BALCONY);
+    rightBalMap:SeatMap =new SeatMap(0, Section.RIGHT_BALCONY);
+    centerBalMap:SeatMap =new SeatMap(0, Section.CENTER_BALCONY);
+    minPrice: number = 0;
+    
 }
