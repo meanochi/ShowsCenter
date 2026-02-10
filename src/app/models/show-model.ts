@@ -10,10 +10,9 @@ export enum TargetAudience {
 }
 
 export enum Sector {
-    MEN ='גברים',
-    WOMEN = 'נשים',    
-    FAMILIES = 'משפחות',
-    TRY = 'tryy'
+    MEN ='🍀 גברים',
+    WOMEN = '🍁 נשים',    
+    FAMILIES = '🍂 משפחות'
 }
 
 export enum Section {

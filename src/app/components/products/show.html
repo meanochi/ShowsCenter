@@ -63,7 +63,7 @@
   </div>
 }
 <div class="grid">
-  <div class="col-9">
+  <div class="col-8 md:col-9 lg:col-9 xl:col-10">
     <h3>כל האירועים:</h3>
     <div class="grid flex w-full mr-auto gap-2">
       <div class="w-full flex-1">
@@ -87,8 +87,8 @@
     </div>
     <div class="grid p-3">
       @for (p of shows; track $index) {
-        <div class="col-12 md:col-6 lg:col-4 xl:col-3 p-3">
-          <p-card styleClass="flex flex-column h-full">
+        <div class="col-12 md:col-6 lg:col-4 xl:col-4 p-3">
+          <p-card styleClass="flex flex-column h-full border-2 surface-border border-round">
             <ng-template #header>
               <img
                 alt="Card"
@@ -98,19 +98,21 @@
               />
             </ng-template>
             <ng-template #title>
-              {{ showSrv.categoryById(p.categoryId) }}
-              @if (showSrv.categoryById(p.categoryId)) {
-                :
-              }
-              {{ p.title }}
+              <div class="h-3rem">
+                {{ showSrv.categoryById(p.categoryId) }}
+                @if (showSrv.categoryById(p.categoryId)) {
+                  :
+                }
+                {{ p.title }}
+              </div>
             </ng-template>
-            <ng-template #subtitle
-              ><div class="flex-grow-1 col-6">
+            <ng-template #subtitle>
+              <div class="flex-1">
                 {{ p.beginsAt | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
-              </div></ng-template
-            >
+              </div>
+            </ng-template>
             <ng-template #content>
-              <div class="col-12 grid gap-2">
+              <div class="col-12 grid gap-2 flex-grow-1">
                 <span class="bg-blue-50 text-blue-700 px-2 py-1 border-round">{{
                   p.audience
                 }}</span>
@@ -118,7 +120,7 @@
               </div>
             </ng-template>
             <ng-template #footer>
-              <div class="flex gap-4 buttons">
+              <div class="flex gap-4 buttons mt-auto">
                 <p-button
                   icon="pi pi-ellipsis-h"
                   class="w-full"
@@ -131,7 +133,6 @@
                 } @else {
                   <p-button
                     label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
-                    icon="pi pi-cart-arrow-down"
                     class="mb-1"
                     styleClass="w-full"
                     (click)="toChoosePlace(p.id)"
@@ -149,66 +150,80 @@
       }
     </div>
   </div>
-  <div class="col-3">
-    <div class="card p-3">
-      <h5>טווח מחירים: {{ priceRange[0] }}₪ - {{ priceRange[1] }}₪</h5>
-      <p-slider
-        [(ngModel)]="priceRange"
-        [range]="true"
-        [min]="0"
-        [max]="1000"
-        (onChange)="filterByPrice()"
-        styleClass="w-full"
-      >
-      </p-slider>
-    </div>
-    <div class="flex flex-column gap-3 mb-5 p-2 border-1 surface-border border-round">
-      <h3>סינון לפי קטגוריות:</h3>
-      @for (category of categories; track category.id) {
-        <div class="flex align-items-center">
-          <p-checkbox
-            name="group1"
-            [value]="category.id"
-            [(ngModel)]="selectedCategories"
-            [inputId]="category.id.toString()"
-            (onChange)="filterShowsByCategories()"
-          >
-          </p-checkbox>
-          <label [for]="category.id.toString()" class="ml-2"> {{ category.name }} </label>
+  <div class="col-4 md:col-3 lg:col-3 xl:col-2 pl-3 pr-0 gap-2 flex flex-column">
+    <p-card>
+      <ng-template #subtitle>טווח מחירים: {{ priceRange[0] }}₪ - {{ priceRange[1] }}₪</ng-template>
+      <ng-template #content>
+        <p-slider
+          [(ngModel)]="priceRange"
+          [range]="true"
+          [min]="0"
+          [max]="1000"
+          (onChange)="filterByPrice()"
+          styleClass="w-full"
+        >
+        </p-slider>
+      </ng-template>
+    </p-card>
+    <p-card class="">
+      <ng-template #title> סינון לפי קטגוריות:</ng-template>
+      <ng-template #content>
+        <div class="flex flex-column gap-1">
+          @for (category of categories; track category.id) {
+            <div class="flex gap-2">
+              <p-checkbox
+                name="group1"
+                [value]="category.id"
+                [(ngModel)]="selectedCategories"
+                [inputId]="category.id.toString()"
+                (onChange)="filterShowsByCategories()"
+              >
+              </p-checkbox>
+              <label [for]="category.id.toString()" class="ml-2"> {{ category.name }} </label>
+            </div>
+          }
         </div>
-      }
-    </div>
-    <div class="flex flex-column gap-3 mb-5 p-4 border-1 surface-border border-round">
-      <h3>סינון לפי קהל יעד:</h3>
-      @for (a of audiences; track a) {
-        <div class="flex align-items-center">
-          <p-checkbox
-            name="group1"
-            [value]="a"
-            [(ngModel)]="selectedAudiences"
-            [inputId]="a.toString()"
-            (onChange)="filterShowsByAudiences()"
-          >
-          </p-checkbox>
-          <label [for]="a" class="ml-2"> {{ a }} </label>
+      </ng-template>
+    </p-card>
+    <p-card>
+      <ng-template #title>סינון לפי קהל יעד:</ng-template>
+      <ng-template #content>
+        <div class="flex flex-column gap-1">
+          @for (a of audiences; track a) {
+            <div class="flex align-items-center">
+              <p-checkbox
+                name="group1"
+                [value]="a"
+                [(ngModel)]="selectedAudiences"
+                [inputId]="a.toString()"
+                (onChange)="filterShowsByAudiences()"
+              >
+              </p-checkbox>
+              <label [for]="a" class="ml-2"> {{ a }} </label>
+            </div>
+          }
         </div>
-      }
-    </div>
-    <div class="flex flex-column gap-3 mb-5 p-4 border-1 surface-border border-round">
-      <h3>סינון לפי מגזר:</h3>
+      </ng-template>
+    </p-card>
+    <p-card>
+      <ng-template #title>סינון לפי מגזר:</ng-template>
+      <ng-template #content>
+        <div class="flex flex-column gap-1">
       @for (s of sectors; track s) {
-        <div class="flex align-items-center">
-          <p-checkbox
-            name="group1"
-            [value]="s"
-            [(ngModel)]="selectedSectors"
-            [inputId]="s.toString()"
-            (onChange)="filterShowsBySectors()"
-          >
-          </p-checkbox>
+            <div class="">
+              <p-checkbox
+                name="group1"
+                [value]="s"
+                [(ngModel)]="selectedSectors"
+                [inputId]="s.toString()"
+                (onChange)="filterShowsBySectors()"
+              >
+              </p-checkbox>
           <label [for]="s" class="ml-2"> {{ s }} </label>
+            </div>
+          }
         </div>
-      }
-    </div>
+      </ng-template>
+    </p-card>
   </div>
 </div>

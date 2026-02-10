@@ -126,7 +126,7 @@ export class AddShow {
       this.centerBalMap = new SeatMap(0, Section.CENTER_BALCONY);
       this.imagePreviewSignal.set(null)
       this.checked.fill(false,1)
-      this.providerId = 0
+      this.providerId = null as unknown as number
       this.show = new Show();
     }
   onFileSelected(event: any): void{

@@ -38,12 +38,12 @@
       <div class="flex align-items-center justify-content-center md:justify-content-start mb-4">
         <span class="font-bold ml-2">מאת:</span>
         <p-avatar
-          [image]="providers[showProd.providerId]?.profileImageUrl || 'log.png'"
+          [image]="currentProvider?.profileImageUrl || 'log.png'"
           shape="circle"
           size="large"
           class="ml-2"
         ></p-avatar>
-        <span class="text-lg">{{providers[showProd.providerId]?.name}}</span>
+        <span class="text-lg">{{currentProvider?.name}}</span>
       </div>
 
       <div

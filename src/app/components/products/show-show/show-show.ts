@@ -18,7 +18,7 @@ export class ShowShow {
   showSrv:ShowsService = inject(ShowsService);
   categoreySrv: CategorySrvice = inject(CategorySrvice)
   providerSrv:ProviderService = inject(ProviderService);
-  providers = this.providerSrv.providers;
+  providers = this.providerSrv.loadProviders();
   categories = this.categoreySrv.categories;
   readonly Audience = TargetAudience;
   readonly Sector = Sector;
@@ -82,5 +82,9 @@ get endsNextDay(): boolean {
     const startDate = new Date(this.showProd.date).getDate();
     return end.getDate() !== startDate;
 }
-
+// show-show.ts
+get currentProvider() {
+    this.providers = this.providerSrv.loadProviders();
+    return this.providers.find(p => p.id === this.showProd.providerId);
+}
 }
