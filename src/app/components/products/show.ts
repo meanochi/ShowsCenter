@@ -76,7 +76,7 @@ export class ShowsComponent {
     
   }
   isManager(){
-    return true;
+    return false;
   }
   toChoosePlace(id:number){
 

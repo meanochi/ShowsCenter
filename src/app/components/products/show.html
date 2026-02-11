@@ -4,30 +4,29 @@
     <p-carousel
       [value]="shows"
       [numVisible]="4"
+      [responsiveOptions]="responsiveOptions"
       [numScroll]="1"
       [circular]="true"
-      [responsiveOptions]="responsiveOptions"
+      [autoplayInterval]="3000"
     >
       <ng-template let-p pTemplate="item">
-        <div class="mb-4 p-8 flex items-center justify-center">
-          <p-card styleClass="flex flex-column h-full">
+        <div class="mb-1 p-2 flex flex-row-reverse align-items-center justify-content-center">
+          <p-card class="flex flex-column h-full">
             <ng-template #header>
               <img
                 alt="Card"
                 class="w-full cardImg"
                 [src]="p.imageUrl && typeof p.imageUrl === 'string' ? p.imageUrl : 'timeBank.png'"
-                style="height: 200px; object-fit: cover"
+                style="height: 120px; object-fit: cover"
               />
             </ng-template>
             <ng-template #title>
-              {{ showSrv.categoryById(p.categoryId) }}
-              @if (showSrv.categoryById(p.categoryId)) {
-                :
-              }
-              {{ p.title }}
+              <div [style]="{ 'font-size': '15px' }">
+                {{ p.title }}
+              </div>
             </ng-template>
             <ng-template #subtitle
-              ><div class="flex-grow-1 col-6">
+              ><div class="flex-grow-1">
                 {{ p.beginsAt | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
               </div></ng-template
             >
@@ -35,19 +34,14 @@
               {{ $any(TargetAudience)[p.audience] }}
             </ng-template>
             <ng-template #footer>
-              <div class="flex gap-4 buttons">
-                <p-button
-                  icon="pi pi-ellipsis-h"
-                  class="w-full"
-                  styleClass="w-full"
-                  (click)="openShow(p.id)"
-                />
+              <div class="flex gap-2 buttons">
+                <p-button icon="pi pi-ellipsis-h" styleClass="h-full" (click)="openShow(p.id)" />
                 <p-button
                   label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
-                  icon="pi pi-cart-arrow-down"
-                  class="mb-1"
-                  styleClass="w-full"
+                  class="flex-grow-1"
+                  styleClass="h-full p-1"
                   (click)="toChoosePlace(p.id)"
+                  [style]="{ 'font-size': '13px' }"
                 />
               </div>
             </ng-template>
@@ -65,8 +59,8 @@
 <div class="grid">
   <div class="col-8 md:col-9 lg:col-9 xl:col-10">
     <h3>כל האירועים:</h3>
-    <div class="grid flex w-full mr-auto gap-2">
-      <div class="w-full flex-1">
+    <div class="grid flex w-full mr-auto ml-auto gap-2">
+      <div class="flex-1 col-6">
         <p-iconField iconPosition="left" class="searchBox">
           <p-inputIcon styleClass="pi pi-search" />
           <input
@@ -87,8 +81,8 @@
     </div>
     <div class="grid p-3">
       @for (p of shows; track $index) {
-        <div class="col-12 md:col-6 lg:col-4 xl:col-4 p-3">
-          <p-card styleClass="flex flex-column h-full border-2 surface-border border-round">
+        <div class="col-12 md:col-6 lg:col-4 xl:col-4">
+          <p-card styleClass="flex flex-column h-full">
             <ng-template #header>
               <img
                 alt="Card"
@@ -120,21 +114,16 @@
               </div>
             </ng-template>
             <ng-template #footer>
-              <div class="flex gap-4 buttons mt-auto">
-                <p-button
-                  icon="pi pi-ellipsis-h"
-                  class="w-full"
-                  styleClass="w-full"
-                  (click)="openShow(p.id)"
-                />
+              <div class="flex gap-2 buttons">
+                <p-button icon="pi pi-ellipsis-h" styleClass="h-full" (click)="openShow(p.id)" />
                 @if (isManager()) {
                   <p-button icon="pi pi-times" class="w-full" styleClass="w-full" />
                   <p-button icon="pi pi-pencil" class="w-full" styleClass="w-full" />
                 } @else {
                   <p-button
                     label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
-                    class="mb-1"
-                    styleClass="w-full"
+                    class="flex-grow-1"
+                    styleClass="h-full p-2"
                     (click)="toChoosePlace(p.id)"
                   />
                 }
@@ -209,7 +198,7 @@
       <ng-template #title>סינון לפי מגזר:</ng-template>
       <ng-template #content>
         <div class="flex flex-column gap-1">
-      @for (s of sectors; track s) {
+          @for (s of sectors; track s) {
             <div class="">
               <p-checkbox
                 name="group1"
@@ -219,7 +208,7 @@
                 (onChange)="filterShowsBySectors()"
               >
               </p-checkbox>
-          <label [for]="s" class="ml-2"> {{ s }} </label>
+              <label [for]="s" class="ml-2"> {{ s }} </label>
             </div>
           }
         </div>
