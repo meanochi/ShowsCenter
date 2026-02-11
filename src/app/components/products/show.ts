@@ -76,7 +76,7 @@ export class ShowsComponent {
     
   }
   isManager(){
-    return false;
+    return true;
   }
   toChoosePlace(id:number){
 
@@ -95,7 +95,7 @@ export class ShowsComponent {
         this.shows = this.showSrv.shows; 
     } else {
         this.shows = this.showSrv.shows.filter(a => 
-            this.selectedAudiences.includes(a)
+            this.selectedAudiences.includes(a.audience)
         );
     }
   }
@@ -104,7 +104,7 @@ export class ShowsComponent {
         this.shows = this.showSrv.shows; 
     } else {
         this.shows = this.showSrv.shows.filter(s => 
-            this.selectedSectors.includes(s)
+            this.selectedSectors.includes(s.sector)
         );
     }
   }
