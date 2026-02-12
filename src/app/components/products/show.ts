@@ -16,10 +16,13 @@ import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { SelectItem } from 'primeng/api';
+import { DataViewModule } from 'primeng/dataview';
+import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-shows',
-  imports: [ButtonModule, AddShow, CardModule,DrawerModule,ShowShow,CarouselModule,CheckboxModule,FormsModule,InputTextModule,IconFieldModule,InputIconModule,SliderModule,DatePipe,CommonModule],
+  imports: [ButtonModule, AddShow, CardModule,DrawerModule,ShowShow,CarouselModule,CheckboxModule,FormsModule,InputTextModule,IconFieldModule,InputIconModule,SliderModule,DatePipe,CommonModule,DataViewModule,SelectModule],
   templateUrl: './show.html',
   styleUrl: './show.scss',
 })
@@ -41,14 +44,21 @@ export class ShowsComponent {
   selectedSectors: any[] = [];
   searchTerm:string=''
   responsiveOptions:any
+  sortOptions: SelectItem[] = [];
+  sortOrder: number = 1;
+  sortField: string = 'title';
+  upcomingShows: Show[] = [];
+
   addShow(p: Show){
     p.id = this.shows.length +1;
     this.showSrv.addShow(p);
     this.getAll()
   }
+
   getAll(){
     this.shows = this.showSrv.shows
   }
+
   ngOnInit() {
         this.responsiveOptions = [
       {
@@ -67,6 +77,13 @@ export class ShowsComponent {
           numScroll: 1
       }
     ];
+
+    this.sortOptions = [
+      { label: 'תאריך: מהחדש לישן', value: '!date' }, // ה-! מסמן ירידה ב-PrimeNG
+      { label: 'תאריך: מהישן לחדש', value: 'date' },
+      { label: 'פופולריות', value: '!popularity' }
+    ];
+    this.prepareUpcomingShows();
   }
   openShow(id:number){
     this.pId = id;
@@ -76,46 +93,50 @@ export class ShowsComponent {
     
   }
   isManager(){
-    return true;
+    return false;
   }
   toChoosePlace(id:number){
 
   }
-    filterShowsByCategories() {
-    if (this.selectedCategories.length === 0) {
-        this.shows = this.showSrv.shows; 
+
+  prepareUpcomingShows() {this.upcomingShows = [...this.showSrv.shows]
+    // .filter(s => new Date(s.date) >= new Date()) // אופציונלי: מציג רק אירועים שטרם עברו
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 12);
+}
+
+  onSortChange(event: any) {
+    const value = event.value;
+
+    if (value.indexOf('!') === 0) {
+      this.sortOrder = -1; // סדר יורד
+      this.sortField = value.substring(1, value.length);
     } else {
-        this.shows = this.showSrv.shows.filter(s => 
-            this.selectedCategories.includes(s.categoryId)
-        );
+      this.sortOrder = 1; // סדר עולה
+      this.sortField = value;
     }
   }
-  filterShowsByAudiences() {
-    if (this.selectedAudiences.length === 0) {
-        this.shows = this.showSrv.shows; 
-    } else {
-        this.shows = this.showSrv.shows.filter(a => 
-            this.selectedAudiences.includes(a.audience)
-        );
-    }
-  }
-  filterShowsBySectors() {
-    if (this.selectedSectors.length === 0) {
-        this.shows = this.showSrv.shows; 
-    } else {
-        this.shows = this.showSrv.shows.filter(s => 
-            this.selectedSectors.includes(s.sector)
-        );
-    }
-  }
-  filterByPrice() {
-    this.shows = this.showSrv.shows.filter(s => 
-        (s.hallMap?.price??0) >= this.priceRange[0] && (s.hallMap?.price??0) <= this.priceRange[1]
-    );
-  }
-  onSearch() {
-    this.shows = this.showSrv.shows.filter(s => 
-        s.title.toLowerCase().includes(this.searchTerm.toLowerCase()) 
-    );
-  }
+
+  applyFilters() {
+  this.shows = this.showSrv.shows.filter(s => {
+    // 1. חיפוש טקסטואלי
+    const matchesSearch = !this.searchTerm || 
+                          s.title.toLowerCase().includes(this.searchTerm.toLowerCase());
+    // 2. קטגוריות
+    const matchesCategory = this.selectedCategories.length === 0 || 
+                           this.selectedCategories.includes(s.categoryId);
+    // 3. קהל יעד
+    const matchesAudience = this.selectedAudiences.length === 0 || 
+                           this.selectedAudiences.includes(s.audience);
+    // 4. מגזר
+    const matchesSector = this.selectedSectors.length === 0 || 
+                         this.selectedSectors.includes(s.sector);
+    // 5. מחיר
+    const currentPrice = s.hallMap?.price??0;
+    const matchesPrice = currentPrice >= this.priceRange[0] && 
+                        currentPrice <= this.priceRange[1];
+                        
+    return matchesSearch && matchesCategory && matchesAudience && matchesSector && matchesPrice;
+  });
+}
 }
