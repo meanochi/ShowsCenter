@@ -127,6 +127,7 @@ export class AddShow {
       this.imagePreviewSignal.set(null)
       this.checked.fill(false,1)
       this.providerId = null as unknown as number
+      this.show.popularity = 0
       this.show = new Show();
     }
   onFileSelected(event: any): void{

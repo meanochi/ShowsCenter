@@ -39,5 +39,5 @@ export class Show {
     rightBalMap:SeatMap =new SeatMap(0, Section.RIGHT_BALCONY);
     centerBalMap:SeatMap =new SeatMap(0, Section.CENTER_BALCONY);
     minPrice: number = 0;
-    
+    popularity?: number;
 }
