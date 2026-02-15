@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output, signal } from '@angular/core';
+import { Component, inject, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -9,11 +9,11 @@ import { UsersService } from '../../../services/users-service';
 import { FloatLabel } from "primeng/floatlabel";
 import { Dialog } from "primeng/dialog";
 @Component({
-    selector: 'app-login',
+    selector: 'app-signup',
     standalone: true,
     imports: [CommonModule, FormsModule, ButtonModule, CheckboxModule, InputTextModule, FloatLabel, Dialog],
     template: `
-
+        <p-dialog [(visible)]="visible">
         <div class="surface-ground px-4 py-8 md:px-6 lg:px-8 flex align-items-center justify-content-center min-h-screen">
             <div class="surface-card p-4 shadow-2 border-round-xl w-full" style="max-width: 400px;">
                 
@@ -26,14 +26,14 @@ import { Dialog } from "primeng/dialog";
                     <div class="text-center">
                         <div class="text-900 text-3xl font-medium mb-3">Welcome Back</div>
                         <span class="text-600 font-medium line-height-3">אין לך חשבון עדיין? </span>
-                        <a class="font-medium no-underline ml-2 text-blue-500 cursor-pointer" (click)="showDialog()" >צור עכשיו!</a>
+                        <a class="font-medium no-underline ml-2 text-blue-500 cursor-pointer"></a>
                     </div>
                 </div>
 
                 <div class="flex flex-column gap-3">
                     <div class="flex flex-column gap-2">
                         <p-floatLabel variant="on">
-                        <input pInputText id="email1" type="text" [(ngModel)] = email name="email" class="w-full" />
+                        <input pInputText id="email1" type="text" [(ngModel)] = newUser.emailAddress name="email" class="w-full" />
                                                 <label for="email1" class="block text-900 font-medium" >כתובת דוא"ל</label>
 
                         </p-floatLabel>
@@ -41,7 +41,7 @@ import { Dialog } from "primeng/dialog";
                     
                     <div class="flex flex-column gap-2">
                         <p-floatLabel variant="on">
-                        <input pInputText id="password1" type="password" [(ngModel)] = pass name="pass"class="w-full" />
+                        <input pInputText id="password1" type="password" [(ngModel)] ="newUser.password"  name="pass"class="w-full" />
                                                 <label for="password1" class="block text-900 font-medium" >סיסמה</label>
                         </p-floatLabel>
 
@@ -55,37 +55,30 @@ import { Dialog } from "primeng/dialog";
                         <a class="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer">שכחת סיסמה?</a>
                     </div>
 
-                    <button pButton pRipple label="Sign In" icon="pi pi-user" class="w-full" (click) = login()></button>
+                    <button pButton pRipple label="Sign In" icon="pi pi-user" class="w-full" (click) = signup()></button>
                 </div>
             </div>
         </div>
+        </p-dialog>
     `
-})export class Login {
+})export class Signup {
     checked1 = signal<boolean>(true);
     userSrv: UsersService = inject(UsersService);
-    email:string = null as unknown as string
-    pass:string = ''
-    newUser:any
+    newUser: User=new User()
     user: User  = new User() 
-    login(){
-        this.userSrv.login(this.email, this.pass).subscribe({
-  next: (response:any) => {
-    // כאן נמצא המידע שחזר מהשרת
+    signup(){
+        this.userSrv.signup(this.newUser).subscribe({
+        next: (response:any) => {
     console.log('הנתונים התקבלו:', response);
-     // שמירת המידע למשתנה מקומי
      this.user.id= response.id
     localStorage.setItem("user", JSON.stringify(this.user.id))
   },
   error: (err) => {
-    // טיפול במקרה של שגיאה (כמו שגיאה 500 שראינו קודם)
     console.error('קרתה שגיאה:', err);
   }
 });
         
     }
-    showDialog(){
-        this.visible.emit(true)
-    }
-    @Output()
-    visible: EventEmitter<Boolean> = new EventEmitter<Boolean>();
+  @Input()
+  visible:boolean = false;
 }
