@@ -2,10 +2,10 @@ import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ShowsComponent } from './components/products/show';
-import { SignIn } from './components/sign-in/sign-in';
+import { Users } from './components/users/users';
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ShowsComponent, ButtonModule, SignIn],
+  imports: [RouterOutlet, ShowsComponent, ButtonModule, Users],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

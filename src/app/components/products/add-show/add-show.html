@@ -85,6 +85,7 @@
           showIcon
           iconDisplay="input"
           dateFormat="dd/mm/yy"
+          appendTo="body"
         />
         <label for="fordate">תאריך</label>
       </p-floatlabel>
@@ -98,7 +99,7 @@
           hourFormat="24"
           [showIcon]="true"
           iconDisplay="input"
-          appendTo="container"
+          appendTo="body"
           inputId="time_input"
         >
           <ng-template #inputicon let-clickCallBack="clickCallBack">
@@ -116,7 +117,7 @@
           hourFormat="24"
           [showIcon]="true"
           iconDisplay="input"
-          appendTo="container"
+          appendTo="body"
           inputId="time_input"
         >
           <ng-template #inputicon let-clickCallBack="clickCallBack">

@@ -81,81 +81,82 @@
     </div>
     <!-- <p-dataView [value]="shows" [sortField]="sortField" [sortOrder]="sortOrder">
       <ng-template pTemplate="grid" let-items>-->
-        <div class="grid p-3"> 
-          <!-- @for (p of items; track p.id) {  -->
-          @for (p of shows; track p.id) {
-            <div class="col-12 md:col-6 lg:col-4 xl:col-4">
-              <p-card styleClass="flex flex-column h-full">
-                <ng-template #header>
-                  <img
-                    alt="Card"
-                    class="w-full cardImg"
-                    [src]="p.imageUrl && typeof p.imageUrl === 'string' ? p.imageUrl : 'timeBank.png'"
-                    style="height: 200px; object-fit: cover"
-                  />
-                </ng-template>
-                <ng-template #title>
-                  <div class="h-3rem">
-                    {{ showSrv.categoryById(p.categoryId) }}
-                    @if (showSrv.categoryById(p.categoryId)) {
-                      :
-                    }
-                    {{ p.title }}
-                  </div>
-                </ng-template>
-                <ng-template #subtitle>
-                  <div class="flex-1">
-                    {{ p.beginsAt | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
-                  </div>
-                </ng-template>
-                <ng-template #content>
-                  <div class="col-12 grid gap-2 flex-grow-1">
-                    <span class="bg-blue-50 text-blue-700 px-2 py-1 border-round">{{
-                      p.audience
-                    }}</span>
-                    <span class="bg-pink-50 text-pink-700 px-2 py-1 border-round">{{ p.sector }}</span>
-                  </div>
-                </ng-template>
-                <ng-template #footer>
-                  <div class="flex gap-2 buttons">
-                    <p-button icon="pi pi-ellipsis-h" styleClass="h-full" (click)="openShow(p.id)" />
-                    @if (isManager()) {
-                      <p-button icon="pi pi-times" class="w-full" styleClass="w-full" />
-                      <p-button icon="pi pi-pencil" class="w-full" styleClass="w-full" />
-                    } @else {
-                      <p-button
-                        label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
-                        class="flex-grow-1"
-                        styleClass="h-full p-2"
-                        (click)="toChoosePlace(p.id)"
-                      />
-                    }
-                  </div>
-                </ng-template>
-              </p-card>
-              <div class="flex justify-center">
-                <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
-                  <app-show-show [showId]="pId"></app-show-show>
-                </p-drawer>
+    <div class="grid p-3">
+      <!-- @for (p of items; track p.id) {  -->
+      @for (p of shows; track p.id) {
+        <div class="col-12 md:col-6 lg:col-4 xl:col-4">
+          <p-card styleClass="flex flex-column h-full">
+            <ng-template #header>
+              <img
+                alt="Card"
+                class="w-full cardImg"
+                [src]="p.imageUrl && typeof p.imageUrl === 'string' ? p.imageUrl : 'timeBank.png'"
+                style="height: 200px; object-fit: cover"
+              />
+            </ng-template>
+            <ng-template #title>
+              <div class="h-3rem">
+                {{ showSrv.categoryById(p.categoryId) }}
+                @if (showSrv.categoryById(p.categoryId)) {
+                  :
+                }
+                {{ p.title }}
               </div>
-            </div>
-          }
+            </ng-template>
+            <ng-template #subtitle>
+              <div class="flex-1">
+                {{ p.beginsAt | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
+              </div>
+            </ng-template>
+            <ng-template #content>
+              <div class="col-12 grid gap-2 flex-grow-1">
+                <span class="bg-blue-50 text-blue-700 px-2 py-1 border-round">{{
+                  p.audience
+                }}</span>
+                <span class="bg-pink-50 text-pink-700 px-2 py-1 border-round">{{ p.sector }}</span>
+              </div>
+            </ng-template>
+            <ng-template #footer>
+              <div class="flex gap-2 buttons">
+                <p-button icon="pi pi-ellipsis-h" styleClass="h-full" (click)="openShow(p.id)" />
+                @if (isManager()) {
+                  <p-button icon="pi pi-times" class="w-full" styleClass="w-full" />
+                  <p-button icon="pi pi-pencil" class="w-full" styleClass="w-full" />
+                } @else {
+                  <p-button
+                    label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
+                    class="flex-grow-1"
+                    styleClass="h-full p-2"
+                    (click)="toChoosePlace(p.id)"
+                  />
+                }
+              </div>
+            </ng-template>
+          </p-card>
+          <div class="flex justify-center">
+            <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
+              <app-show-show [showId]="pId"></app-show-show>
+            </p-drawer>
+          </div>
         </div>
-      <!-- </ng-template>
+      }
+    </div>
+    <!-- </ng-template>
     </p-dataView> -->
   </div>
   <div class="col-4 md:col-3 lg:col-3 xl:col-2 pl-3 pr-0 gap-2 flex flex-column">
     <!-- sorting -->
     <p-card header="מיון מופעים" styleClass="mb-2 shadow-1">
-        <div class="p-inputgroup">
-            <span class="p-inputgroup-addon"><i class="pi pi-sort-alt"></i></span>
-            <p-select
-                [options]="sortOptions" 
-                placeholder="מיין לפי..." 
-                (onChange)="onSortChange($event)"
-                styleClass="w-full">
-            </p-select>
-        </div>
+      <div class="p-inputgroup">
+        <span class="p-inputgroup-addon"><i class="pi pi-sort-alt"></i></span>
+        <p-select
+          [options]="sortOptions"
+          placeholder="מיין לפי..."
+          (onChange)="onSortChange($event)"
+          styleClass="w-full"
+        >
+        </p-select>
+      </div>
     </p-card>
     <!-- price- from... to... -->
     <p-card>
