@@ -7,14 +7,15 @@ import { User } from '../models/user-model';
 
 export class UsersService {
   login(email: string, pass: string){
-  const data = {
-    password: pass,
-    emailAddress:email
-  };
-  return this.http.post('https://localhost:44304/api/Users/loginUser', data);
-}
-signup(user:User){
+    const data = {
+      password: pass,
+      emailAddress:email
+    };
+    return this.http.post('https://localhost:44304/api/Users/loginUser', data);
+  }
+
+  signup(user:User){
     return this.http.post('https://localhost:44304/api/Users/user', user);
-}
+  }
   constructor(private http: HttpClient) {}
 }

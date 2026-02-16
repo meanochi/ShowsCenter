@@ -16,7 +16,7 @@
               <img
                 alt="Card"
                 class="w-full cardImg"
-                [src]="p.imageUrl && typeof p.imageUrl === 'string' ? p.imageUrl : 'timeBank.png'"
+                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? p.imgUrl : 'timeBank.png'"
                 style="height: 120px; object-fit: cover"
               />
             </ng-template>
@@ -27,7 +27,7 @@
             </ng-template>
             <ng-template #subtitle
               ><div class="flex-grow-1">
-                {{ p.beginsAt | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
+                {{ p.beginTime | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
               </div></ng-template
             >
             <ng-template #content>
@@ -90,7 +90,7 @@
               <img
                 alt="Card"
                 class="w-full cardImg"
-                [src]="p.imageUrl && typeof p.imageUrl === 'string' ? p.imageUrl : 'timeBank.png'"
+                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? p.imgUrl : 'timeBank.png'"
                 style="height: 200px; object-fit: cover"
               />
             </ng-template>
@@ -105,7 +105,7 @@
             </ng-template>
             <ng-template #subtitle>
               <div class="flex-1">
-                {{ p.beginsAt | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
+                {{ p.beginTime | date: 'HH:mm' }} | {{ p.date | date: 'dd.MM.yyyy' }}
               </div>
             </ng-template>
             <ng-template #content>

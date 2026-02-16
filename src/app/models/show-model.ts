@@ -1,6 +1,7 @@
 import { min } from "rxjs/internal/operators/min";
 import { SeatMap } from "./map-model";
 
+
 export enum TargetAudience {
     PRESCHOOL = '🧸 גיל הרך',
     CHILDREN = '🪁 ילדים',    
@@ -22,22 +23,37 @@ export enum Section {
     CENTER_BALCONY = 'יציע מרכז'
 }
 
+export const SECTION_ID_MAP: { [key: number]: Section } = {
+    1: Section.HALL,
+    2: Section.RIGHT_BALCONY,
+    3: Section.LEFT_BALCONY,
+    4: Section.CENTER_BALCONY
+};
+
 export class Show {
     id: number =0;
     title: string = '';
     date: Date = new Date();
-    beginsAt: string = '';
-    duration: number = 0;
+    beginTime: string = '';
+    endTime: string='';
     audience: TargetAudience  = TargetAudience.ADULTS;
     sector: Sector = Sector.WOMEN;
     description: string ='';
-    imageUrl: string | null = null;
+    imgUrl: string | null = null;
     providerId: number =0;
+    providerName:string='';
     categoryId: number =0;
+    categoryName: string='';
     hallMap:SeatMap = new SeatMap(0, Section.HALL);
     leftBalMap:SeatMap =new SeatMap(0, Section.LEFT_BALCONY);
     rightBalMap:SeatMap =new SeatMap(0, Section.RIGHT_BALCONY);
     centerBalMap:SeatMap =new SeatMap(0, Section.CENTER_BALCONY);
     minPrice: number = 0;
     popularity?: number;
+
+    constructor(init?: Partial<Show>) {
+        Object.assign(this, init);
+    }
 }
+
+
