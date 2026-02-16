@@ -19,6 +19,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { SelectItem } from 'primeng/api';
 import { DataViewModule } from 'primeng/dataview';
 import { SelectModule } from 'primeng/select';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-shows',
@@ -47,6 +48,7 @@ export class ShowsComponent {
   readonly TargetAudience = TargetAudience;
   readonly Sector = Sector;
   showSrv: ShowsService = inject(ShowsService);
+  shows$: Observable<Show[]> = this.showSrv.shows$;
   shows: Show[] = this.showSrv.shows;
   pro: Show = new Show();
   visible: boolean = false;
@@ -101,6 +103,9 @@ export class ShowsComponent {
       { label: 'פופולריות', value: '!popularity' },
     ];
     this.prepareUpcomingShows();
+    this.shows$.subscribe(() => {
+        this.applyFilters();
+    });
   }
   openShow(id: number) {
     this.pId = id;
@@ -133,8 +138,7 @@ export class ShowsComponent {
   }
 
   applyFilters() {
-    this.shows = this.showSrv.shows.filter((s) => {
-      // 1. חיפוש טקסטואלי
+this.shows = this.showSrv.shows.filter((s) => {      // 1. חיפוש טקסטואלי
       const matchesSearch =
         !this.searchTerm || s.title.toLowerCase().includes(this.searchTerm.toLowerCase());
       // 2. קטגוריות

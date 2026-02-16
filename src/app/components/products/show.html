@@ -83,7 +83,7 @@
       <ng-template pTemplate="grid" let-items>-->
     <div class="grid p-3">
       <!-- @for (p of items; track p.id) {  -->
-      @for (p of shows; track p.id) {
+      @for (p of (shows); track p.id) {
         <div class="col-12 md:col-6 lg:col-4 xl:col-4">
           <p-card styleClass="flex flex-column h-full">
             <ng-template #header>
