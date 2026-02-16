@@ -35,6 +35,7 @@ export class ShowsService {
         if (item.endTime) show.endTime = item.endTime.substring(0, 5);
         if (item.sections && Array.isArray(item.sections)) {
         item.sections.forEach((sec: any) => {
+          
           // מציאת סוג ה-Section לפי ה-ID מהשרת
           const sectionType = SECTION_ID_MAP[sec.id]; 
           
