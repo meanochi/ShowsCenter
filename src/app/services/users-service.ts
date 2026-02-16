@@ -11,11 +11,11 @@ export class UsersService {
       password: pass,
       emailAddress:email
     };
-    return this.http.post('https://localhost:44304/api/Users/loginUser', data);
+    return this.http.post('/api/Users/loginUser', data);
   }
 
   signup(user:User){
-    return this.http.post('https://localhost:44304/api/Users/user', user);
+    return this.http.post('/api/Users/user', user);
   }
   constructor(private http: HttpClient) {}
 }

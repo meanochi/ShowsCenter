@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { find } from 'rxjs';
+import { BehaviorSubject, find } from 'rxjs';
 import { Category } from '../models/category-model';
 import { CategorySrvice } from './category-srvice';
 import { Sector, Show, TargetAudience,SECTION_ID_MAP, Section } from '../models/show-model';
@@ -10,11 +10,15 @@ import { SeatMap } from '../models/map-model';
 @Injectable({
   providedIn: 'root',
 })
+
 export class ShowsService {
   shows: Show[] = [];
   categories: Category[] = inject(CategorySrvice).categories;
   audiences:TargetAudience[]=Object.values(TargetAudience)
   sectors:Sector[]=Object.values(Sector)
+  // הוסף משתנה BehaviorSubject כדי לנהל את הנתונים
+  private showsSubject = new BehaviorSubject<Show[]>([]);
+  shows$ = this.showsSubject.asObservable(); // זה מה שהקומפוננטה תירשם אליו
   constructor( private http: HttpClient) {
     this.loadShows();
   }
@@ -26,7 +30,7 @@ export class ShowsService {
     //     this.shows = JSON.parse(stored);
     //   }
     // }   
-    this.http.get<any[]>('https://localhost:44304/api/Shows')
+    this.http.get<any[]>('/api/Shows')
     .pipe(
       map(data => data.map(item => {
         const show = new Show(item);
@@ -56,6 +60,7 @@ export class ShowsService {
       }))
     ).subscribe(shows => {
       this.shows = shows;
+      this.showsSubject.next(shows); // עדכון כל מי שמאזין
     });
   }
 
