@@ -20,7 +20,6 @@ import { PasswordModule } from 'primeng/password';
     CheckboxModule,
     InputTextModule,
     FloatLabel,
-    Dialog,
     PasswordModule
   ],
   template: `

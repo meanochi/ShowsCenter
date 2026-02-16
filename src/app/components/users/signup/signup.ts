@@ -22,7 +22,6 @@ import { PasswordModule } from 'primeng/password';
     InputTextModule,
     FloatLabel,
     Dialog,
-    Inplace,
     PasswordModule,
   ],
   template: `

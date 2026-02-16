@@ -108,10 +108,12 @@ export class ShowsComponent {
     });
   }
   openShow(id: number) {
+    setTimeout(() => {
     this.pId = id;
     this.pTitle = this.showSrv.findShow(id)?.title || '';
     this.visible = true;
     console.log(this.showSrv.findShow(id));
+    });
   }
   isManager() {
     return false;
