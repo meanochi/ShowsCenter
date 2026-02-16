@@ -3,26 +3,24 @@ import { find } from 'rxjs';
 import { Category } from '../models/category-model';
 import { CategorySrvice } from './category-srvice';
 import { Sector, Show, TargetAudience } from '../models/show-model';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
 })
+
 export class ShowsService {
   shows: Show[] = [];
   categories: Category[] = inject(CategorySrvice).categories;
   audiences:TargetAudience[]=Object.values(TargetAudience)
   sectors:Sector[]=Object.values(Sector)
-  constructor() {
+  constructor(private http: HttpClient) {
     this.loadShows();
   }
 
   private loadShows() {
-    if (typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem('shows');
-      if (stored) {
-        this.shows = JSON.parse(stored);
-      }
-    }
+      return this.http.get('https://localhost:44304/api/Shows');
+
   }
 
   private saveShows() {
