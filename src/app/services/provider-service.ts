@@ -10,7 +10,7 @@ export class ProviderService {
     addProvider(c:string, im:string = '') {
       this.newProvider.id = this.providers.length
       this.newProvider.name = c
-      this.newProvider.profileImageUrl = im
+      this.newProvider.profileimgUrl = im
       this.providers.push(this.newProvider)
       this.newProvider = new Provider()
     }

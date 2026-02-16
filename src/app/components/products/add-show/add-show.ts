@@ -43,12 +43,12 @@ export class AddShow {
     id: number =0;
     title: string = '';
     date: Date = new Date();
-    beginsAt: string = '';
-    duration: number = 0;
+    beginTime: string = '';
+    endTime: string='';
     audience?: TargetAudience;
     sector?: Sector;
     description: string ='';
-    imageUrl: string | null = null;
+    imgUrl: string | null = null;
     providerId: number =0;
     categoryId: number = null as unknown as number;
     hallMap:SeatMap = new SeatMap(0, Section.HALL);
@@ -94,12 +94,12 @@ export class AddShow {
       }
       this.show.title = this.title
       this.show.date = this.date
-      this.show.beginsAt = this.beginsAt
-      this.show.duration = this.duration
+      this.show.beginTime = this.beginTime
+      this.show.endTime = this.endTime
       this.show.audience = this.audience || TargetAudience.ADULTS
       this.show.sector = this.sector || Sector.WOMEN
       this.show.description = this.description
-      this.show.imageUrl = this.imagePreviewUrl as string
+      this.show.imgUrl = this.imagePreviewUrl as string
       this.show.providerId = this.providerId
       this.show.categoryId = this.categoryId
       this.show.hallMap = this.hallMap
@@ -112,12 +112,12 @@ export class AddShow {
     reset(){
       this.title = ''
       this.date = new Date()
-      this.beginsAt = ''
-      this.duration = 0;
+      this.beginTime = ''
+      this.endTime = '';
       this.audience = undefined;
       this.sector = undefined;
       this.description = '';
-      this.imageUrl = null;
+      this.imgUrl = null;
       this.providerId = 0;
       this.categoryId = 0;
       this.hallMap = new SeatMap(0, Section.HALL);
@@ -134,7 +134,7 @@ export class AddShow {
     const files = event.currentFiles || event.files;
         if (event.files && event.files.length > 0) {
           const file = files[0];
-          this.imageUrl = file;
+          this.imgUrl = file;
           const reader = new FileReader();
         reader.onload = () => {
           this.imagePreviewSignal.set(reader.result);
@@ -145,7 +145,7 @@ export class AddShow {
 }
   removeImage(fileUpload: FileUpload) {
     this.imagePreviewSignal.set(null);
-    this.imageUrl = null;
+    this.imgUrl = null;
     fileUpload.clear(); 
 }
 sectorOptions = Object.keys(Sector)
