@@ -130,11 +130,6 @@
               </div>
             </ng-template>
           </p-card>
-          <div class="flex justify-center">
-            <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
-              <app-show-show [showId]="pId"></app-show-show>
-            </p-drawer>
-          </div>
         </div>
       }
     </div>
@@ -231,4 +226,10 @@
       </ng-template>
     </p-card>
   </div>
+</div>
+
+<div class="flex justify-center">
+  <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
+    <app-show-show [showId]="pId"></app-show-show>
+  </p-drawer>
 </div>
