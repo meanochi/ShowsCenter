@@ -43,8 +43,8 @@ export class AddShow {
     id: number =0;
     title: string = '';
     date: Date = new Date();
-    beginTime: string = '';
-    endTime: string='';
+    beginTime: Date = new Date();
+    endTime: Date = new Date();
     audience?: TargetAudience;
     sector?: Sector;
     description: string ='';
@@ -113,8 +113,8 @@ export class AddShow {
     reset(){
       this.title = ''
       this.date = new Date()
-      this.beginTime = ''
-      this.endTime = '';
+      this.beginTime = new Date()
+      this.endTime = new Date()
       this.audience = undefined;
       this.sector = undefined;
       this.description = '';
