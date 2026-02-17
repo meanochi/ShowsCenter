@@ -69,9 +69,7 @@ export class AddShow {
         this.visible = true;
     }
     ngOnInit(){
-    // this.providerSrv.loadProviders().subscribe(data => {
-    //     this.providers = data; 
-    // });
+    this.providerSrv.loadProviders()
     this.providers=this.providerSrv.providers
     this.targetAudienceOptions = Object.keys(TargetAudience)
     .filter(key => isNaN(Number(key))) // מסנן את האינדקסים המספריים

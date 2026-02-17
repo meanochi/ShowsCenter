@@ -9,6 +9,7 @@ import { CarouselModule } from 'primeng/carousel';
 import { CategorySrvice } from '../../../services/category-srvice';
 import { ProgressSpinnerModule } from 'primeng/progressspinner'; //
 import { Provider } from '../../../models/provider-model';
+import { Observable } from 'rxjs';
 @Component({
   selector: 'app-show-show',
   imports: [ AvatarModule, ButtonModule, DatePipe,CarouselModule,AvatarModule, ProgressSpinnerModule],
@@ -19,11 +20,12 @@ export class ShowShow {
   showSrv:ShowsService = inject(ShowsService);
   categoreySrv: CategorySrvice = inject(CategorySrvice)
   providerSrv:ProviderService = inject(ProviderService);
-  //providers = this.providerSrv.loadProviders();
   providers:Provider[]=[]
+  providers$: Observable<Provider[]> | undefined;
   categories = this.categoreySrv.categories;
   readonly Audience = TargetAudience;
   readonly Sector = Sector;
+  currProvider: Provider | undefined
   @Input()
   showId:number=0;
   
@@ -51,10 +53,10 @@ export class ShowShow {
     ]; 
   }
   ngOnChanges(){
-    // this.providerSrv.loadProviders().subscribe(data => {
-    //     this.providers = data;
-    // });
-    this.providers=this.providerSrv.providers
+    this.providerSrv.loadProviders().subscribe(data => {
+        this.currProvider = data.find(p => p.id === this.showProd.providerId);
+    });
+    console.log(this.providers);
     this.showProd = this.showSrv.findShow(this.showId)? this.showSrv.findShow(this.showId)! : new Show();
     this.relatedEvents = this.showSrv.shows.filter(element => 
         element.categoryId === this.showProd.categoryId && element.id !== this.showProd.id
