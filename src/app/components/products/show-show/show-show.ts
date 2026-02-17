@@ -48,8 +48,7 @@ export class ShowShow {
           numVisible: 1,
           numScroll: 1
       }
-    ];
-    
+    ]; 
   }
   ngOnChanges(){
     // this.providerSrv.loadProviders().subscribe(data => {

@@ -20,6 +20,7 @@ import { SelectItem } from 'primeng/api';
 import { DataViewModule } from 'primeng/dataview';
 import { SelectModule } from 'primeng/select';
 import { Observable } from 'rxjs';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-shows',
@@ -39,7 +40,7 @@ import { Observable } from 'rxjs';
     DatePipe,
     CommonModule,
     DataViewModule,
-    SelectModule,
+    SelectModule
   ],
   templateUrl: './show.html',
   styleUrl: './show.scss',
@@ -67,6 +68,7 @@ export class ShowsComponent {
   sortOrder: number = 1;
   sortField: string = 'title';
   upcomingShows: Show[] = [];
+  private cd = inject(ChangeDetectorRef);
 
   addShow(p: Show) {
     p.id = this.shows.length + 1;
@@ -104,7 +106,11 @@ export class ShowsComponent {
     ];
     this.prepareUpcomingShows();
     this.shows$.subscribe(() => {
-        this.applyFilters();
+        //this.applyFilters();
+        setTimeout(() => {
+            this.applyFilters();
+            this.cd.detectChanges(); 
+        });
     });
   }
   openShow(id: number) {
@@ -140,7 +146,8 @@ export class ShowsComponent {
   }
 
   applyFilters() {
-this.shows = this.showSrv.shows.filter((s) => {      // 1. חיפוש טקסטואלי
+    //this.shows = this.showSrv.shows.filter((s) => {      // 1. חיפוש טקסטואלי
+      const filtered = this.showSrv.shows.filter((s) => { 
       const matchesSearch =
         !this.searchTerm || s.title.toLowerCase().includes(this.searchTerm.toLowerCase());
       // 2. קטגוריות
@@ -158,5 +165,6 @@ this.shows = this.showSrv.shows.filter((s) => {      // 1. חיפוש טקסטו
 
       return matchesSearch && matchesCategory && matchesAudience && matchesSector && matchesPrice;
     });
+    this.shows=filtered;
   }
 }
