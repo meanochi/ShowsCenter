@@ -8,6 +8,7 @@ import { ProviderService } from '../../../services/provider-service';
 import { CarouselModule } from 'primeng/carousel';
 import { CategorySrvice } from '../../../services/category-srvice';
 import { ProgressSpinnerModule } from 'primeng/progressspinner'; //
+import { Provider } from '../../../models/provider-model';
 @Component({
   selector: 'app-show-show',
   imports: [ AvatarModule, ButtonModule, DatePipe,CarouselModule,AvatarModule, ProgressSpinnerModule],
@@ -18,7 +19,8 @@ export class ShowShow {
   showSrv:ShowsService = inject(ShowsService);
   categoreySrv: CategorySrvice = inject(CategorySrvice)
   providerSrv:ProviderService = inject(ProviderService);
-  providers = this.providerSrv.loadProviders();
+  //providers = this.providerSrv.loadProviders();
+  providers:Provider[]=[]
   categories = this.categoreySrv.categories;
   readonly Audience = TargetAudience;
   readonly Sector = Sector;
@@ -50,7 +52,10 @@ export class ShowShow {
     
   }
   ngOnChanges(){
-    this.providers  = this.providerSrv.loadProviders()
+    // this.providerSrv.loadProviders().subscribe(data => {
+    //     this.providers = data;
+    // });
+    this.providers=this.providerSrv.providers
     this.showProd = this.showSrv.findShow(this.showId)? this.showSrv.findShow(this.showId)! : new Show();
     this.relatedEvents = this.showSrv.shows.filter(element => 
         element.categoryId === this.showProd.categoryId && element.id !== this.showProd.id
@@ -84,7 +89,7 @@ get endsNextDay(): boolean {
 }
 // show-show.ts
 get currentProvider() {
-    this.providers = this.providerSrv.loadProviders();
+    this.providers = this.providerSrv.providers
     return this.providers.find(p => p.id === this.showProd.providerId);
 }
 }

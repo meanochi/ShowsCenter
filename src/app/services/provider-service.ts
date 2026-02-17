@@ -15,8 +15,10 @@ export class ProviderService {
       this.providers.push(this.newProvider)
       this.newProvider = new Provider()
     }
-    loadProviders(){
-          this.http.get<any[]>('/api/Provider').subscribe()
+    loadProviders() {
+      this.http.get<Provider[]>('/api/Provider').subscribe(data => {
+          this.providers = data;
+    });
     }
     constructor( private http: HttpClient){
     }

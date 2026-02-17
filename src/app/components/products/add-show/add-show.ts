@@ -39,7 +39,7 @@ export class AddShow {
     categorySrv: CategorySrvice  = inject(CategorySrvice)
     categories: Category[] = this.categorySrv.categories
     providerSrv: ProviderService  = inject(ProviderService)
-    providers: Provider[] = this.providerSrv.loadProviders()
+    providers: Provider[] = this.providerSrv.providers
     id: number =0;
     title: string = '';
     date: Date = new Date();
@@ -69,7 +69,10 @@ export class AddShow {
         this.visible = true;
     }
     ngOnInit(){
-    this.providers  = this.providerSrv.loadProviders()
+    // this.providerSrv.loadProviders().subscribe(data => {
+    //     this.providers = data; 
+    // });
+    this.providers=this.providerSrv.providers
     this.targetAudienceOptions = Object.keys(TargetAudience)
     .filter(key => isNaN(Number(key))) // מסנן את האינדקסים המספריים
     .map(key => ({
