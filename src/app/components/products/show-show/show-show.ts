@@ -88,7 +88,6 @@ get endsNextDay(): boolean {
     const startDate = new Date(this.showProd.date).getDate();
     return new Date(end).getDate() !== startDate;
 }
-// show-show.ts
 get currentProvider() {
     this.providers = this.providerSrv.providers
     return this.providers.find(p => p.id === this.showProd.providerId);
