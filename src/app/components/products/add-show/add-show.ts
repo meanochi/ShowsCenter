@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, inject, Input, input, Output, signal, ViewChild } from '@angular/core';
 import { Section, Sector, Show, TargetAudience } from '../../../models/show-model';
 import { CommonModule } from '@angular/common';
 import {FormsModule} from '@angular/forms'
@@ -190,11 +190,23 @@ export class AddShow {
     this.imgUrl = null;
     fileUpload.clear(); 
 }
-sectorOptions = Object.keys(Sector)
+  sectorOptions = Object.keys(Sector)
   .filter(key => isNaN(Number(key)))
   .map(key => ({
     label: Sector[key as keyof typeof Sector],
     value: Sector[key as keyof typeof Sector] // כאן אנחנו שומרים את הערך ("גברים"), לא את המפתח (MEN)
   }));
+
+  @ViewChild('addProviderRef') addProviderRef!: AddProvider;
+
+  openAddProvider() {
+    this.addProviderRef?.showDialog();
+  }
+
+  onProviderAdded(provider: Provider) {
+    this.providerId = provider.id;
+    this.providers = this.providerSrv.providers;
+  }
+
 
 }

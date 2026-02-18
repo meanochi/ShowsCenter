@@ -37,4 +37,9 @@ export class SeatMap{
             }
         } 
    }
+
+   /** Number of seats in this section (for API payload). */
+   get totalSeats(): number {
+       return this.map.flat().length;
+   }
 }

@@ -10,6 +10,7 @@ import { CategorySrvice } from '../../../services/category-srvice';
 import { ProgressSpinnerModule } from 'primeng/progressspinner'; //
 import { Provider } from '../../../models/provider-model';
 import { Observable } from 'rxjs';
+import { ImageService } from '../../../services/image-service';
 @Component({
   selector: 'app-show-show',
   imports: [ AvatarModule, ButtonModule, DatePipe,CarouselModule,AvatarModule, ProgressSpinnerModule],
@@ -26,6 +27,7 @@ export class ShowShow {
   readonly Audience = TargetAudience;
   readonly Sector = Sector;
   currProvider: Provider | undefined
+  imageSrv: ImageService = inject(ImageService);
   @Input()
   showId:number=0;
   

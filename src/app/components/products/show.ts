@@ -21,6 +21,7 @@ import { DataViewModule } from 'primeng/dataview';
 import { SelectModule } from 'primeng/select';
 import { Observable } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
+import { ImageService } from '../../services/image-service';
 
 @Component({
   selector: 'app-shows',
@@ -69,12 +70,9 @@ export class ShowsComponent {
   sortField: string = 'title';
   upcomingShows: Show[] = [];
   private cd = inject(ChangeDetectorRef);
-
-  addShow(p: Show) {
-    p.id = this.shows.length + 1;
-    this.showSrv.addShow(p);
-    this.getAll();
-  }
+  imageSrv: ImageService = inject(ImageService);
+  /** Called after add-show succeeds; list refreshes when service loadShows() completes (shows$). */
+  addShow(_p: Show) {}
 
   getAll() {
     this.shows = this.showSrv.shows;
@@ -122,7 +120,7 @@ export class ShowsComponent {
     });
   }
   isManager() {
-    return false;
+    return true;
   }
   toChoosePlace(id: number) {}
 
