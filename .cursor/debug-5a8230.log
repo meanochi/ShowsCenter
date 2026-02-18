@@ -1,0 +1,29 @@
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":false,"showsLength":0,"willSet":false},"timestamp":1771453906289,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771453906298,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771453907407,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771453907761,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":false,"showsLength":5,"willSet":true},"timestamp":1771453908265,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:after set show","message":"show set to first","data":{"showId":1030},"timestamp":1771453908266,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":true,"showsLength":5,"willSet":false},"timestamp":1771453908275,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":false,"showsLength":0,"willSet":false},"timestamp":1771453911567,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771453911570,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771453912617,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771453913125,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":false,"showsLength":5,"willSet":true},"timestamp":1771453913181,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:after set show","message":"show set to first","data":{"showId":1030},"timestamp":1771453913182,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":true,"showsLength":5,"willSet":false},"timestamp":1771453913192,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":false,"showsLength":0,"willSet":false},"timestamp":1771454050074,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771454050078,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771454051942,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771454052635,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":false,"showsLength":5,"willSet":true},"timestamp":1771454053259,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:after set show","message":"show set to first","data":{"showId":1030},"timestamp":1771454053261,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":true,"showsLength":5,"willSet":false},"timestamp":1771454053293,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":false,"showsLength":0,"willSet":false},"timestamp":1771454058107,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771454058108,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771454058505,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771454058528,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:ngDoCheck","message":"CD run","data":{"showTruthy":false},"timestamp":1771454058589,"hypothesisId":"H2"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":false,"showsLength":5,"willSet":true},"timestamp":1771454058615,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:after set show","message":"show set to first","data":{"showId":1030},"timestamp":1771454058616,"hypothesisId":"H1"}
+{"sessionId":"5a8230","location":"seats-map.ts:subscribe","message":"shows$ emit","data":{"hadShow":true,"showsLength":5,"willSet":false},"timestamp":1771454058619,"hypothesisId":"H1"}
