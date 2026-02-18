@@ -19,10 +19,13 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ProviderService } from '../../../services/provider-service';
 import { Provider } from '../../../models/provider-model';
+import { ShowsService } from '../../../services/shows-service';
+import { AddProvider } from '../../providers/add-provider/add-provider';
+import { ImageService } from '../../../services/image-service';
 
 @Component({
   selector: 'app-add-show',
-  imports: [ToggleSwitchModule, RadioButtonModule, ButtonModule ,CommonModule, FormsModule,Dialog, ButtonModule, InputTextModule, AvatarModule,Select,FloatLabelModule,FileUploadModule,InputNumberModule,TextareaModule,DatePickerModule],
+  imports: [ToggleSwitchModule, RadioButtonModule, ButtonModule ,CommonModule, FormsModule,Dialog, ButtonModule, InputTextModule, AvatarModule,Select,FloatLabelModule,FileUploadModule,InputNumberModule,TextareaModule,DatePickerModule, AddProvider],
   templateUrl: './add-show.html',
   styleUrl: './add-show.scss',
 })
@@ -40,6 +43,9 @@ export class AddShow {
     categories: Category[] = this.categorySrv.categories
     providerSrv: ProviderService  = inject(ProviderService)
     providers: Provider[] = this.providerSrv.providers
+    showsSrv: ShowsService = inject(ShowsService)
+    submitLoading = false
+    submitError: string | null = null
     id: number =0;
     title: string = '';
     date: Date = new Date();
@@ -62,7 +68,7 @@ export class AddShow {
     selectedSector: string = '';
     today: Date = new Date().getDate() as unknown as Date;
     checked: boolean[]=[true,false,false,false] 
-
+    imageSrv: ImageService = inject(ImageService);
     imagePreviewSignal = signal<string | ArrayBuffer | null>(null);
     
     showDialog() {
@@ -81,34 +87,69 @@ export class AddShow {
     @Output()
     showReady: EventEmitter<Show> = new EventEmitter<Show>();
 
-    addShow(){
+    private formatTime(value: string | Date | undefined): string {
+      if (value == null) return '';
+      if (typeof value === 'string') return value.substring(0, 5);
+      if (value instanceof Date) {
+        const h = value.getHours().toString().padStart(2, '0');
+        const m = value.getMinutes().toString().padStart(2, '0');
+        return `${h}:${m}`;
+      }
+      return '';
+    }
 
-      this.show.minPrice = this.hallMap.price
-      if(this.leftBalMap.price > 0 && (this.show.minPrice === 0 || this.leftBalMap.price < this.show.minPrice)){
-        this.show.minPrice = this.leftBalMap.price
+    addShow(){
+      this.submitError = null;
+      this.show.minPrice = this.hallMap.price ?? 0;
+      if ((this.leftBalMap.price ?? 0) > 0 && (this.show.minPrice === 0 || this.leftBalMap.price! < this.show.minPrice)) {
+        this.show.minPrice = this.leftBalMap.price!;
       }
-      if(this.rightBalMap.price > 0 && (this.show.minPrice === 0 || this.rightBalMap.price < this.show.minPrice)){
-        this.show.minPrice = this.rightBalMap.price
+      if ((this.rightBalMap.price ?? 0) > 0 && (this.show.minPrice === 0 || this.rightBalMap.price! < this.show.minPrice)) {
+        this.show.minPrice = this.rightBalMap.price!;
       }
-      if(this.centerBalMap.price > 0 && (this.show.minPrice === 0 || this.centerBalMap.price < this.show.minPrice)){
-        this.show.minPrice = this.centerBalMap.price
+      if ((this.centerBalMap.price ?? 0) > 0 && (this.show.minPrice === 0 || this.centerBalMap.price! < this.show.minPrice)) {
+        this.show.minPrice = this.centerBalMap.price!;
       }
-      this.show.title = this.title
-      this.show.date = this.date
-      this.show.beginTime = this.beginTime
-      this.show.endTime = this.endTime
-      this.show.audience = this.audience || TargetAudience.ADULTS
-      this.show.sector = this.sector || Sector.WOMEN
-      this.show.description = this.description
-      this.show.imgUrl = this.imagePreviewUrl as string
-      this.show.providerId = this.providerId
-      this.show.categoryId = this.categoryId
-      this.show.hallMap = this.hallMap
-      this.show.leftBalMap = this.leftBalMap
-      this.show.rightBalMap = this.rightBalMap
-      this.show.centerBalMap = this.centerBalMap 
-      this.showReady.emit(this.show);
-      this.reset();
+      this.show.title = this.title;
+      this.show.date = this.date;
+      this.show.beginTime = this.formatTime(this.beginTime);
+      this.show.endTime = this.formatTime(this.endTime);
+      this.show.audience = this.audience ?? TargetAudience.ADULTS;
+      this.show.sector = this.sector ?? Sector.WOMEN;
+      this.show.description = this.description;
+      this.show.imgUrl = (this.imagePreviewUrl as string) ?? null;
+      this.show.providerId = this.providerId;
+      this.show.categoryId = this.categoryId;
+      this.show.hallMap = this.hallMap;
+      this.show.leftBalMap = this.leftBalMap;
+      this.show.rightBalMap = this.rightBalMap;
+      this.show.centerBalMap = this.centerBalMap;
+      if (this.selectedFile) {
+        this.imageSrv.upload(this.selectedFile).subscribe({
+          next: (res) => {
+            console.log('הקובץ נשמר בהצלחה!', res.path);
+            this.show.imgUrl = res.path;
+            // כאן תוכל לשלוח את res.path ל-Service אחר כדי לשמור ב-DB יחד עם שאר הנתונים
+          },
+          error: (err) => console.error('שגיאה בהעלאה', err)
+        });
+      }
+      else{
+        this.show.imgUrl = null;
+      }
+      this.submitLoading = true;
+      this.showsSrv.addShow(this.show).subscribe({
+        next: () => {
+          this.showReady.emit(this.show);
+          this.reset();
+          this.visible = false;
+          this.submitLoading = false;
+        },
+        error: (err) => {
+          this.submitLoading = false;
+          this.submitError = err?.error?.message ?? err?.message ?? 'שמירת המופע נכשלה';
+        },
+      });
     }
     reset(){
       this.title = ''
