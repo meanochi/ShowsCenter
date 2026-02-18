@@ -65,23 +65,20 @@ export class ShowShow {
     );
     console.log(this.relatedEvents);
     console.log(this.providers);
-    
   }
-get (): Date | null {
-    if (!this.showProd.beginTime || !this.showProd.endTime || !this.showProd.date) return null;
 
-    const start = new Date(this.showProd.date);
-    const startTime = new Date(this.showProd.beginTime);
-    const Time = new Date(this.showProd.endTime);
-    start.setHours(startTime.getHours());
-    start.setMinutes(startTime.getMinutes());
-
-    const end = new Date(start);
-    end.setHours(start.getHours() + Time.getHours());
-    end.setMinutes(start.getMinutes() + Time.getMinutes());
-
-    return end;
-}
+// get (): Date | null {
+//     if (!this.showProd.beginTime || !this.showProd.endTime || !this.showProd.date) return null;
+//     const start = new Date(this.showProd.date);
+//     const startTime = new Date(this.showProd.beginTime);
+//     const Time = new Date(this.showProd.endTime);
+//     start.setHours(startTime.getHours());
+//     start.setMinutes(startTime.getMinutes());
+//     const end = new Date(start);
+//     end.setHours(start.getHours() + Time.getHours());
+//     end.setMinutes(start.getMinutes() + Time.getMinutes());
+//     return end;
+// }
 
 get endsNextDay(): boolean {
     const end = this.showProd.endTime;

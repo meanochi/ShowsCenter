@@ -41,14 +41,15 @@ export class Show {
     id: number =0;
     title: string = '';
     date: Date = new Date();
-    beginTime: string = '';
-    endTime: string='';
+    beginTime: Date = new Date();
+    endTime: Date = new Date();
     audience: TargetAudience  = TargetAudience.ADULTS;
     sector: Sector = Sector.WOMEN;
     description: string ='';
     imgUrl: string | null = null;
     providerId: number =0;
     providerName:string='';
+    providerProfileImgUrl:string=''
     categoryId: number =0;
     categoryName: string='';
     hallMap:SeatMap = new SeatMap(0, Section.HALL);
