@@ -90,7 +90,7 @@ export class ShowsService {
       Sector: show.sector,
       Description: show.description ?? '',
       ImgUrl: show.imgUrl ?? '',
-      ProviderId: 301,
+      ProviderId: show.providerId,
       CategoryId: 401,
     };
   }

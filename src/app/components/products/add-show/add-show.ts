@@ -112,8 +112,8 @@ export class AddShow {
       }
       this.show.title = this.title;
       this.show.date = this.date;
-      this.show.beginTime = this.formatTime(this.beginTime);
-      this.show.endTime = this.formatTime(this.endTime);
+      this.show.beginTime = new Date(this.formatTime(this.beginTime));
+      this.show.endTime = new Date(this.formatTime(this.endTime));
       this.show.audience = this.audience ?? TargetAudience.ADULTS;
       this.show.sector = this.sector ?? Sector.WOMEN;
       this.show.description = this.description;

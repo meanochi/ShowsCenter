@@ -1,0 +1,157 @@
+.seats-map-wrapper {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.seats-card {
+  width: 100%;
+  max-width: 960px;
+  background-color: #ffffff;
+  border-radius: 0.9rem;
+  padding: 1rem 1.25rem 1.5rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+}
+
+.legend {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend .legend-seat {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid #9ca3af;
+}
+
+.legend-seat-available {
+  background-color: #22c55e;
+  border-color: #16a34a;
+}
+
+.legend-seat-disabled {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.seats-layout {
+  display: grid;
+  grid-template-columns: minmax(70px, 1fr) minmax(260px, 3fr) minmax(70px, 1fr);
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    'left-bal center-bal right-bal'
+    'left-bal hall right-bal';
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.section {
+  padding: 0.5rem;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #dc2626;
+  letter-spacing: 0.08em;
+}
+
+.left-bal {
+  grid-area: right-bal;
+}
+
+.center-bal {
+  grid-area: center-bal;
+}
+
+.right-bal {
+  grid-area: left-bal;
+}
+
+.hall {
+  grid-area: hall;
+}
+
+.section-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.seat-row {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.seat-button {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  min-width: 16px;
+  border-radius: 2px;
+  border-width: 1px;
+}
+
+.seat-button.seat-available {
+  background-color: #22c55e;
+  border-color: #16a34a;
+}
+
+.seat-button.seat-disabled {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.section-grid-skew-left {
+  transform: skewY(25deg) rotate(10deg);
+}
+
+.section-grid-skew-right {
+  transform: skewY(-25deg) rotate(-10deg);
+}
+
+.section-grid-curve-top {
+  transform-origin: center bottom;
+  transform: perspective(600px) rotateX(24deg);
+}
+
+.section-grid-curve-bottom {
+  transform-origin: center top;
+  transform: perspective(700px) rotateX(32deg);
+}
+
+.hall .seat-row.row-inner {
+  transform: scaleX(0.9);
+}
+
+.hall .seat-row.row-outer {
+  transform: scaleX(1.05);
+}
+
+@media (max-width: 768px) {
+  .seats-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      'center-bal'
+      'hall'
+      'left-bal'
+      'right-bal';
+  }
+}
