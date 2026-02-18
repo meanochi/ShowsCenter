@@ -53,12 +53,10 @@
   grid-template-areas:
     'left-bal center-bal right-bal'
     'left-bal hall right-bal';
-  gap: 1.5rem;
   align-items: start;
 }
 
 .section {
-  padding: 0.5rem;
 }
 
 .section-title {
@@ -69,7 +67,12 @@
   color: #dc2626;
   letter-spacing: 0.08em;
 }
-
+.right-bal .section-title{
+  transform: rotate(-30deg) translate(-3rem);
+}
+.left-bal .section-title{
+  transform: rotate(30deg) translate(3rem);
+}
 .left-bal {
   grid-area: right-bal;
 }
@@ -89,9 +92,14 @@
 .section-grid {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
-
+.right-bal .seat-row{
+  justify-content: end;
+}
+.left-bal .seat-row{
+  justify-content: start;
+}
 .seat-row {
   display: flex;
   justify-content: center;
@@ -105,6 +113,7 @@
   min-width: 16px;
   border-radius: 2px;
   border-width: 1px;
+  cursor: pointer;
 }
 
 .seat-button.seat-available {
@@ -154,4 +163,5 @@
       'left-bal'
       'right-bal';
   }
+  
 }
