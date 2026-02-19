@@ -146,25 +146,22 @@ export class ShowsComponent {
   }
 
   applyFilters() {
-    //this.shows = this.showSrv.shows.filter((s) => {      // 1. חיפוש טקסטואלי
-      const filtered = this.showSrv.shows.filter((s) => { 
-      const matchesSearch =
-        !this.searchTerm || s.title.toLowerCase().includes(this.searchTerm.toLowerCase());
-      // 2. קטגוריות
-      const matchesCategory =
-        this.selectedCategories.length === 0 || this.selectedCategories.includes(s.categoryId);
-      // 3. קהל יעד
-      const matchesAudience =
-        this.selectedAudiences.length === 0 || this.selectedAudiences.includes(s.audience);
-      // 4. מגזר
-      const matchesSector =
-        this.selectedSectors.length === 0 || this.selectedSectors.includes(s.sector);
-      // 5. מחיר
-      const currentPrice = s.hallMap?.price ?? 0;
-      const matchesPrice = currentPrice >= this.priceRange[0] && currentPrice <= this.priceRange[1];
+    const filterParams = {
+      description: this.searchTerm,
+      categoryId: this.selectedCategories, // מערך
+      audiences: this.selectedAudiences,   // מערך 
+      sectors: this.selectedSectors,       // מערך
+      minPrice: this.priceRange[0],
+      maxPrice: this.priceRange[1],
+      skip: 20,       // להתחלה
+      position: 1   // כמות להצגה
+    };
+  
+    // קריאה לשירות עם האובייקט
+    this.showSrv.getFilteredShows(filterParams);
+  }
 
-      return matchesSearch && matchesCategory && matchesAudience && matchesSector && matchesPrice;
-    });
-    this.shows=filtered;
+  getAllShows(){
+    return this.showSrv.shows$;
   }
 }

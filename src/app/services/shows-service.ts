@@ -3,9 +3,10 @@ import { BehaviorSubject, find } from 'rxjs';
 import { Category } from '../models/category-model';
 import { CategorySrvice } from './category-srvice';
 import { Sector, Show, TargetAudience,SECTION_ID_MAP, Section } from '../models/show-model';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { SeatMap } from '../models/map-model';
+import { HttpParams } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -23,14 +24,45 @@ export class ShowsService {
     this.loadShows();
   }
 
-  private loadShows() {
-    // if (typeof localStorage !== 'undefined') {
-    //   const stored = localStorage.getItem('shows');
-    //   if (stored) {
-    //     this.shows = JSON.parse(stored);
-    //   }
-    // }   
-    this.http.get<any[]>('/api/Shows')
+  public getFilteredShows(filters: any) {
+    this.loadShows(filters);
+}
+
+  private loadShows(filters: any = {}) {
+    let params = new HttpParams();
+    if (filters.description) {
+      params = params.set('description', filters.description);
+    }
+
+    if (filters.minPrice) params = params.set('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice) params = params.set('maxPrice', filters.maxPrice.toString());
+
+    params = params.set('skip', filters.skip?.toString() || '0');
+    params = params.set('position', filters.position?.toString() || '10');
+
+    if (filters.categoryId && filters.categoryId.length > 0) {
+      filters.categoryId.forEach((id: number) => {
+        params = params.append('categoryId', id.toString());
+      });
+    }
+
+    if (filters.sectors && filters.sectors.length > 0) {
+      filters.sectors.forEach((sector: string) => {
+        params = params.append('sectors', sector);
+      });
+    }
+
+    if (filters.audiences && filters.audiences.length > 0) {
+      filters.audiences.forEach((audience: string) => {
+        params = params.append('audiences', audience);
+      });
+    }
+    const headers = new HttpHeaders({
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    });
+
+    this.http.get<any[]>('/api/Shows', { params, headers })
     .pipe(
       map(data => data.map(item => {
         const show = new Show(item);
@@ -58,9 +90,16 @@ export class ShowsService {
       }
         return show;
       }))
-    ).subscribe(shows => {
-      this.shows = shows;
-      this.showsSubject.next(shows); // עדכון כל מי שמאזין
+    ).subscribe({
+      next: (shows) => {
+        this.shows = shows;
+        this.showsSubject.next(shows); // עדכון כל מי שמאזין
+      },
+      error: (error) => {
+        console.error('Error loading shows:', error);
+        // אם יש שגיאה, עדכן עם מערך ריק כדי לא לשבור את הקומפוננטות
+        this.showsSubject.next([]);
+      }
     });
   }
 
@@ -76,7 +115,7 @@ export class ShowsService {
   }
 
   findShow(id:number){
-    this.loadShows();
+    this.loadShows({});
     const show:Show | undefined =this.shows.find(p=>p.id===id)
     return show
   }
@@ -84,11 +123,11 @@ export class ShowsService {
     return this.categories.find(c=>c.id === id)?.name
 }
 showsFromProvider(providerId:number){
-  this.loadShows();
+  this.loadShows({});
   return this.shows.filter(p=>p.providerId === providerId)
 }
 showsFromCategory(categoryId:number){
-  this.loadShows();
+  this.loadShows({});
   return this.shows.filter(p=>p.categoryId === categoryId)
 }
 

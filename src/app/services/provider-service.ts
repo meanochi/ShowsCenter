@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Provider } from '../models/provider-model';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
 @Injectable({
@@ -18,7 +18,11 @@ export class ProviderService {
     }
     
     loadProviders(): Observable<Provider[]> {
-      return this.http.get<Provider[]>('/api/Provider').pipe(
+      const headers = new HttpHeaders({
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      });
+      return this.http.get<Provider[]>('/api/Provider', { headers }).pipe(
           tap(data => this.providers = data) 
       );
     }
