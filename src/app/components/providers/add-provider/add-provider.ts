@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Dialog } from 'primeng/dialog';
@@ -30,11 +30,11 @@ export class AddProvider {
   imageSrv: ImageService = inject(ImageService);
   visible = false;
   name = '';
-  profileimgUrl = '';
   imagePreviewUrl: string | ArrayBuffer | null = null;
+  imagePreviewSignal = signal<string | ArrayBuffer | null>(null);
+  selectedFile: File | null = null;
   submitLoading = false;
   submitError: string | null = null;
-  file: File | null = null;
   @Output() providerAdded = new EventEmitter<Provider>();
 
   showDialog() {
@@ -50,18 +50,26 @@ export class AddProvider {
     this.submitError = null;
     const provider = new Provider();
     provider.name = this.name;
-    provider.profileimgUrl = (this.imagePreviewUrl as string) ?? (this.profileimgUrl || '');
-    if (this.imagePreviewUrl) {
-      this.imageSrv.upload(this.file!).subscribe({
-        next: (res) => {
-          console.log('הקובץ נשמר בהצלחה!', res.path);
-          provider.profileimgUrl = res.path;
-          // כאן תוכל לשלוח את res.path ל-Service אחר כדי לשמור ב-DB יחד עם שאר הנתונים
-        },
-        error: (err) => console.error('שגיאה בהעלאה', err)
-      });
-    }
     this.submitLoading = true;
+    if (this.selectedFile) {
+      this.imageSrv.upload(this.selectedFile).subscribe({
+        next: (res) => {
+          provider.profileimgUrl = res.path;
+          this.sendProviderToServer(provider);
+        },
+        error: (err) => {
+          console.error('שגיאה בהעלאה', err);
+          this.submitLoading = false;
+          this.submitError = err?.error?.message ?? err?.message ?? 'העלאת התמונה נכשלה';
+        },
+      });
+    } else {
+      provider.profileimgUrl = '';
+      this.sendProviderToServer(provider);
+    }
+  }
+
+  private sendProviderToServer(provider: Provider): void {
     this.providerSrv.addProvider(provider).subscribe({
       next: (created) => {
         this.providerAdded.emit(created);
@@ -78,25 +86,30 @@ export class AddProvider {
 
   reset() {
     this.name = '';
-    this.profileimgUrl = '';
     this.imagePreviewUrl = null;
+    this.imagePreviewSignal.set(null);
+    this.selectedFile = null;
     this.submitError = null;
   }
 
-  onFileSelected(event: { files?: File[] }) {
-    const files = event.files;
+  onFileSelected(event: { currentFiles?: File[]; files?: File[] }) {
+    const files = event.currentFiles ?? event.files;
     if (files && files.length > 0) {
-      this.file = files[0];
+      const file = files[0];
+      this.selectedFile = file;
       const reader = new FileReader();
       reader.onload = () => {
+        this.imagePreviewSignal.set(reader.result);
         this.imagePreviewUrl = reader.result;
       };
-      reader.readAsDataURL(this.file);
+      reader.readAsDataURL(file);
     }
   }
 
   removeImage(fileUpload: FileUpload) {
+    this.imagePreviewSignal.set(null);
     this.imagePreviewUrl = null;
+    this.selectedFile = null;
     fileUpload.clear();
   }
 }

@@ -2,7 +2,7 @@
   <div class="grid grid-nogutter surface-section shadow-2 border-round-xl overflow-hidden">
     <div class="col-12 md:col-6 p-0 relative">
       <img
-        [src]="showProd.imgUrl && typeof showProd.imgUrl === 'string' ? showProd.imgUrl : 'timeBank.png'"
+        [src]="showProd.imgUrl ? 'https://localhost:44304/'+ showProd.imgUrl : 'timeBank.png'"
         alt="תמונת מופע"
         class="w-full h-full object-cover"
         style="min-height: 300px; max-height: 450px"
@@ -38,7 +38,7 @@
       <div class="flex align-items-center justify-content-center md:justify-content-start mb-4">
         <span class="font-bold ml-2">מאת:</span>
         <p-avatar
-          [image]="currentProvider?.profileimgUrl || 'log.png'"
+          [image]="'https://localhost:44304/'+ currentProvider?.profileimgUrl || 'log.png'"
           shape="circle"
           size="large"
           class="ml-2"
@@ -91,7 +91,7 @@
         >
           <div class="mb-3 relative bg-gray-100 border-round" style="height: 120px">
             <img
-              [src]="item.imgUrl ? item.imgUrl : 'timeBank.png'"
+              [src]="'https://localhost:44304/'+ item.imgUrl ? item.imgUrl : 'timeBank.png'"
               class="w-full h-full object-cover border-round"
             />
           </div>

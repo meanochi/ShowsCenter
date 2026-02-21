@@ -187,16 +187,18 @@
           optionLabel="name"
           optionValue="id"
           class="w-full md:w-56"
+          appendTo="body"
+
         >
-          <ng-template #selectedItem let-selectedOption>
+          <ng-template #selectedItem let-selectedOption >
             <div class="flex items-center gap-2">
-              <img [src]="selectedOption.profileimgUrl" style="width: 18px" />
+              <img [src]="'https://localhost:44304/'+ selectedOption.profileImgUrl" style="width: 18px"/>
               <div>{{ selectedOption.name }}</div>
             </div>
           </ng-template>
           <ng-template let-provider #item>
             <div class="flex items-center gap-2">
-              <img [src]="provider.profileimgUrl" style="width: 18px" />
+              <img [src]= "'https://localhost:44304/' + provider.profileImgUrl" style="width: 18px" />
               <div>{{ provider.name }}</div>
             </div>
           </ng-template>
