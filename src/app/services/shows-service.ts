@@ -57,12 +57,7 @@ export class ShowsService {
         params = params.append('audiences', audience);
       });
     }
-    const headers = new HttpHeaders({
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    });
-
-    this.http.get<any[]>('/api/Shows', { params, headers })
+    this.http.get<any[]>('/api/Shows', { params })
     .pipe(
       map(data => data.map(item => {
         const show = new Show(item);

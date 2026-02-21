@@ -18,13 +18,13 @@ export class ImageService {
     return this.http.post(this.apiUrl, formData);
   }
   // In image-service.ts
-private baseUrl = 'https://localhost:44304';
+  private baseUrl = 'https://localhost:44304';
 
-getImageUrl(path: string | null | undefined): string | null {
-  if (!path) return null;
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  const base = this.baseUrl.replace(/\/$/, '');
-  const pathNorm = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${pathNorm}`;
-}
+  getImageUrl(path: string | null | undefined): string | null {
+    if (!path) return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const base = this.baseUrl.replace(/\/$/, '');
+    const pathNorm = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${pathNorm}`;
+  }
 }
