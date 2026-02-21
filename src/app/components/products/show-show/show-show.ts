@@ -56,7 +56,6 @@ export class ShowShow {
     ]; 
   }
   ngOnChanges(){
-    this.loadProviders()
     console.log(this.providers);
     this.showProd = this.showSrv.findShow(this.showId)? this.showSrv.findShow(this.showId)! : new Show();
     this.relatedEvents = this.showSrv.shows.filter(element => 
@@ -87,7 +86,6 @@ get endsNextDay(): boolean {
     return new Date(end).getDate() !== startDate;
 }
 get currentProvider() {
-  this.loadProviders()
     return this.providers.find(p => p.id === this.showProd.providerId);
 }
 private loadProviders() {

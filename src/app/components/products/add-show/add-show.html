@@ -1,8 +1,5 @@
 <div #container class="flex justify-center gap-4">
-  <app-add-provider
-    #addProviderRef
-    (providerAdded)="onProviderAdded($event)"
-  />
+  <app-add-provider #addProviderRef (providerAdded)="onProviderAdded($event)" />
   <p-button (click)="showDialog()" label="הוסף מופע" />
   <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem' }" class="dialog">
     <ng-template #header>
@@ -193,7 +190,7 @@
         >
           <ng-template #selectedItem let-selectedOption>
             <div class="flex items-center gap-2">
-              <img [src]="imageSrv.getImageUrl(selectedOption.profileimgUrl)" style="width: 18px" />
+              <img [src]="selectedOption.profileimgUrl" style="width: 18px" />
               <div>{{ selectedOption.name }}</div>
             </div>
           </ng-template>
@@ -243,29 +240,29 @@
     </div>
 
     <div class="mt-3 relative flex flex-column items-center">
-      @if(imagePreviewSignal()){
+      @if (imagePreviewSignal()) {
         <img
-        [src]="imagePreviewSignal()"
-        class="rounded-circle shadow-lg"
-        style="
-          width: 100px;
-          height: 100px;
-          object-fit: cover;
-          border: 3px solid var(--primary-color);
-        "
-      />
-      
-      <p-button
-        icon="pi pi-times"
-        severity="danger"
-        [rounded]="true"
-        [text]="true"
-        size="small"
-        label="מחק תמונה"
-        (onClick)="removeImage(fileUpload)"
-      >
-      </p-button>
-    }
+          [src]="imagePreviewSignal()"
+          class="rounded-circle shadow-lg"
+          style="
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+          "
+        />
+
+        <p-button
+          icon="pi pi-times"
+          severity="danger"
+          [rounded]="true"
+          [text]="true"
+          size="small"
+          label="מחק תמונה"
+          (onClick)="removeImage(fileUpload)"
+        >
+        </p-button>
+      }
     </div>
     @if (submitError) {
       <div class="p-2 mb-2 surface-100 border-round text-red-600 text-sm">
@@ -273,7 +270,13 @@
       </div>
     }
     <ng-template #footer>
-      <p-button label="Cancel" [text]="true" severity="secondary" (click)="visible = false" [disabled]="submitLoading" />
+      <p-button
+        label="Cancel"
+        [text]="true"
+        severity="secondary"
+        (click)="visible = false"
+        [disabled]="submitLoading"
+      />
       <p-button
         label="Save"
         [outlined]="true"

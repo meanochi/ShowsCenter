@@ -129,7 +129,6 @@ export class AddShow {
     return '';
   }
   ngOnChanges() {
-    this.loadProviders();
   }
   addShow() {
     this.submitError = null;
@@ -154,8 +153,8 @@ export class AddShow {
     }
     this.show.title = this.title;
     this.show.date = this.date;
-    this.show.beginTime = new Date(this.formatTime(this.beginTime));
-    this.show.endTime = new Date(this.formatTime(this.endTime));
+    this.show.beginTime = this.beginTime;
+    this.show.endTime = this.endTime;
     this.show.audience = this.audience ?? TargetAudience.ADULTS;
     this.show.sector = this.sector ?? Sector.WOMEN;
     this.show.description = this.description;

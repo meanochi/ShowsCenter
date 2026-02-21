@@ -2,7 +2,7 @@
   <div class="grid grid-nogutter surface-section shadow-2 border-round-xl overflow-hidden">
     <div class="col-12 md:col-6 p-0 relative">
       <img
-        [src]="showProd.imgUrl && typeof showProd.imgUrl === 'string' ? imageSrv.getImageUrl(showProd.imgUrl) : 'timeBank.png'"
+        [src]="showProd.imgUrl && typeof showProd.imgUrl === 'string' ? showProd.imgUrl : 'timeBank.png'"
         alt="תמונת מופע"
         class="w-full h-full object-cover"
         style="min-height: 300px; max-height: 450px"
@@ -20,7 +20,7 @@
         </div>
         <div class="text-lg text-600 mb-2">
           <i class="pi pi-clock ml-2"></i>{{ showProd.beginTime | date: 'HH:mm' }} -
-          {{ showProd.endTime | date: 'HH:mm'}}
+          {{ showProd.endTime | date: 'HH:mm' }}
         </div>
         <div class="text-700 mb-3">{{ showProd.description }}</div>
 
@@ -43,7 +43,7 @@
           size="large"
           class="ml-2"
         ></p-avatar>
-        <span class="text-lg">{{currentProvider?.name}}</span>
+        <span class="text-lg">{{ currentProvider?.name }}</span>
       </div>
 
       <div
@@ -91,7 +91,7 @@
         >
           <div class="mb-3 relative bg-gray-100 border-round" style="height: 120px">
             <img
-              [src]="item.imgUrl && typeof item.imgUrl === 'string' ? imageSrv.getImageUrl(item.imgUrl) : 'timeBank.png'"
+              [src]="item.imgUrl ? item.imgUrl : 'timeBank.png'"
               class="w-full h-full object-cover border-round"
             />
           </div>

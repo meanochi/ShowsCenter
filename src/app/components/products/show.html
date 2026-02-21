@@ -16,7 +16,7 @@
               <img
                 alt="Card"
                 class="w-full cardImg"
-                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? imageSrv.getImageUrl(p.imgUrl) : 'timeBank.png'"
+                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? p.imgUrl : 'timeBank.png'"
                 style="height: 120px; object-fit: cover"
               />
             </ng-template>
@@ -46,8 +46,7 @@
               </div>
             </ng-template>
           </p-card>
-          <div class="flex justify-center">
-          </div>
+          <div class="flex justify-center"></div>
         </div>
       </ng-template>
     </p-carousel>
@@ -80,14 +79,14 @@
       <ng-template pTemplate="grid" let-items>-->
     <div class="grid p-3">
       <!-- @for (p of items; track p.id) {  -->
-      @for (p of (shows); track p.id) {
+      @for (p of shows; track p.id) {
         <div class="col-12 md:col-6 lg:col-4 xl:col-4">
           <p-card styleClass="flex flex-column h-full">
             <ng-template #header>
               <img
                 alt="Card"
                 class="w-full cardImg"
-                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? imageSrv.getImageUrl(p.imgUrl) : 'timeBank.png'"
+                [src]="p.imgUrl ? p.imgUrl : 'timeBank.png'"
                 style="height: 200px; object-fit: cover"
               />
             </ng-template>
@@ -101,9 +100,7 @@
               </div>
             </ng-template>
             <ng-template #subtitle>
-              <div class="flex-1">
-                {{ p.beginTime }} | {{ p.date | date: 'dd.MM.yyyy' }}
-              </div>
+              <div class="flex-1">{{ p.beginTime }} | {{ p.date | date: 'dd.MM.yyyy' }}</div>
             </ng-template>
             <ng-template #content>
               <div class="col-12 grid gap-2 flex-grow-1">
