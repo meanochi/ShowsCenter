@@ -1,4 +1,3 @@
-import { min } from "rxjs/internal/operators/min";
 import { SeatMap } from "./map-model";
 
 
@@ -28,6 +27,14 @@ export const SECTION_ID_MAP: { [key: number]: Section } = {
     2: Section.RIGHT_BALCONY,
     3: Section.LEFT_BALCONY,
     4: Section.CENTER_BALCONY
+};
+
+/** Map Section enum to server section id (for POST body). */
+export const SECTION_TO_ID: { [key in Section]: number } = {
+    [Section.HALL]: 1,
+    [Section.RIGHT_BALCONY]: 2,
+    [Section.LEFT_BALCONY]: 3,
+    [Section.CENTER_BALCONY]: 4
 };
 
 export class Show {

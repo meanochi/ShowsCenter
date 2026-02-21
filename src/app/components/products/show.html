@@ -16,7 +16,7 @@
               <img
                 alt="Card"
                 class="w-full cardImg"
-                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? p.imgUrl : 'timeBank.png'"
+                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? imageSrv.getImageUrl(p.imgUrl) : 'timeBank.png'"
                 style="height: 120px; object-fit: cover"
               />
             </ng-template>
@@ -87,7 +87,7 @@
               <img
                 alt="Card"
                 class="w-full cardImg"
-                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? p.imgUrl : 'timeBank.png'"
+                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? imageSrv.getImageUrl(p.imgUrl) : 'timeBank.png'"
                 style="height: 200px; object-fit: cover"
               />
             </ng-template>

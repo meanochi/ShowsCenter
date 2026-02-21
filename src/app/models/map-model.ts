@@ -16,14 +16,15 @@ export class SeatMap{
         let c =0;
         switch (this.section) {
             case Section.HALL:
-                r=20;
-                c=30;
+                r=10;
+                c=20;
                 break;
             case Section.CENTER_BALCONY:
-                r=10;
-                c=40;
+                r=5;
+                c=20;
                 break;
-            case (Section.LEFT_BALCONY || Section.RIGHT_BALCONY):
+            case Section.LEFT_BALCONY:
+            case Section.RIGHT_BALCONY:
                 r=15;
                 c=5;
         }
@@ -36,5 +37,10 @@ export class SeatMap{
                 this.map[i][j].section = this.section;
             }
         } 
+   }
+
+   /** Number of seats in this section (for API payload). */
+   get totalSeats(): number {
+       return this.map.flat().length;
    }
 }

@@ -2,7 +2,7 @@
   <div class="grid grid-nogutter surface-section shadow-2 border-round-xl overflow-hidden">
     <div class="col-12 md:col-6 p-0 relative">
       <img
-        [src]="showProd.imgUrl || 'timeBank.png'"
+        [src]="showProd.imgUrl && typeof showProd.imgUrl === 'string' ? imageSrv.getImageUrl(showProd.imgUrl) : 'timeBank.png'"
         alt="תמונת מופע"
         class="w-full h-full object-cover"
         style="min-height: 300px; max-height: 450px"
@@ -92,7 +92,7 @@
         >
           <div class="mb-3 relative bg-gray-100 border-round" style="height: 120px">
             <img
-              [src]="item.imgUrl || 'defualt.jpg'"
+              [src]="item.imgUrl && typeof item.imgUrl === 'string' ? imageSrv.getImageUrl(item.imgUrl) : 'timeBank.png'"
               class="w-full h-full object-cover border-round"
             />
           </div>

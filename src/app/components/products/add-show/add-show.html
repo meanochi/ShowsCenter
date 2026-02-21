@@ -1,4 +1,8 @@
 <div #container class="flex justify-center gap-4">
+  <app-add-provider
+    #addProviderRef
+    (providerAdded)="onProviderAdded($event)"
+  />
   <p-button (click)="showDialog()" label="הוסף מופע" />
   <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem' }" class="dialog">
     <ng-template #header>
@@ -189,13 +193,13 @@
         >
           <ng-template #selectedItem let-selectedOption>
             <div class="flex items-center gap-2" *ngIf="selectedOption">
-              <img [src]="selectedOption.profileimgUrl" style="width: 18px" />
+              <img [src]="imageSrv.getImageUrl(selectedOption.profileimgUrl)" style="width: 18px" />
               <div>{{ selectedOption.name }}</div>
             </div>
           </ng-template>
           <ng-template let-provider #item>
             <div class="flex items-center gap-2">
-              <img [src]="provider.profileimgUrl" style="width: 18px" />
+              <img [src]="imageSrv.getImageUrl(provider.profileimgUrl)" style="width: 18px" />
               <div>{{ provider.name }}</div>
             </div>
           </ng-template>
@@ -203,7 +207,7 @@
             <i class="pi pi-user"></i>
           </ng-template>
           <ng-template #footer>
-            <div class="p-1">
+            <div class="p-1" (click)="$event.stopPropagation()">
               <p-button
                 label="הוסף חדש"
                 fluid
@@ -211,6 +215,7 @@
                 text
                 size="small"
                 icon="pi pi-plus"
+                (onClick)="openAddProvider()"
               />
             </div>
           </ng-template>
@@ -262,14 +267,20 @@
       </p-button>
     }
     </div>
+    @if (submitError) {
+      <div class="p-2 mb-2 surface-100 border-round text-red-600 text-sm">
+        {{ submitError }}
+      </div>
+    }
     <ng-template #footer>
-      <p-button label="Cancel" [text]="true" severity="secondary" (click)="visible = false" />
+      <p-button label="Cancel" [text]="true" severity="secondary" (click)="visible = false" [disabled]="submitLoading" />
       <p-button
         label="Save"
         [outlined]="true"
         severity="secondary"
-        (click)="visible = false"
         (click)="addShow()"
+        [loading]="submitLoading"
+        [disabled]="submitLoading"
       />
     </ng-template>
   </p-dialog>

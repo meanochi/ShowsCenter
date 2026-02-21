@@ -1,10 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, find } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { Category } from '../models/category-model';
 import { CategorySrvice } from './category-srvice';
 import { Sector, Show, TargetAudience,SECTION_ID_MAP, Section } from '../models/show-model';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { map } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { SeatMap } from '../models/map-model';
 import { HttpParams } from '@angular/common/http';
 
@@ -108,10 +108,54 @@ export class ShowsService {
       localStorage.setItem('shows', JSON.stringify(this.shows));
     }
   }
-  
-  addShow(show: Show) {
-    this.shows.push(show);
-    this.saveShows();
+
+  /**
+   * Build the request body for POST /api/Shows.
+   * Matches server: Title, Date (DateOnly), BeginTime/EndTime (TimeOnly), Audience, Sector, Description, ImgUrl, ProviderId, CategoryId.
+   */
+  private buildAddShowBody(show: Show): Record<string, unknown> {
+    const dateStr = show.date instanceof Date
+      ? show.date.toISOString().slice(0, 10)
+      : String(show.date).slice(0, 10);
+    const beginTimeStr = this.formatTimeForServer(show.beginTime);
+    const endTimeStr = this.formatTimeForServer(show.endTime);
+
+    return {
+      Title: show.title,
+      Date: dateStr,
+      BeginTime: beginTimeStr,
+      EndTime: endTimeStr,
+      Audience: show.audience,
+      Sector: show.sector,
+      Description: show.description ?? '',
+      ImgUrl: show.imgUrl ?? '',
+      ProviderId: show.providerId,
+      CategoryId: 401,
+    };
+  }
+
+  private formatTimeForServer(value: string | Date | undefined): string {
+    if (value == null) return '';
+    if (typeof value === 'string') return value.substring(0, 5);
+    if (value instanceof Date) {
+      const h = value.getHours().toString().padStart(2, '0');
+      const m = value.getMinutes().toString().padStart(2, '0');
+      return `${h}:${m}`;
+    }
+    return '';
+  }
+
+  /** POST new show to server, then reload shows list. Returns observable for success/error handling. */
+  addShow(show: Show): Observable<Show> {
+    const userId = localStorage.getItem('user');
+    const body = this.buildAddShowBody(show);
+    return this.http.post<Show>(`/api/Shows?userId=${userId}`, body).pipe(
+      tap(() => this.loadShows()),
+      catchError((err) => {
+        console.error('addShow failed', err);
+        throw err;
+      }),
+    );
   }
 
   findShow(id:number){
