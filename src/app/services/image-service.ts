@@ -6,7 +6,6 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ImageService {
-  private apiUrl = 'https://localhost:5001/api/images/upload'; // וודא שהפורט נכון
 
   constructor(private http: HttpClient) { }
 
@@ -15,7 +14,7 @@ export class ImageService {
     // השם 'file' חייב להיות זהה לשם הפרמטר ב-Controller ב-.NET
     formData.append('file', file, file.name);
 
-    return this.http.post(this.apiUrl, formData);
+    return this.http.post('/api/images/upload', formData);
   }
   // In image-service.ts
 private baseUrl = 'https://localhost:44304';

@@ -10,8 +10,8 @@ import { catchError, tap } from 'rxjs/operators';
 export class ProviderService {
   providers: Provider[] = [];
 
-  constructor(private http: HttpClient) {}
-
+  constructor(private http: HttpClient) {
+  }
   /**
    * Build request body for POST /api/Provider.
    * Adjust property names if your API expects different casing.

@@ -1,4 +1,4 @@
-import { Component, OnInit, DoCheck, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ShowsService } from '../../services/shows-service';
 import { Seat } from '../../models/seat-model';
 import { Show } from '../../models/show-model';
@@ -9,7 +9,7 @@ import { Show } from '../../models/show-model';
   templateUrl: './seats-map.html',
   styleUrl: './seats-map.scss',
 })
-export class SeatsMap implements OnInit, DoCheck {
+export class SeatsMap implements OnInit {
   private showSrv: ShowsService = inject(ShowsService);
 
   /** The show whose seating we render. For now – first show in list. */
@@ -17,24 +17,13 @@ export class SeatsMap implements OnInit, DoCheck {
 
   ngOnInit(): void {
     this.showSrv.shows$.subscribe((shows) => {
-      // #region agent log
-      const hadShow = !!this.show;
-      const willSet = !this.show && shows.length > 0;
-      fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5a8230'},body:JSON.stringify({sessionId:'5a8230',location:'seats-map.ts:subscribe',message:'shows$ emit',data:{hadShow,showsLength:shows.length,willSet},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-      // #endregion
       if (!this.show && shows.length) {
-        this.show = shows[0];
-        // #region agent log
-        fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5a8230'},body:JSON.stringify({sessionId:'5a8230',location:'seats-map.ts:after set show',message:'show set to first',data:{showId:this.show?.id},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
+        // Defer assignment to next turn so it doesn't run after the current change-detection check (fixes NG0100).
+        setTimeout(() => {
+          this.show = shows[0];
+        }, 0);
       }
     });
-  }
-
-  ngDoCheck(): void {
-    // #region agent log
-    fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5a8230'},body:JSON.stringify({sessionId:'5a8230',location:'seats-map.ts:ngDoCheck',message:'CD run',data:{showTruthy:!!this.show},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
   }
 
   getSeatTitle(seat: Seat, price: number | null | undefined): string {

@@ -192,14 +192,14 @@
           class="w-full md:w-56"
         >
           <ng-template #selectedItem let-selectedOption>
-            <div class="flex items-center gap-2" *ngIf="selectedOption">
+            <div class="flex items-center gap-2">
               <img [src]="imageSrv.getImageUrl(selectedOption.profileimgUrl)" style="width: 18px" />
               <div>{{ selectedOption.name }}</div>
             </div>
           </ng-template>
           <ng-template let-provider #item>
             <div class="flex items-center gap-2">
-              <img [src]="imageSrv.getImageUrl(provider.profileimgUrl)" style="width: 18px" />
+              <img [src]="provider.profileimgUrl" style="width: 18px" />
               <div>{{ provider.name }}</div>
             </div>
           </ng-template>

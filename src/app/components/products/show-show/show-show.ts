@@ -36,6 +36,7 @@ export class ShowShow {
   responsiveOptions: any[] | undefined;
   relatedEvents: Show[] = [];
   ngOnInit() {
+    this.loadProviders()
     this.responsiveOptions = [
       {
           breakpoint: '1024px',
@@ -55,9 +56,7 @@ export class ShowShow {
     ]; 
   }
   ngOnChanges(){
-    this.providerSrv.loadProviders().subscribe(data => {
-        this.currProvider = data.find(p => p.id === this.showProd.providerId);
-    });
+    this.loadProviders()
     console.log(this.providers);
     this.showProd = this.showSrv.findShow(this.showId)? this.showSrv.findShow(this.showId)! : new Show();
     this.relatedEvents = this.showSrv.shows.filter(element => 
@@ -88,7 +87,17 @@ get endsNextDay(): boolean {
     return new Date(end).getDate() !== startDate;
 }
 get currentProvider() {
-    this.providers = this.providerSrv.providers
+  this.loadProviders()
     return this.providers.find(p => p.id === this.showProd.providerId);
+}
+private loadProviders() {
+  this.providerSrv.loadProviders().subscribe({
+    next: (providers) => {
+      this.providers = providers;
+    },
+    error: (err) => {
+      console.error('Error loading providers', err);
+    },
+  });
 }
 }

@@ -165,4 +165,5 @@ export class ShowsComponent {
     });
     this.shows=filtered;
   }
+  
 }
