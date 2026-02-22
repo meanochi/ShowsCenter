@@ -75,6 +75,11 @@
         </div>
       }
     </div>
+    @if (showsLoadError) {
+      <p class="p-3 text-red-600 bg-red-50 border-round border-1 border-red-200">
+        {{ showsLoadError }}
+      </p>
+    }
     <!-- <p-dataView [value]="shows" [sortField]="sortField" [sortOrder]="sortOrder">
       <ng-template pTemplate="grid" let-items>-->
     <div class="grid p-3">

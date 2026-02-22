@@ -38,7 +38,7 @@
       <div class="flex align-items-center justify-content-center md:justify-content-start mb-4">
         <span class="font-bold ml-2">מאת:</span>
         <p-avatar
-          [image]="'https://localhost:44304/'+ currentProvider?.profileimgUrl || 'log.png'"
+          [image]="(currentProvider?.profileimgUrl ? 'https://localhost:44304/' + currentProvider?.profileimgUrl : 'log.png')"
           shape="circle"
           size="large"
           class="ml-2"
@@ -91,7 +91,7 @@
         >
           <div class="mb-3 relative bg-gray-100 border-round" style="height: 120px">
             <img
-              [src]="'https://localhost:44304/'+ item.imgUrl ? item.imgUrl : 'timeBank.png'"
+              [src]="(item.imgUrl ? 'https://localhost:44304/' + item.imgUrl : 'timeBank.png')"
               class="w-full h-full object-cover border-round"
             />
           </div>

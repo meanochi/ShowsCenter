@@ -36,6 +36,7 @@ import { Provider } from '../../../models/provider-model';
 import { ShowsService } from '../../../services/shows-service';
 import { AddProvider } from '../../providers/add-provider/add-provider';
 import { ImageService } from '../../../services/image-service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-add-show',
@@ -101,12 +102,19 @@ export class AddShow {
   checked: boolean[] = [true, false, false, false];
   imageSrv: ImageService = inject(ImageService);
   imagePreviewSignal = signal<string | ArrayBuffer | null>(null);
+  private cd = inject(ChangeDetectorRef);
 
   showDialog() {
+    // #region agent log
+    fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'add-show.ts:showDialog',message:'dialog opened',data:{visible:true,providersLength:this.providers?.length},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+    // #endregion
+    this.loadProviders(); // ensure providers are loaded when dialog opens (in case ngOnInit load was slow or failed)
     this.visible = true;
-    this.loadProviders();
   }
   ngOnInit() {
+    // #region agent log
+    fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'add-show.ts:ngOnInit',message:'calling loadProviders',data:{},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+    // #endregion
     this.loadProviders();
     this.targetAudienceOptions = Object.keys(TargetAudience)
       .filter((key) => isNaN(Number(key))) // מסנן את האינדקסים המספריים
@@ -254,14 +262,22 @@ export class AddShow {
 
   onProviderAdded(provider: Provider) {
     this.providerId = provider.id;
-    this.loadProviders();
   }
   private loadProviders() {
     this.providerSrv.loadProviders().subscribe({
       next: (providers) => {
+        // #region agent log
+        console.log('[DEBUG] providers loaded', { count: providers?.length, firstId: providers?.[0]?.id });
+        fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'add-show.ts:loadProviders.next',message:'providers loaded',data:{count:providers?.length,firstId:providers?.[0]?.id},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
         this.providers = providers;
+        this.cd.detectChanges(); // פותר את שגיאת ה-NG0100 של המפיקים
       },
       error: (err) => {
+        // #region agent log
+        console.log('[DEBUG] providers load failed', err?.message || err);
+        fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'add-show.ts:loadProviders.error',message:'providers load failed',data:{err:err?.message||String(err)},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+        // #endregion
         console.error('Error loading providers', err);
       },
     });

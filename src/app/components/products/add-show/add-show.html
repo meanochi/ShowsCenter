@@ -192,13 +192,13 @@
         >
           <ng-template #selectedItem let-selectedOption >
             <div class="flex items-center gap-2">
-              <img [src]="'https://localhost:44304/'+ selectedOption.profileImgUrl" style="width: 18px"/>
+              <img [src]="(selectedOption?.profileimgUrl ? 'https://localhost:44304/' + selectedOption.profileimgUrl : 'timeBank.png')" style="width: 18px"/>
               <div>{{ selectedOption.name }}</div>
             </div>
           </ng-template>
           <ng-template let-provider #item>
             <div class="flex items-center gap-2">
-              <img [src]= "'https://localhost:44304/' + provider.profileImgUrl" style="width: 18px" />
+              <img [src]="(provider?.profileimgUrl ? 'https://localhost:44304/' + provider.profileimgUrl : 'timeBank.png')" style="width: 18px" />
               <div>{{ provider.name }}</div>
             </div>
           </ng-template>

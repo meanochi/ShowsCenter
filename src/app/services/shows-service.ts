@@ -19,6 +19,9 @@ export class ShowsService {
   // הוסף משתנה BehaviorSubject כדי לנהל את הנתונים
   private showsSubject = new BehaviorSubject<Show[]>([]);
   shows$ = this.showsSubject.asObservable(); // זה מה שהקומפוננטה תירשם אליו
+  /** Set when loadShows fails (e.g. 404 – backend not running). Cleared on success. */
+  private showsLoadErrorSubject = new BehaviorSubject<string | null>(null);
+  showsLoadError$ = this.showsLoadErrorSubject.asObservable();
   constructor( private http: HttpClient) {
     this.loadShows();
   }
@@ -28,6 +31,10 @@ export class ShowsService {
   }
 
   private loadShows(filters: any = {}) {
+    // #region agent log
+    console.log('[DEBUG] loadShows started');
+    fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'shows-service.ts:loadShows',message:'loadShows started',data:{},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
     let params = new HttpParams();
     if (filters.description) {
       params = params.set('description', filters.description);
@@ -36,8 +43,8 @@ export class ShowsService {
     if (filters.minPrice) params = params.set('minPrice', filters.minPrice.toString());
     if (filters.maxPrice) params = params.set('maxPrice', filters.maxPrice.toString());
 
-    params = params.set('skip', filters.skip?.toString() || '0');
-    params = params.set('position', filters.position?.toString() || '10');
+    params = params.set('skip', filters.skip?.toString() || '10');
+    params = params.set('position', filters.position?.toString() || '1');
 
     if (filters.categoryId && filters.categoryId.length > 0) {
       filters.categoryId.forEach((id: number) => {
@@ -86,12 +93,25 @@ export class ShowsService {
       }))
     ).subscribe({
       next: (shows) => {
+        // #region agent log
+        console.log('[DEBUG] shows loaded', { count: shows?.length, firstId: shows?.[0]?.id });
+        fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'shows-service.ts:loadShows.next',message:'shows loaded',data:{count:shows?.length,firstId:shows?.[0]?.id},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+        // #endregion
+        this.showsLoadErrorSubject.next(null);
         this.shows = shows;
         this.showsSubject.next(shows); // עדכון כל מי שמאזין
       },
       error: (error) => {
+        // #region agent log
+        console.log('[DEBUG] shows load failed', error?.message || error);
+        fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'shows-service.ts:loadShows.error',message:'shows load failed',data:{err:error?.message||String(error)},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+        // #endregion
         console.error('Error loading shows:', error);
-        // אם יש שגיאה, עדכן עם מערך ריק כדי לא לשבור את הקומפוננטות
+        const msg = error?.status === 404
+          ? 'שרת ה-API לא זמין (404). וודא שהשרת רץ ב־https://localhost:44304'
+          : (error?.error?.message || error?.message || 'טעינת המופעים נכשלה');
+        this.showsLoadErrorSubject.next(msg);
+        // אם יש שגיאה, עדכון עם מערך ריק כדי לא לשבור את הקומפוננטות
         this.showsSubject.next([]);
       }
     });
@@ -142,7 +162,6 @@ export class ShowsService {
   }
 
   findShow(id:number){
-    this.loadShows();
     const show:Show | undefined =this.shows.find(p=>p.id===id)
     return show
   }
@@ -150,11 +169,9 @@ export class ShowsService {
     return this.categories.find(c=>c.id === id)?.name
 }
 showsFromProvider(providerId:number){
-  this.loadShows();
   return this.shows.filter(p=>p.providerId === providerId)
 }
 showsFromCategory(categoryId:number){
-  this.loadShows();
   return this.shows.filter(p=>p.categoryId === categoryId)
 }
 

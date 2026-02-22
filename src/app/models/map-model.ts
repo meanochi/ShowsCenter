@@ -6,14 +6,16 @@ export class SeatMap{
     price: number = null as unknown as number;
     map:Seat[][] =[];
     constructor(p:number, section:Section){
+        this.section = section; // חובה תמיד להגדיר את הסוג קודם כל!
+        
         if(p===0){
             this.price = null as unknown as number;
-            this.section = section
-        } else{
-        this.price = p;
+        } else {
+            this.price = p;
         }
+        
         let r=0;
-        let c =0;
+        let c=0;
         switch (this.section) {
             case Section.HALL:
                 r=10;
@@ -28,10 +30,11 @@ export class SeatMap{
                 r=15;
                 c=5;
         }
+        
         for (let i = 0; i < r; i++) {
             this.map[i] = []; 
             for (let j = 0; j < c; j++) {
-                this.map[i][j] = new Seat()
+                this.map[i][j] = new Seat();
                 this.map[i][j].row = i;
                 this.map[i][j].col = j;
                 this.map[i][j].section = this.section;

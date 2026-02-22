@@ -69,6 +69,7 @@ export class ShowsComponent {
   sortOrder: number = 1;
   sortField: string = 'title';
   upcomingShows: Show[] = [];
+  showsLoadError: string | null = null;
   private cd = inject(ChangeDetectorRef);
   imageSrv: ImageService = inject(ImageService);
   /** Called after add-show succeeds; list refreshes when service loadShows() completes (shows$). */
@@ -103,12 +104,14 @@ export class ShowsComponent {
       { label: 'פופולריות', value: '!popularity' },
     ];
     this.prepareUpcomingShows();
-    this.shows$.subscribe(() => {
-      //this.applyFilters();
-      setTimeout(() => {
-        this.applyFilters();
-        this.cd.detectChanges();
-      });
+    this.showSrv.showsLoadError$.subscribe((err) => {
+      this.showsLoadError = err;
+      this.cd.detectChanges();
+    });
+    this.shows$.subscribe((shows) => {
+      this.shows = shows; // template binds to this.shows – must update when service emits
+      this.prepareUpcomingShows();
+      this.cd.detectChanges();
     });
   }
   openShow(id: number) {

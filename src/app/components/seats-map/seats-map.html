@@ -2,13 +2,12 @@
   @if (show) {
     <div class="seats-card">
       <div class="seats-layout">
-        <!-- Left balcony -->
         <section class="section left-bal">
           <h4 class="section-title">יציע שמאל</h4>
           <div class="section-grid section-grid-skew-left">
             @for (row of show.leftBalMap.map; track $index) {
               <div class="seat-row">
-                @for (seat of row; track seat.col) {
+                @for (seat of row; track $index) {
                   <button
                     class="seat-button"
                     [class.seat-disabled]="seat.status"
@@ -23,13 +22,12 @@
           </div>
         </section>
 
-        <!-- Center balcony -->
         <section class="section center-bal">
           <h4 class="section-title">יציע מרכז</h4>
           <div class="section-grid section-grid-curve-top">
             @for (row of show.centerBalMap.map; track $index) {
               <div class="seat-row">
-                @for (seat of row; track seat.col) {
+                @for (seat of row; track $index) {
                   <button
                     class="seat-button"
                     [class.seat-disabled]="seat.status"
@@ -44,13 +42,12 @@
           </div>
         </section>
 
-        <!-- Right balcony -->
         <section class="section right-bal">
           <h4 class="section-title">יציע ימין</h4>
           <div class="section-grid section-grid-skew-right">
             @for (row of show.rightBalMap.map; track $index) {
               <div class="seat-row">
-                @for (seat of row; track seat.col) {
+                @for (seat of row; track $index) {
                   <button
                     class="seat-button"
                     [class.seat-disabled]="seat.status"
@@ -65,13 +62,12 @@
           </div>
         </section>
 
-        <!-- Main hall -->
         <section class="section hall">
           <h4 class="section-title">אולם</h4>
           <div class="section-grid section-grid-curve-bottom">
             @for (row of show.hallMap.map; track $index; let i = $index) {
               <div class="seat-row" [class.row-inner]="i < 3" [class.row-outer]="i >= 7">
-                @for (seat of row; track seat.col) {
+                @for (seat of row; track $index) {
                   <button
                     class="seat-button"
                     [class.seat-disabled]="seat.status"
