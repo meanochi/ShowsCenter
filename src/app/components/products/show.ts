@@ -41,7 +41,7 @@ import { ImageService } from '../../services/image-service';
     DatePipe,
     CommonModule,
     DataViewModule,
-    SelectModule
+    SelectModule,
   ],
   templateUrl: './show.html',
   styleUrl: './show.scss',
@@ -104,19 +104,19 @@ export class ShowsComponent {
     ];
     this.prepareUpcomingShows();
     this.shows$.subscribe(() => {
-        //this.applyFilters();
-        setTimeout(() => {
-            this.applyFilters();
-            this.cd.detectChanges(); 
-        });
+      //this.applyFilters();
+      setTimeout(() => {
+        this.applyFilters();
+        this.cd.detectChanges();
+      });
     });
   }
   openShow(id: number) {
     setTimeout(() => {
-    this.pId = id;
-    this.pTitle = this.showSrv.findShow(id)?.title || '';
-    this.visible = true;
-    console.log(this.showSrv.findShow(id));
+      this.pId = id;
+      this.pTitle = this.showSrv.findShow(id)?.title || '';
+      this.visible = true;
+      console.log(this.showSrv.findShow(id));
     });
   }
   isManager() {
@@ -144,26 +144,20 @@ export class ShowsComponent {
   }
 
   applyFilters() {
-    //this.shows = this.showSrv.shows.filter((s) => {      // 1. חיפוש טקסטואלי
-      const filtered = this.showSrv.shows.filter((s) => { 
-      const matchesSearch =
-        !this.searchTerm || s.title.toLowerCase().includes(this.searchTerm.toLowerCase());
-      // 2. קטגוריות
-      const matchesCategory =
-        this.selectedCategories.length === 0 || this.selectedCategories.includes(s.categoryId);
-      // 3. קהל יעד
-      const matchesAudience =
-        this.selectedAudiences.length === 0 || this.selectedAudiences.includes(s.audience);
-      // 4. מגזר
-      const matchesSector =
-        this.selectedSectors.length === 0 || this.selectedSectors.includes(s.sector);
-      // 5. מחיר
-      const currentPrice = s.hallMap?.price ?? 0;
-      const matchesPrice = currentPrice >= this.priceRange[0] && currentPrice <= this.priceRange[1];
-
-      return matchesSearch && matchesCategory && matchesAudience && matchesSector && matchesPrice;
-    });
-    this.shows=filtered;
+    const filterParams = {
+      description: this.searchTerm,
+      categoryId: this.selectedCategories, // מערך
+      audiences: this.selectedAudiences, // מערך
+      sectors: this.selectedSectors, // מערך
+      minPrice: this.priceRange[0],
+      maxPrice: this.priceRange[1],
+      skip: 20, // להתחלה
+      position: 1, // כמות להצגה
+    }; // קריאה לשירות עם האובייקט
+    this.showSrv.getFilteredShows(filterParams);
   }
-  
+
+  getAllShows() {
+    return this.showSrv.shows$;
+  }
 }
