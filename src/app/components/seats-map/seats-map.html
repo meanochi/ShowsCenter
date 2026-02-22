@@ -1,6 +1,12 @@
 <div class="seats-map-wrapper" dir="rtl">
   @if (show) {
     <div class="seats-card">
+      @if (cartItems.length > 0 && remainingSeconds !== null) {
+        <div class="countdown-bar">
+          <span class="countdown-label">זמן שנותר עד שחרור מושב:</span>
+          <span class="countdown-value">{{ formatCountdown(remainingSeconds) }}</span>
+        </div>
+      }
       <div class="seats-layout">
         <section class="section left-bal">
           <h4 class="section-title">יציע שמאל</h4>
@@ -10,11 +16,14 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-disabled]="seat.status"
-                    [class.seat-available]="!seat.status"
-                    [disabled]="seat.status"
+                    [class.seat-available]="getSeatState(seat) === 'available'"
+                    [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
+                    [class.seat-disabled]="getSeatState(seat) === 'unavailable'"
+                    [class.seat-pending]="isPending(seat)"
+                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat)"
                     [title]="getSeatTitle(seat, show.leftBalMap.price)"
                     type="button"
+                    (click)="onSeatClick(seat)"
                   ></button>
                 }
               </div>
@@ -30,11 +39,14 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-disabled]="seat.status"
-                    [class.seat-available]="!seat.status"
-                    [disabled]="seat.status"
+                    [class.seat-available]="getSeatState(seat) === 'available'"
+                    [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
+                    [class.seat-disabled]="getSeatState(seat) === 'unavailable'"
+                    [class.seat-pending]="isPending(seat)"
+                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat)"
                     [title]="getSeatTitle(seat, show.centerBalMap.price)"
                     type="button"
+                    (click)="onSeatClick(seat)"
                   ></button>
                 }
               </div>
@@ -50,11 +62,14 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-disabled]="seat.status"
-                    [class.seat-available]="!seat.status"
-                    [disabled]="seat.status"
+                    [class.seat-available]="getSeatState(seat) === 'available'"
+                    [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
+                    [class.seat-disabled]="getSeatState(seat) === 'unavailable'"
+                    [class.seat-pending]="isPending(seat)"
+                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat)"
                     [title]="getSeatTitle(seat, show.rightBalMap.price)"
                     type="button"
+                    (click)="onSeatClick(seat)"
                   ></button>
                 }
               </div>
@@ -70,11 +85,14 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-disabled]="seat.status"
-                    [class.seat-available]="!seat.status"
-                    [disabled]="seat.status"
+                    [class.seat-available]="getSeatState(seat) === 'available'"
+                    [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
+                    [class.seat-disabled]="getSeatState(seat) === 'unavailable'"
+                    [class.seat-pending]="isPending(seat)"
+                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat)"
                     [title]="getSeatTitle(seat, show.hallMap.price)"
                     type="button"
+                    (click)="onSeatClick(seat)"
                   ></button>
                 }
               </div>
