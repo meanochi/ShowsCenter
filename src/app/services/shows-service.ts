@@ -31,10 +31,6 @@ export class ShowsService {
   }
 
   private loadShows(filters: any = {}) {
-    // #region agent log
-    console.log('[DEBUG] loadShows started');
-    fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'shows-service.ts:loadShows',message:'loadShows started',data:{},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-    // #endregion
     let params = new HttpParams();
     if (filters.description) {
       params = params.set('description', filters.description);
@@ -93,19 +89,11 @@ export class ShowsService {
       }))
     ).subscribe({
       next: (shows) => {
-        // #region agent log
-        console.log('[DEBUG] shows loaded', { count: shows?.length, firstId: shows?.[0]?.id });
-        fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'shows-service.ts:loadShows.next',message:'shows loaded',data:{count:shows?.length,firstId:shows?.[0]?.id},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion
         this.showsLoadErrorSubject.next(null);
         this.shows = shows;
         this.showsSubject.next(shows); // עדכון כל מי שמאזין
       },
       error: (error) => {
-        // #region agent log
-        console.log('[DEBUG] shows load failed', error?.message || error);
-        fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'shows-service.ts:loadShows.error',message:'shows load failed',data:{err:error?.message||String(error)},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion
         console.error('Error loading shows:', error);
         const msg = error?.status === 404
           ? 'שרת ה-API לא זמין (404). וודא שהשרת רץ ב־https://localhost:44304'

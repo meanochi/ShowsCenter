@@ -39,11 +39,6 @@ export class SeatsMap implements OnInit {
 
   ngOnInit(): void {
     this.showSrv.shows$.subscribe((shows) => {
-      // #region agent log
-      const setShow = !this.show && shows.length > 0;
-      console.log('[DEBUG] shows$ emission', { showsLength: shows?.length, setShow, showId: setShow ? shows?.[0]?.id : null });
-      fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'seats-map.ts:ngOnInit.subscribe',message:'shows$ emission',data:{showsLength:shows?.length,setShow,showId:setShow?shows?.[0]?.id:null},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
       if (!this.show && shows.length > 0) {
         this.show = shows[0];
         this.cd.detectChanges();
