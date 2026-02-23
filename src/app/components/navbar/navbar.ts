@@ -1,33 +1,48 @@
-import { afterNextRender, Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-navbar',
+  standalone: true,
+  imports: [CommonModule, RouterModule, ButtonModule],
   templateUrl: './navbar.html',
-  styleUrls: ['./navbar.scss']
+  styleUrl: './navbar.scss'
 })
-export class NavbarComponent {
-  isLoggedIn = false;
-  username = 'User';
+export class NavbarComponent implements OnInit {
+  private router = inject(Router);
+  
+  isLoggedIn: boolean = false;
+  userName: string = 'אורח';
 
-  constructor(private router: Router) {
-    afterNextRender(() => {
-      // קוד זה לעולם לא ירוץ בשרת, לכן בטוח להשתמש ב-localStorage
-      this.checkLoginStatus();
-    });
-
+  ngOnInit() {
+    this.checkLoginStatus();
   }
 
-  checkLoginStatus(): void {
-    const userId = localStorage.getItem('user');
-    this.isLoggedIn = !!userId;
-  }
-
-  logout(): void {
-    const confirmed = confirm('Are you sure you want to log out?');
-    if (confirmed) {
-      localStorage.removeItem('user');
+  // פונקציה שבודקת האם המשתמש מחובר
+  checkLoginStatus() {
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      this.isLoggedIn = true;
+      // אם שמרת גם את שם המשתמש בלוקל סטורג', אפשר לשלוף אותו כאן. אחרת נציג משתמש:
+      this.userName = localStorage.getItem('userName') || 'משתמש'; 
+    } else {
       this.isLoggedIn = false;
+    }
+  }
+
+  // פונקציית התנתקות
+  logout() {
+    if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
+      // מחיקת הנתונים מהלוקל סטורג'
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userName');
+      
+      // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
+      this.checkLoginStatus();
+      
+      // ניתוב חזרה לדף הבית
       this.router.navigate(['/']);
     }
   }
