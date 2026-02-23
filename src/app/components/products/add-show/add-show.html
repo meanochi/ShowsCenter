@@ -1,5 +1,9 @@
 <div #container class="flex justify-center gap-4">
   <app-add-provider #addProviderRef (providerAdded)="onProviderAdded($event)" />
+  <app-add-category #addCategoryRef (categoryAdded)="onCategoryAdded($event)" />
+
+  <app-add-category #addCategoryRef (categoryAdded)="onCategoryAdded($event)" />
+
   <p-button (click)="showDialog()" label="הוסף מופע" />
   <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem' }" class="dialog">
     <ng-template #header>
@@ -20,18 +24,42 @@
         <label for="title" class="w-24">שם המופע</label>
       </p-floatlabel>
     </div>
-    <div class="flex items-center gap-4 mb-2" style="max-width: 31ch">
-      <p-floatlabel class="w-full md:w-56" variant="on">
+<div class="card flex justify-center">
+      <p-floatlabel class="md:w-56" variant="on" style="min-width: 31ch">
         <p-select
-          [(ngModel)]="categoryId"
-          inputId="on_label"
-          autocomplete="off"
           [options]="categories"
-          optionValue="id"
+          [(ngModel)]="categoryId"
           optionLabel="name"
-          class="w-full"
-        />
-        <label for="on_label">קטגוריה</label>
+          optionValue="id"
+          inputId="on_label2"
+          class="w-full md:w-56"
+          appendTo="body"
+        >
+          <ng-template let-category #item>
+            <div class="flex items-center gap-2">
+              <div>{{ category.name }}</div>
+            </div>
+          </ng-template>
+          
+          <ng-template #dropdownicon>
+            <i class="pi pi-plus"></i>
+          </ng-template>
+          
+          <ng-template #footer>
+            <div class="p-1" (click)="$event.stopPropagation()">
+              <p-button
+                label="הוסף חדש"
+                fluid
+                severity="secondary"
+                text
+                size="small"
+                icon="pi pi-plus"
+                (onClick)="openAddCategory()"
+              />
+            </div>
+          </ng-template>
+        </p-select>
+        <label for="on_label2">קטגוריה</label>
       </p-floatlabel>
     </div>
     <div class="flex items-center gap-4 mb-2">
@@ -188,17 +216,30 @@
           optionValue="id"
           class="w-full md:w-56"
           appendTo="body"
-
         >
-          <ng-template #selectedItem let-selectedOption >
+          <ng-template #selectedItem let-selectedOption>
             <div class="flex items-center gap-2">
-              <img [src]="(selectedOption?.profileimgUrl ? 'https://localhost:44304/' + selectedOption.profileimgUrl : 'timeBank.png')" style="width: 18px"/>
+              <img
+                [src]="
+                  selectedOption?.profileImgUrl
+                    ? 'https://localhost:44304/' + selectedOption.profileImgUrl
+                    : 'timeBank.png'
+                "
+                style="width: 18px"
+              />
               <div>{{ selectedOption.name }}</div>
             </div>
           </ng-template>
           <ng-template let-provider #item>
             <div class="flex items-center gap-2">
-              <img [src]="(provider?.profileimgUrl ? 'https://localhost:44304/' + provider.profileimgUrl : 'timeBank.png')" style="width: 18px" />
+              <img
+                [src]="
+                  provider?.profileImgUrl
+                    ? 'https://localhost:44304/' + provider.profileImgUrl
+                    : 'timeBank.png'
+                "
+                style="width: 18px"
+              />
               <div>{{ provider.name }}</div>
             </div>
           </ng-template>

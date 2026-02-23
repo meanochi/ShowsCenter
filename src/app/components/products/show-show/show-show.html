@@ -12,7 +12,8 @@
     <div class="col-12 md:col-6 p-4 flex flex-column justify-content-between">
       <div class="text-center md:text-right mb-4">
         <h2 class="text-xl font-semi-bold text-700 mb-0">
-          {{ categories[showProd?.categoryId]?.name }}
+          {{ showProd.categoryName}}
+          {{ categories[showProd.categoryId]?.name }}
         </h2>
         <h1 class="text-4xl font-bold text-900 mb-2 mt-1">{{ showProd.title }}</h1>
         <div class="text-xl font-bold text-700 mb-1">
@@ -38,12 +39,12 @@
       <div class="flex align-items-center justify-content-center md:justify-content-start mb-4">
         <span class="font-bold ml-2">מאת:</span>
         <p-avatar
-          [image]="(currentProvider?.profileimgUrl ? 'https://localhost:44304/' + currentProvider?.profileimgUrl : 'log.png')"
+          [image]="(showProd.providerProfileImgUrl ? 'https://localhost:44304/' + showProd.providerProfileImgUrl : 'log.png')"
           shape="circle"
           size="large"
           class="ml-2"
         ></p-avatar>
-        <span class="text-lg">{{ currentProvider?.name }}</span>
+        <span class="text-lg">{{ showProd.providerName }}</span>
       </div>
 
       <div

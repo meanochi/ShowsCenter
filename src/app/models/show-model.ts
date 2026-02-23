@@ -50,7 +50,7 @@ export class Show {
     providerId: number =0;
     providerName:string='';
     providerProfileImgUrl:string=''
-    categoryId: number =0;
+    categoryId: number= 301;
     categoryName: string='';
     hallMap:SeatMap = new SeatMap(0, Section.HALL);
     leftBalMap:SeatMap =new SeatMap(0, Section.LEFT_BALCONY);

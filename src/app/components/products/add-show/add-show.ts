@@ -37,6 +37,7 @@ import { ShowsService } from '../../../services/shows-service';
 import { AddProvider } from '../../providers/add-provider/add-provider';
 import { ImageService } from '../../../services/image-service';
 import { ChangeDetectorRef } from '@angular/core';
+import { AddCategory } from '../../categories/add-category/add-category';
 
 @Component({
   selector: 'app-add-show',
@@ -57,6 +58,7 @@ import { ChangeDetectorRef } from '@angular/core';
     TextareaModule,
     DatePickerModule,
     AddProvider,
+    AddCategory,
   ],
   templateUrl: './add-show.html',
   styleUrl: './add-show.scss',
@@ -72,7 +74,7 @@ export class AddShow {
     }));
   show: Show = new Show();
   categorySrv: CategorySrvice = inject(CategorySrvice);
-  categories: Category[] = this.categorySrv.categories;
+  categories: Category[] = [];
   providerSrv: ProviderService = inject(ProviderService);
   providers: Provider[] = [];
   showsSrv: ShowsService = inject(ShowsService);
@@ -88,7 +90,7 @@ export class AddShow {
   description: string = '';
   imgUrl: string | null = null;
   providerId: number = 0;
-  categoryId: number = null as unknown as number;
+  categoryId: number =301;
   hallMap: SeatMap = new SeatMap(0, Section.HALL);
   leftBalMap: SeatMap = new SeatMap(0, Section.LEFT_BALCONY);
   rightBalMap: SeatMap = new SeatMap(0, Section.RIGHT_BALCONY);
@@ -105,16 +107,12 @@ export class AddShow {
   private cd = inject(ChangeDetectorRef);
 
   showDialog() {
-    // #region agent log
-    fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'add-show.ts:showDialog',message:'dialog opened',data:{visible:true,providersLength:this.providers?.length},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
+    this.loadCategories();
     this.loadProviders(); // ensure providers are loaded when dialog opens (in case ngOnInit load was slow or failed)
     this.visible = true;
   }
   ngOnInit() {
-    // #region agent log
-    fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'add-show.ts:ngOnInit',message:'calling loadProviders',data:{},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
+    this.loadCategories();
     this.loadProviders();
     this.targetAudienceOptions = Object.keys(TargetAudience)
       .filter((key) => isNaN(Number(key))) // מסנן את האינדקסים המספריים
@@ -136,8 +134,7 @@ export class AddShow {
     }
     return '';
   }
-  ngOnChanges() {
-  }
+  ngOnChanges() {}
   addShow() {
     this.submitError = null;
     this.show.minPrice = this.hallMap.price ?? 0;
@@ -216,8 +213,8 @@ export class AddShow {
     this.imgUrl = null;
     this.selectedFile = null;
     this.imagePreviewUrl = null;
-    this.providerId = 0;
-    this.categoryId = 0;
+    this.providerId = null as unknown as number;
+    this.categoryId = 301;
     this.hallMap = new SeatMap(0, Section.HALL);
     this.leftBalMap = new SeatMap(0, Section.LEFT_BALCONY);
     this.rightBalMap = new SeatMap(0, Section.RIGHT_BALCONY);
@@ -255,30 +252,49 @@ export class AddShow {
     }));
 
   @ViewChild('addProviderRef') addProviderRef!: AddProvider;
+  @ViewChild('addCategoryRef') addCategoryRef!: AddCategory;
 
   openAddProvider() {
     this.addProviderRef?.showDialog();
   }
-
-  onProviderAdded(provider: Provider) {
-    this.providerId = provider.id;
+  openAddCategory() {
+    this.addCategoryRef?.showDialog();
   }
-  private loadProviders() {
+  onProviderAdded(provider: Provider) {
+    // אותו תיקון גם עבור מפיקים
+    this.loadProviders(provider.id);
+  }
+  onCategoryAdded(category: Category) {
+    // מעבירים את ה-ID לפונקציית הטעינה כדי שיעודכן בסיום
+    this.loadCategories(category.id);
+  }
+  private loadProviders(selectedId?: number) {
     this.providerSrv.loadProviders().subscribe({
       next: (providers) => {
-        // #region agent log
-        console.log('[DEBUG] providers loaded', { count: providers?.length, firstId: providers?.[0]?.id });
-        fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'add-show.ts:loadProviders.next',message:'providers loaded',data:{count:providers?.length,firstId:providers?.[0]?.id},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
         this.providers = providers;
-        this.cd.detectChanges(); // פותר את שגיאת ה-NG0100 של המפיקים
+        if (selectedId) {
+          this.providerId = selectedId;
+        }
+        this.cd.detectChanges(); 
       },
       error: (err) => {
-        // #region agent log
-        console.log('[DEBUG] providers load failed', err?.message || err);
-        fetch('http://127.0.0.1:7869/ingest/71f6d3c7-aea8-4b94-a2c3-1c7962199f55',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb2b0'},body:JSON.stringify({sessionId:'9bb2b0',location:'add-show.ts:loadProviders.error',message:'providers load failed',data:{err:err?.message||String(err)},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
-        // #endregion
         console.error('Error loading providers', err);
+      },
+    });
+  }
+  private loadCategories(selectedId?: number) {
+    this.categorySrv.loadCategoriers().subscribe({
+      next: (categories) => {
+        this.categories = categories;
+        console.log('Categories from server:', categories);
+        // עדכון הערך הנבחר מתבצע רק אחרי שהרשימה מכילה את הקטגוריה החדשה
+        if (selectedId) {
+          this.categoryId = selectedId;
+        }
+        this.cd.detectChanges(); 
+      },
+      error: (err) => {
+        console.error('Error loading categories', err);
       },
     });
   }
