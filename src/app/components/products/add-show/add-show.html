@@ -2,6 +2,8 @@
   <app-add-provider #addProviderRef (providerAdded)="onProviderAdded($event)" />
   <app-add-category #addCategoryRef (categoryAdded)="onCategoryAdded($event)" />
 
+  <app-add-category #addCategoryRef (categoryAdded)="onCategoryAdded($event)" />
+
   <p-button (click)="showDialog()" label="הוסף מופע" />
   <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem' }" class="dialog">
     <ng-template #header>
@@ -22,31 +24,27 @@
         <label for="title" class="w-24">שם המופע</label>
       </p-floatlabel>
     </div>
-    <div class="card flex justify-center">
+<div class="card flex justify-center">
       <p-floatlabel class="md:w-56" variant="on" style="min-width: 31ch">
         <p-select
           [options]="categories"
           [(ngModel)]="categoryId"
           optionLabel="name"
           optionValue="id"
+          inputId="on_label2"
           class="w-full md:w-56"
           appendTo="body"
-          [placeholder]="'בחר קטגוריה'"
-          [showClear]="true"
         >
-          <ng-template #selectedItem let-selectedOption>
-            <div class="flex items-center gap-2">
-              <div>{{ selectedOption?.name || 'בחר קטגוריה' }}</div>
-            </div>
-          </ng-template>
           <ng-template let-category #item>
             <div class="flex items-center gap-2">
               <div>{{ category.name }}</div>
             </div>
           </ng-template>
+          
           <ng-template #dropdownicon>
             <i class="pi pi-plus"></i>
           </ng-template>
+          
           <ng-template #footer>
             <div class="p-1" (click)="$event.stopPropagation()">
               <p-button

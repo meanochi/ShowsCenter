@@ -261,30 +261,37 @@ export class AddShow {
     this.addCategoryRef?.showDialog();
   }
   onProviderAdded(provider: Provider) {
-    this.loadProviders();
-    this.providerId = provider.id;
+    // אותו תיקון גם עבור מפיקים
+    this.loadProviders(provider.id);
   }
   onCategoryAdded(category: Category) {
-    this.loadCategories();
-    this.categoryId = category.id;
-    this.cd.detectChanges(); // Force UI update
+    // מעבירים את ה-ID לפונקציית הטעינה כדי שיעודכן בסיום
+    this.loadCategories(category.id);
   }
-  private loadProviders() {
+  private loadProviders(selectedId?: number) {
     this.providerSrv.loadProviders().subscribe({
       next: (providers) => {
         this.providers = providers;
-        this.cd.detectChanges(); // פותר את שגיאת ה-NG0100 של המפיקים
+        if (selectedId) {
+          this.providerId = selectedId;
+        }
+        this.cd.detectChanges(); 
       },
       error: (err) => {
         console.error('Error loading providers', err);
       },
     });
   }
-  private loadCategories() {
+  private loadCategories(selectedId?: number) {
     this.categorySrv.loadCategoriers().subscribe({
       next: (categories) => {
         this.categories = categories;
-        this.cd.detectChanges(); // פותר את שגיאת ה-NG0100 של המפיקים
+        console.log('Categories from server:', categories);
+        // עדכון הערך הנבחר מתבצע רק אחרי שהרשימה מכילה את הקטגוריה החדשה
+        if (selectedId) {
+          this.categoryId = selectedId;
+        }
+        this.cd.detectChanges(); 
       },
       error: (err) => {
         console.error('Error loading categories', err);

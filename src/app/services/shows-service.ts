@@ -43,7 +43,7 @@ export class ShowsService {
     if (filters.minPrice) params = params.set('minPrice', filters.minPrice.toString());
     if (filters.maxPrice) params = params.set('maxPrice', filters.maxPrice.toString());
 
-    params = params.set('skip', filters.skip?.toString() || '10');
+    params = params.set('skip', filters.skip?.toString() || '20');
     params = params.set('position', filters.position?.toString() || '1');
 
     if (filters.categoryId && filters.categoryId.length > 0) {
@@ -133,7 +133,7 @@ export class ShowsService {
       Description: show.description ?? '',
       ImgUrl: show.imgUrl ?? '',
       ProviderId: show.providerId,
-      CategoryId: 401,
+      CategoryId: show.categoryId,
     };
   }
 
