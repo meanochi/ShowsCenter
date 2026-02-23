@@ -13,7 +13,7 @@ import { SeatMap } from '../models/map-model';
 
 export class ShowsService {
   shows: Show[] = [];
-  categories: Category[] = inject(CategorySrvice).categories;
+  categories: Category[] = [];
   audiences:TargetAudience[]=Object.values(TargetAudience)
   sectors:Sector[]=Object.values(Sector)
   // הוסף משתנה BehaviorSubject כדי לנהל את הנתונים
@@ -22,8 +22,13 @@ export class ShowsService {
   /** Set when loadShows fails (e.g. 404 – backend not running). Cleared on success. */
   private showsLoadErrorSubject = new BehaviorSubject<string | null>(null);
   showsLoadError$ = this.showsLoadErrorSubject.asObservable();
-  constructor( private http: HttpClient) {
+  constructor(private http: HttpClient, private categorySrv: CategorySrvice) {
     this.loadShows();
+    
+    // הזרקת הנתונים מה-Service לתוך המשתנה המקומי
+    this.categorySrv.categories$.subscribe(data => {
+      this.categories = data;
+    });
   }
 
   public getFilteredShows(filters: any) {

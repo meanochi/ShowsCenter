@@ -49,6 +49,7 @@ import { ImageService } from '../../services/image-service';
 export class ShowsComponent {
   readonly TargetAudience = TargetAudience;
   readonly Sector = Sector;
+  private categorySrv = inject(CategorySrvice);
   showSrv: ShowsService = inject(ShowsService);
   shows$: Observable<Show[]> = this.showSrv.shows$;
   shows: Show[] = this.showSrv.shows;
@@ -56,7 +57,7 @@ export class ShowsComponent {
   visible: boolean = false;
   pId: number = 0;
   pTitle: string = '';
-  categories: Category[] = inject(CategorySrvice).categories;
+  categories: Category[] = [];
   audiences: TargetAudience[] = this.showSrv.audiences;
   sectors: Sector[] = this.showSrv.sectors;
   selectedCategories: any[] = [];
@@ -112,6 +113,10 @@ export class ShowsComponent {
       this.shows = shows; // template binds to this.shows – must update when service emits
       this.prepareUpcomingShows();
       this.cd.detectChanges();
+    });
+
+    this.categorySrv.categories$.subscribe(data => {
+      this.categories = data;
     });
   }
   openShow(id: number) {
