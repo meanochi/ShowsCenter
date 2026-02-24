@@ -125,8 +125,7 @@ export class Login {
     });
   }
   showDialog() {
-    this.visible.emit(true);
+    
   }
-  @Output()
-  visible: EventEmitter<boolean> = new EventEmitter<boolean>();
+
 }

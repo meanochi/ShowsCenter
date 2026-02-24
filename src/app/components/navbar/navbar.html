@@ -1,4 +1,4 @@
-<nav class="flex justify-between items-center p-3 mb-4 shadow-sm" style="background-color: var(--surface-card); border-bottom: 1px solid var(--surface-border);">
+<nav class="w-full flex justify-between items-center p-3 mb-4 shadow-sm" style="background-color: var(--surface-card); border-bottom: 1px solid var(--surface-border);">
   
   <div class="flex items-center gap-3 cursor-pointer" routerLink="/">
     <img src="log.png" alt="Shows Center Logo" style="width: 45px; height: 45px; object-fit: contain;">
@@ -15,7 +15,7 @@
   <div class="flex items-center gap-3">
     @if (isLoggedIn) {
       <div class="flex items-center gap-3">
-        <span class="font-medium text-lg">שלום, {{ userName }}</span>
+        <span class="font-medium text-lg">שלום, {{ authService.userName() }}</span>
         <p-button 
           label="התנתק" 
           icon="pi pi-sign-out" 
