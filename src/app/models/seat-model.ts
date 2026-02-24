@@ -7,4 +7,8 @@ export class Seat {
   row: number = 0;
   col: number = 0;
   section: Section = Section.HALL;
+  /** Set when adding to cart: show id for display and for backend orderedSeats. */
+  showId?: number;
+  /** Price for this section (for cart display and total). */
+  price?: number;
 }

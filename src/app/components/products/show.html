@@ -37,7 +37,7 @@
               <div class="flex gap-2 buttons">
                 <p-button icon="pi pi-ellipsis-h" styleClass="h-full" (click)="openShow(p.id)" />
                 <p-button
-                  label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
+                  label="לבחירת מקום החל מ-{{ p.cheapestPrice }}₪"
                   class="flex-grow-1"
                   styleClass="h-full p-1"
                   (click)="toChoosePlace(p.id)"
@@ -123,7 +123,7 @@
                   <p-button icon="pi pi-pencil" class="w-full" styleClass="w-full" />
                 } @else {
                   <p-button
-                    label="לבחירת מקום החל מ-{{ p.minPrice }}₪"
+                    label="לבחירת מקום החל מ-{{ p.cheapestPrice }}₪"
                     class="flex-grow-1"
                     styleClass="h-full p-2"
                     (click)="toChoosePlace(p.id)"
@@ -139,6 +139,11 @@
     </p-dataView> -->
   </div>
   <div class="col-4 md:col-3 lg:col-3 xl:col-2 pl-3 pr-0 gap-2 flex flex-column">
+    <p-card styleClass="mb-2 shadow-1">
+      <ng-template #content>
+        <p-button label="נקה סינון" icon="pi pi-filter-slash" styleClass="w-full p-button-outlined" (click)="clearFilters()"></p-button>
+      </ng-template>
+    </p-card>
     <!-- sorting -->
     <p-card header="מיון מופעים" styleClass="mb-2 shadow-1">
       <div class="p-inputgroup">
@@ -161,7 +166,7 @@
           [range]="true"
           [min]="0"
           [max]="1000"
-          (onChange)="applyFilters()"
+          (onChange)="onPriceRangeChange($event)"
           styleClass="w-full"
         >
         </p-slider>
@@ -232,6 +237,15 @@
 
 <div class="flex justify-center">
   <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
-    <app-show-show [showId]="pId"></app-show-show>
+    <app-show-show [showId]="pId" (openSeatsMap)="openSeatsDrawer($event)"></app-show-show>
+  </p-drawer>
+  <p-drawer
+    [header]="'בחירת מקום – ' + seatsDrawerTitle"
+    [(visible)]="seatsDrawerVisible"
+    [fullScreen]="true"
+  >
+    @if (seatsDrawerShowId) {
+      <app-seats-map [showId]="seatsDrawerShowId"></app-seats-map>
+    }
   </p-drawer>
 </div>

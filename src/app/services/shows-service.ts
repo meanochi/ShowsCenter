@@ -22,8 +22,22 @@ export class ShowsService {
   /** Set when loadShows fails (e.g. 404 – backend not running). Cleared on success. */
   private showsLoadErrorSubject = new BehaviorSubject<string | null>(null);
   showsLoadError$ = this.showsLoadErrorSubject.asObservable();
-  constructor(private http: HttpClient, private categorySrv: CategorySrvice) {
-    this.loadShows();
+  constructor(private http: HttpClient, private categorySrv: CategorySrvice) {}
+
+  /** Ensure we always send an array of numbers for category filter (handles object/value quirks). */
+  private normalizeCategoryIds(categoryId: unknown): number[] {
+    if (categoryId == null) return [];
+    if (Array.isArray(categoryId)) {
+      return categoryId
+        .map((item) => (typeof item === 'number' ? item : (item as { id?: number })?.id))
+        .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+    }
+    const single = typeof categoryId === 'number' ? categoryId : Number(categoryId);
+    return !isNaN(single) ? [single] : [];
+  }
+
+  private _loadShowsInit() {
+    // this.loadShows();
     
     // הזרקת הנתונים מה-Service לתוך המשתנה המקומי
     this.categorySrv.categories$.subscribe(data => {
@@ -41,15 +55,16 @@ export class ShowsService {
       params = params.set('description', filters.description);
     }
 
-    if (filters.minPrice) params = params.set('minPrice', filters.minPrice.toString());
-    if (filters.maxPrice) params = params.set('maxPrice', filters.maxPrice.toString());
+    if (typeof filters.minPrice === 'number') params = params.set('minPrice', filters.minPrice.toString());
+    if (typeof filters.maxPrice === 'number') params = params.set('maxPrice', filters.maxPrice.toString());
 
-    params = params.set('skip', filters.skip?.toString() || '20');
-    params = params.set('position', filters.position?.toString() || '1');
+    params = params.set('skip', filters.skip?.toString() ?? '1000');
+    params = params.set('position', filters.position?.toString() ?? '1');
 
-    if (filters.categoryId && filters.categoryId.length > 0) {
-      filters.categoryId.forEach((id: number) => {
-        params = params.append('categoryId', id.toString());
+    const categoryIds = this.normalizeCategoryIds(filters.categoryId);
+    if (categoryIds.length > 0) {
+      categoryIds.forEach((id) => {
+        params = params.append('categoryIdS', id.toString());
       });
     }
 
@@ -78,9 +93,8 @@ export class ShowsService {
           const sectionType = SECTION_ID_MAP[sec.id]; 
           
           if (sectionType) {
-            const mapObj = new SeatMap(sec.totalSeats, sectionType);
-            
-            // השמה למשתנה הנכון במודל לפי ה-Enum שחזר מהמפה
+            const price = typeof sec.price === 'number' ? sec.price : 0;
+            const mapObj = new SeatMap(price, sectionType);
             switch (sectionType) {
               case Section.HALL: show.hallMap = mapObj; break;
               case Section.RIGHT_BALCONY: show.rightBalMap = mapObj; break;
@@ -89,6 +103,15 @@ export class ShowsService {
             }
           }
         });
+        const sectionPrices = [
+          show.hallMap?.price,
+          show.leftBalMap?.price,
+          show.rightBalMap?.price,
+          show.centerBalMap?.price,
+        ].filter((p): p is number => typeof p === 'number' && p > 0);
+        if (sectionPrices.length > 0 && (show.minPrice == null || show.minPrice === 0)) {
+          show.minPrice = Math.min(...sectionPrices);
+        }
       }
         return show;
       }))

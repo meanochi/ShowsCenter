@@ -1,11 +1,13 @@
 import { Component, EventEmitter, inject, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { User } from '../../../models/user-model';
 import { UsersService } from '../../../services/users-service';
+import { AuthMessageService } from '../../../services/auth-message-service';
 import { FloatLabel } from 'primeng/floatlabel';
 import { Dialog } from 'primeng/dialog';
 import { PasswordModule } from 'primeng/password';
@@ -105,6 +107,8 @@ import { PasswordModule } from 'primeng/password';
 export class Login {
   checked1 = signal<boolean>(true);
   userSrv: UsersService = inject(UsersService);
+  private router = inject(Router);
+  private authMessage = inject(AuthMessageService);
   email: string = null as unknown as string;
   pass: string = '';
   newUser: any;
@@ -112,14 +116,15 @@ export class Login {
   login() {
     this.userSrv.login(this.email, this.pass).subscribe({
       next: (response: any) => {
-        // כאן נמצא המידע שחזר מהשרת
-        console.log('הנתונים התקבלו:', response);
-        // שמירת המידע למשתנה מקומי
         this.user.id = response.id;
         localStorage.setItem('user', JSON.stringify(this.user.id));
+        if (response.name) {
+          localStorage.setItem('userName', response.name);
+        }
+        this.authMessage.showSuccess('התחברת בהצלחה!');
+        this.router.navigate(['/shows']);
       },
       error: (err) => {
-        // טיפול במקרה של שגיאה (כמו שגיאה 500 שראינו קודם)
         console.error('קרתה שגיאה:', err);
       },
     });

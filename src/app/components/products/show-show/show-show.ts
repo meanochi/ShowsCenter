@@ -39,6 +39,9 @@ export class ShowShow {
   @Input()
   showId: number = 0;
 
+  @Output()
+  openSeatsMap = new EventEmitter<number>();
+
   showProd: Show = new Show();
   userName: string = 'Michal';
   responsiveOptions: any[] | undefined;
@@ -102,6 +105,7 @@ export class ShowShow {
   get currentProvider() {
     return this.providers.find((p) => p.id === this.showProd.providerId);
   }
+
   private loadProviders() {
     this.providerSrv.loadProviders().subscribe({
       next: (providers) => {

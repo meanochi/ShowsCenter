@@ -1,11 +1,13 @@
 import { Component, inject, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { User } from '../../../models/user-model';
 import { UsersService } from '../../../services/users-service';
+import { AuthMessageService } from '../../../services/auth-message-service';
 import { FloatLabel } from 'primeng/floatlabel';
 import { Dialog } from 'primeng/dialog';
 import { Inplace } from 'primeng/inplace';
@@ -127,12 +129,19 @@ export class Signup {
   userSrv: UsersService = inject(UsersService);
   newUser: User = new User();
   user: User = new User();
+  private router = inject(Router);
+  private authMessage = inject(AuthMessageService);
+
   signup() {
     this.userSrv.signup(this.newUser).subscribe({
       next: (response: any) => {
-        console.log('הנתונים התקבלו:', response);
         this.user.id = response.id;
         localStorage.setItem('user', JSON.stringify(this.user.id));
+        if (response.name) {
+          localStorage.setItem('userName', response.name);
+        }
+        this.authMessage.showSuccess('נרשמת בהצלחה!');
+        this.router.navigate(['/shows']);
       },
       error: (err) => {
         console.error('קרתה שגיאה:', err);

@@ -1,6 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 
 @Component({
@@ -10,23 +12,35 @@ import { ButtonModule } from 'primeng/button';
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
-  
+  private navSubscription?: Subscription;
+
   isLoggedIn: boolean = false;
   userName: string = 'אורח';
 
   ngOnInit() {
     this.checkLoginStatus();
+    this.navSubscription = this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => this.checkLoginStatus());
   }
 
-  // פונקציה שבודקת האם המשתמש מחובר
+  ngOnDestroy() {
+    this.navSubscription?.unsubscribe();
+  }
+
+  // פונקציה שבודקת האם המשתמש מחובר (login שומר ב-'user')
   checkLoginStatus() {
-    const userId = localStorage.getItem('userId');
-    if (userId) {
-      this.isLoggedIn = true;
-      // אם שמרת גם את שם המשתמש בלוקל סטורג', אפשר לשלוף אותו כאן. אחרת נציג משתמש:
-      this.userName = localStorage.getItem('userName') || 'משתמש'; 
+    const raw = localStorage.getItem('user');
+    if (raw) {
+      try {
+        JSON.parse(raw);
+        this.isLoggedIn = true;
+        this.userName = localStorage.getItem('userName') || 'משתמש';
+      } catch {
+        this.isLoggedIn = false;
+      }
     } else {
       this.isLoggedIn = false;
     }
@@ -35,8 +49,7 @@ export class NavbarComponent implements OnInit {
   // פונקציית התנתקות
   logout() {
     if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-      // מחיקת הנתונים מהלוקל סטורג'
-      localStorage.removeItem('userId');
+      localStorage.removeItem('user');
       localStorage.removeItem('userName');
       
       // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
