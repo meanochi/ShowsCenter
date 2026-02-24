@@ -1,30 +1,53 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { interval } from 'rxjs';
 import { map, startWith, withLatestFrom } from 'rxjs/operators';
 import { ShowsService } from '../../services/shows-service';
 import { CartService } from '../../services/cart-service';
+import { SeatsService } from '../../services/seats-service';
 import { Seat } from '../../models/seat-model';
-import { Show } from '../../models/show-model';
+import { Show, Section } from '../../models/show-model';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
 
 export type SeatState = 'available' | 'in-cart' | 'unavailable';
 
+/** sectionId from DB: 1=HALL, 2=RIGHT_BALCONY, 3=LEFT_BALCONY, 4=CENTER_BALCONY */
+const SECTION_ID_TO_MAP = {
+  1: (s: Show) => s.hallMap.map,
+  2: (s: Show) => s.rightBalMap.map,
+  3: (s: Show) => s.leftBalMap.map,
+  4: (s: Show) => s.centerBalMap.map,
+} as const;
+
 @Component({
   selector: 'app-seats-map',
-  imports: [],
+  imports: [DialogModule, ButtonModule],
   templateUrl: './seats-map.html',
   styleUrl: './seats-map.scss',
 })
-export class SeatsMap implements OnInit {
+export class SeatsMap implements OnInit, OnChanges {
   private showSrv: ShowsService = inject(ShowsService);
   private cartSrv: CartService = inject(CartService);
+  private seatsSrv: SeatsService = inject(SeatsService);
   private cd: ChangeDetectorRef = inject(ChangeDetectorRef);
 
-  /** The show whose seating we render. For now – first show in list. */
+  /** When set, show the map for this show; otherwise use first show in list. */
+  @Input() showId: number | null = null;
+
+  /** The show whose seating we render. */
   show: Show | null = null;
   /** Current cart items (subscribed in ngOnInit). */
   cartItems: Seat[] = [];
   /** Seat keys for which a lock request is in progress. */
   pendingKeys = new Set<string>();
+
+  /** Seat confirmation dialog: selected seat and its section price (only when dialog open). */
+  seatDialogVisible = false;
+  selectedSeat: Seat | null = null;
+  selectedSeatPrice: number | null = null;
+  /** Shown when Save failed because seat was taken by another user. */
+  seatConflictMessage: string | null = null;
+  savingSeat = false;
 
   /** Remaining seconds until the soonest-expiring seat; null when cart is empty. */
   remainingSeconds$ = interval(1000).pipe(
@@ -37,12 +60,50 @@ export class SeatsMap implements OnInit {
   /** Current remaining seconds (set by subscription) so template can show 0. */
   remainingSeconds: number | null = null;
 
-  ngOnInit(): void {
-    this.showSrv.shows$.subscribe((shows) => {
-      if (!this.show && shows.length > 0) {
-        this.show = shows[0];
-        this.cd.detectChanges();
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['showId']) {
+      this.updateShowFromInput();
+    }
+  }
+
+  private updateShowFromInput(): void {
+    if (this.showId != null && this.showId > 0) {
+      const found = this.showSrv.findShow(this.showId);
+      this.show = found ?? null;
+      if (this.show) this.loadSeatStatusesFromDb(this.showId!, this.show);
+    } else {
+      this.show = this.showSrv.shows.length > 0 ? this.showSrv.shows[0] : null;
+    }
+    this.cd.detectChanges();
+  }
+
+  /** Apply DB seat statuses (0=available, 1=reserved, 2=sold) to the show's map. */
+  private loadSeatStatusesFromDb(showId: number, show: Show): void {
+    this.seatsSrv.getSeatStatuses(showId).subscribe((list) => {
+      for (const dto of list) {
+        const getMap = SECTION_ID_TO_MAP[dto.sectionId as keyof typeof SECTION_ID_TO_MAP];
+        if (!getMap) continue;
+        const grid = getMap(show);
+        const row = grid[dto.row];
+        if (row && row[dto.col]) {
+          row[dto.col].status = dto.status !== 0; // 1 or 2 => unavailable
+        }
       }
+      this.cd.detectChanges();
+    });
+  }
+
+  ngOnInit(): void {
+    this.updateShowFromInput();
+    this.showSrv.shows$.subscribe((shows) => {
+      if (this.showId != null && this.showId > 0) {
+        const found = this.showSrv.findShow(this.showId);
+        this.show = found ?? null;
+        if (this.show) this.loadSeatStatusesFromDb(this.showId!, this.show);
+      } else if (!this.show && shows.length > 0) {
+        this.show = shows[0];
+      }
+      this.cd.detectChanges();
     });
     this.cartSrv.cart$.subscribe((items) => {
       this.cartItems = items;
@@ -74,19 +135,82 @@ export class SeatsMap implements OnInit {
     return 'available';
   }
 
+  /** Opens the seat confirmation dialog (details + price). Save sends lock to DB (status 1). */
   onSeatClick(seat: Seat): void {
+    if (!this.cartSrv.isLoggedIn) {
+      alert('יש להתחבר כדי לשמור מושב.');
+      return;
+    }
     const state = this.getSeatState(seat);
     if (state !== 'available' || this.isPending(seat)) return;
-    const key = this.seatKey(seat);
+    const showId = this.showId ?? this.show?.id ?? 0;
+    if (!showId) return;
+    this.selectedSeat = seat;
+    this.selectedSeatPrice = this.getPriceForSeat(seat);
+    this.seatConflictMessage = null;
+    this.seatDialogVisible = true;
+    this.cd.detectChanges();
+  }
+
+  getPriceForSeat(seat: Seat): number | null {
+    if (!this.show) return null;
+    const p = this.show.hallMap.section === seat.section ? this.show.hallMap.price
+      : this.show.leftBalMap.section === seat.section ? this.show.leftBalMap.price
+      : this.show.rightBalMap.section === seat.section ? this.show.rightBalMap.price
+      : this.show.centerBalMap.section === seat.section ? this.show.centerBalMap.price
+      : null;
+    return p != null && p > 0 ? p : null;
+  }
+
+  closeSeatDialog(): void {
+    this.seatDialogVisible = false;
+    this.selectedSeat = null;
+    this.selectedSeatPrice = null;
+    this.seatConflictMessage = null;
+    this.savingSeat = false;
+    this.cd.detectChanges();
+  }
+
+  /** Confirm: validate seat still available then call lock API (DB status → 1). */
+  confirmSeatChoice(): void {
+    if (!this.selectedSeat) return;
+    const showId = this.showId ?? this.show?.id ?? 0;
+    if (!showId) return;
+    if (this.getSeatState(this.selectedSeat) !== 'available') {
+      this.seatConflictMessage = 'המושב נבחר בינתיים על ידי משתמש אחר.';
+      this.cd.detectChanges();
+      return;
+    }
+    this.savingSeat = true;
+    this.seatConflictMessage = null;
+    const key = this.seatKey(this.selectedSeat);
     this.pendingKeys.add(key);
     this.cd.detectChanges();
-    this.cartSrv.addSeat(seat).subscribe({
+    const price = this.selectedSeatPrice ?? undefined;
+    this.cartSrv.addSeat(this.selectedSeat, showId, price).subscribe({
       next: () => {
         this.pendingKeys.delete(key);
+        this.savingSeat = false;
+        this.closeSeatDialog();
+        if (this.show) this.loadSeatStatusesFromDb(showId, this.show);
         this.cd.detectChanges();
       },
-      error: () => {
+      error: (err) => {
         this.pendingKeys.delete(key);
+        this.savingSeat = false;
+        if (err?.status === 401) {
+          this.seatConflictMessage = 'יש להתחבר כדי לשמור מושב.';
+          this.cd.detectChanges();
+          return;
+        }
+        const status = err?.status;
+        const msg = err?.error?.message ?? err?.message ?? '';
+        if (status === 409 || status === 400 || /taken|נבחר|occupied|unavailable/i.test(String(msg))) {
+          this.seatConflictMessage = 'המושב נבחר בינתיים על ידי משתמש אחר.';
+          if (this.show) this.loadSeatStatusesFromDb(showId, this.show);
+        } else {
+          this.seatConflictMessage = 'שגיאה בשמירת המושב. נסה שוב.';
+        }
         this.cd.detectChanges();
       },
     });

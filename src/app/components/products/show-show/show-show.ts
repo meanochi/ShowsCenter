@@ -11,6 +11,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner'; //
 import { Provider } from '../../../models/provider-model';
 import { Observable } from 'rxjs';
 import { ImageService } from '../../../services/image-service';
+import { Category } from '../../../models/category-model';
 @Component({
   selector: 'app-show-show',
   imports: [
@@ -30,13 +31,16 @@ export class ShowShow {
   providerSrv: ProviderService = inject(ProviderService);
   providers: Provider[] = [];
   providers$: Observable<Provider[]> | undefined;
-  categories = this.categoreySrv.categories;
+  categories :Category[]=[];
   readonly Audience = TargetAudience;
   readonly Sector = Sector;
   currProvider: Provider | undefined;
   imageSrv: ImageService = inject(ImageService);
   @Input()
   showId: number = 0;
+
+  @Output()
+  openSeatsMap = new EventEmitter<number>();
 
   showProd: Show = new Show();
   userName: string = 'Michal';
@@ -61,6 +65,9 @@ export class ShowShow {
         numScroll: 1,
       },
     ];
+    this.categoreySrv.categories$.subscribe(data => {
+      this.categories = data;
+    });
   }
   ngOnChanges() {
     console.log(this.providers);
@@ -98,6 +105,7 @@ export class ShowShow {
   get currentProvider() {
     return this.providers.find((p) => p.id === this.showProd.providerId);
   }
+
   private loadProviders() {
     this.providerSrv.loadProviders().subscribe({
       next: (providers) => {

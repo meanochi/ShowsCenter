@@ -1,6 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { UsersService } from '../../services/users-service';
 import { AuthService } from '../../services/auth-service';
@@ -12,33 +14,52 @@ import { AuthService } from '../../services/auth-service';
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
-  userSrv: UsersService = inject(UsersService)
+  private navSubscription?: Subscription;
+userSrv: UsersService = inject(UsersService)
   isLoggedIn: boolean = false;
   userName: string = 'אורח';
   public authService = inject(AuthService);
   
   ngOnInit() {
     this.checkLoginStatus();
+    this.navSubscription = this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => this.checkLoginStatus());
   }
 
-  logout() {
-    if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-      this.authService.logout(); // קוראים לפונקציה מהסרוויס
-      this.router.navigate(['/']);
-    }
+  ngOnDestroy() {
+    this.navSubscription?.unsubscribe();
   }
-  // פונקציה שבודקת האם המשתמש מחובר
+
+  // פונקציה שבודקת האם המשתמש מחובר (login שומר ב-'user')
   checkLoginStatus() {
-    const userId = localStorage.getItem('user');
-    if (userId) {
-      this.isLoggedIn = true;
-      // אם שמרת גם את שם המשתמש בלוקל סטורג', אפשר לשלוף אותו כאן. אחרת נציג משתמש:
-      this.userName =this.userSrv.getUserNameById(Number(localStorage.getItem('user'))) || 'משתמש'; 
+    const raw = localStorage.getItem('user');
+    if (raw) {
+      try {
+        JSON.parse(raw);
+        this.isLoggedIn = true;
+        this.userName = localStorage.getItem('userName') || 'משתמש';
+      } catch {
+        this.isLoggedIn = false;
+      }
     } else {
       this.isLoggedIn = false;
     }
   }
 
+  // פונקציית התנתקות
+  logout() {
+    if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('userName');
+      
+      // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
+      this.checkLoginStatus();
+      
+      // ניתוב חזרה לדף הבית
+      this.router.navigate(['/']);
+    }
+  }
 }

@@ -1,5 +1,11 @@
 <app-navbar></app-navbar>
 
+@if (successMessage()) {
+  <div class="auth-success-banner">
+    {{ successMessage() }}
+  </div>
+}
+
 <div class="p-3">
     <router-outlet></router-outlet>
 </div>

@@ -62,6 +62,18 @@ export class Show {
     constructor(init?: Partial<Show>) {
         Object.assign(this, init);
     }
+
+    /** Cheapest seat price from all sections (use when minPrice not set from API). */
+    get cheapestPrice(): number {
+        const prices = [
+            this.hallMap?.price,
+            this.leftBalMap?.price,
+            this.rightBalMap?.price,
+            this.centerBalMap?.price,
+        ].filter((p): p is number => typeof p === 'number' && p > 0);
+        if (prices.length === 0) return this.minPrice ?? 0;
+        return Math.min(...prices);
+    }
 }
 
 

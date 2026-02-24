@@ -7,6 +7,7 @@ import { AddShow } from './add-show/add-show';
 import { CategorySrvice } from '../../services/category-srvice';
 import { DrawerModule } from 'primeng/drawer';
 import { ShowShow } from './show-show/show-show';
+import { SeatsMap } from '../seats-map/seats-map';
 import { Category } from '../../models/category-model';
 import { CommonModule, DatePipe } from '@angular/common';
 import { CarouselModule } from 'primeng/carousel';
@@ -31,6 +32,7 @@ import { ImageService } from '../../services/image-service';
     CardModule,
     DrawerModule,
     ShowShow,
+    SeatsMap,
     CarouselModule,
     CheckboxModule,
     FormsModule,
@@ -49,6 +51,7 @@ import { ImageService } from '../../services/image-service';
 export class ShowsComponent {
   readonly TargetAudience = TargetAudience;
   readonly Sector = Sector;
+  private categorySrv = inject(CategorySrvice);
   showSrv: ShowsService = inject(ShowsService);
   shows$: Observable<Show[]> = this.showSrv.shows$;
   shows: Show[] = this.showSrv.shows;
@@ -56,7 +59,11 @@ export class ShowsComponent {
   visible: boolean = false;
   pId: number = 0;
   pTitle: string = '';
-  categories: Category[] = inject(CategorySrvice).categories;
+  /** Separate drawer: only seat map (opened by "לבחירת מקום"). */
+  seatsDrawerVisible: boolean = false;
+  seatsDrawerShowId: number = 0;
+  seatsDrawerTitle: string = '';
+  categories: Category[] = [];
   audiences: TargetAudience[] = this.showSrv.audiences;
   sectors: Sector[] = this.showSrv.sectors;
   selectedCategories: any[] = [];
@@ -80,6 +87,7 @@ export class ShowsComponent {
   }
 
   ngOnInit() {
+    this.shows = this.showSrv.shows;
     this.responsiveOptions = [
       {
         breakpoint: '1024px',
@@ -99,9 +107,10 @@ export class ShowsComponent {
     ];
 
     this.sortOptions = [
-      { label: 'תאריך: מהחדש לישן', value: '!date' }, // ה-! מסמן ירידה ב-PrimeNG
-      { label: 'תאריך: מהישן לחדש', value: 'date' },
+      { label: 'מחיר: מהנמוך לגבוה', value: 'price' },
+      { label: 'מחיר: מהגבוה לנמוך', value: '!price' },
       { label: 'פופולריות', value: '!popularity' },
+      { label: 'שם המופע (א-ת)', value: 'title' }
     ];
     this.prepareUpcomingShows();
     this.showSrv.showsLoadError$.subscribe((err) => {
@@ -113,25 +122,42 @@ export class ShowsComponent {
       this.prepareUpcomingShows();
       this.cd.detectChanges();
     });
-  }
-  openShow(id: number) {
-    setTimeout(() => {
-      this.pId = id;
-      this.pTitle = this.showSrv.findShow(id)?.title || '';
-      this.visible = true;
-      console.log(this.showSrv.findShow(id));
+
+    this.showSrv.getFilteredShows({});
+
+    this.categorySrv.categories$.subscribe(data => {
+      this.categories = data;
     });
   }
-  isManager() {
-    return true;
+  openShow(id: number) {
+    this.pId = id;
+    this.pTitle = this.showSrv.findShow(id)?.title ?? '';
+    this.visible = true;
+    this.cd.detectChanges();
   }
-  toChoosePlace(id: number) {}
+  isManager() {
+    return false;
+  }
+  /** Opens only the seat-map drawer (no card details). */
+  toChoosePlace(id: number) {
+    this.seatsDrawerShowId = id;
+    this.seatsDrawerTitle = this.showSrv.findShow(id)?.title ?? '';
+    this.seatsDrawerVisible = true;
+  }
+
+  /** Called from show-show when user clicks "לבחירת מקום" there; opens seats drawer and closes details. */
+  openSeatsDrawer(showId: number) {
+    this.visible = false;
+    this.toChoosePlace(showId);
+  }
 
   prepareUpcomingShows() {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
     this.upcomingShows = [...this.showSrv.shows]
-      // .filter(s => new Date(s.date) >= new Date()) // אופציונלי: מציג רק אירועים שטרם עברו
+      .filter((s) => new Date(s.date) >= now)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 12);
+      .slice(0, 15);
   }
 
   onSortChange(event: any) {
@@ -144,19 +170,53 @@ export class ShowsComponent {
       this.sortOrder = 1; // סדר עולה
       this.sortField = value;
     }
+
+    this.applyFilters();
   }
 
+  /** Keep priceRange as a proper array and apply filters (fixes slider showing 0 after change). */
+  onPriceRangeChange(ev: { value?: number | number[] }) {
+    const val = ev?.value;
+    if (Array.isArray(val) && val.length === 2) {
+      this.priceRange = [val[0], val[1]];
+    }
+    this.applyFilters();
+  }
+
+  clearFilters() {
+    this.searchTerm = '';
+    this.selectedCategories = [];
+    this.selectedAudiences = [];
+    this.selectedSectors = [];
+    this.priceRange = [0, 1000];
+    this.sortOrder = 1;
+    this.sortField = 'title';
+    this.showSrv.getFilteredShows({});
+  }
+
+  /** Strip to Hebrew + spaces so backend Contains() matches DB (DB may have different emoji). */
+  private hebrewOnly(val: string): string {
+    return val ? val.replace(/[^\u0590-\u05FF\s]/g, '').trim() : '';
+  }
+
+  /** Full range = no price filter so backend returns shows with no Sections too (e.g. 1060, 1070). */
+  private readonly fullPriceRange = [0, 1000] as const;
+
   applyFilters() {
+    const [minP, maxP] = this.priceRange;
+    const useFullRange = minP === this.fullPriceRange[0] && maxP === this.fullPriceRange[1];
     const filterParams = {
-      description: this.searchTerm,
-      categoryId: this.selectedCategories, // מערך
-      audiences: this.selectedAudiences, // מערך
-      sectors: this.selectedSectors, // מערך
-      minPrice: this.priceRange[0],
-      maxPrice: this.priceRange[1],
-      skip: 20, // להתחלה
-      position: 1, // כמות להצגה
-    }; // קריאה לשירות עם האובייקט
+      description: this.searchTerm?.trim() ?? '',
+      categoryId: this.selectedCategories ?? [],
+      audiences: (this.selectedAudiences ?? []).map((a) => this.hebrewOnly(a)).filter(Boolean),
+      sectors: (this.selectedSectors ?? []).map((s) => this.hebrewOnly(s)).filter(Boolean),
+      minPrice: useFullRange ? undefined : minP,
+      maxPrice: useFullRange ? undefined : maxP,
+      sortField: this.sortField,
+      sortOrder: this.sortOrder,
+      skip: 1000,
+      position: 1,
+    };
     this.showSrv.getFilteredShows(filterParams);
   }
 

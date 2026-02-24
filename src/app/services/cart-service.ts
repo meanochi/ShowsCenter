@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { Seat } from '../models/seat-model';
 import { SECTION_TO_ID, SECTION_ID_MAP, Section } from '../models/show-model';
@@ -9,16 +9,38 @@ const LOCK_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
 export interface LockSeatDTO {
   UserId: number;
+  ShowId: number;
   Row: number;
   Col: number;
   sectionId: number;
+  /** 1 = reserved for user (orderedSeats.status in DB). */
+  Status: number;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class CartService {
-  private readonly currentUserId = 1;
+  private get currentUserId(): number {
+    const raw = localStorage.getItem('user');
+    if (raw == null) return 0;
+    try {
+      const id = JSON.parse(raw);
+      return typeof id === 'number' ? id : Number(id) || 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /** Returns current user id if logged in, else 0. */
+  getCurrentUserId(): number {
+    return this.currentUserId;
+  }
+
+  get isLoggedIn(): boolean {
+    return this.currentUserId > 0;
+  }
+
   private readonly cartSubject = new BehaviorSubject<Seat[]>([]);
   cart$ = this.cartSubject.asObservable();
 
@@ -30,19 +52,28 @@ export class CartService {
 
   constructor(private http: HttpClient) {}
 
-  addSeat(seat: Seat): Observable<Seat> {
+  addSeat(seat: Seat, showId: number, price?: number): Observable<Seat> {
+    const uid = this.currentUserId;
+    if (uid <= 0) {
+      return throwError(() => ({ status: 401, message: 'Login required' }));
+    }
     const sectionId = SECTION_TO_ID[seat.section];
     const body: LockSeatDTO = {
-      UserId: this.currentUserId,
+      UserId: uid,
+      ShowId: showId,
       Row: seat.row,
       Col: seat.col,
       sectionId,
+      Status: 1,
     };
     return this.http.post<Seat & { id: number }>('/api/Order/lock', body).pipe(
       map((created) => {
         const cartSeat: Seat = {
           ...seat,
           id: created.id,
+          showId,
+          price: price ?? seat.price,
+          userId: uid,
           section: created.section ?? SECTION_ID_MAP[created.section as number] ?? seat.section,
         };
         const cart = [...this.cartSubject.value, cartSeat];
@@ -59,8 +90,9 @@ export class CartService {
   removeSeat(seat: Seat): void {
     const id = seat.id;
     if (id == null) return;
+    const uid = this.currentUserId;
     this.http
-      .delete(`/api/Order/${id}?userId=${this.currentUserId}`)
+      .delete(`/api/Order/${id}?userId=${uid}`)
       .subscribe({
         next: () => {
           this.clearTimer(id);
