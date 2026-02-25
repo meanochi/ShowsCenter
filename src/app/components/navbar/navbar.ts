@@ -4,6 +4,8 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
+import { UsersService } from '../../services/users-service';
+import { AuthService } from '../../services/auth-service';
 
 @Component({
   selector: 'app-navbar',
@@ -15,10 +17,11 @@ import { ButtonModule } from 'primeng/button';
 export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private navSubscription?: Subscription;
-
+userSrv: UsersService = inject(UsersService)
   isLoggedIn: boolean = false;
   userName: string = 'אורח';
-
+  public authService = inject(AuthService);
+  
   ngOnInit() {
     this.checkLoginStatus();
     this.navSubscription = this.router.events

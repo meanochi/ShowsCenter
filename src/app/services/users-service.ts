@@ -6,6 +6,7 @@ import { User } from '../models/user-model';
 })
 
 export class UsersService {
+  user: User = new User()
   login(email: string, pass: string){
     const data = {
       password: pass,
@@ -18,4 +19,11 @@ export class UsersService {
     return this.http.post('/api/Users/user', user);
   }
   constructor(private http: HttpClient) {}
+
+  getUserNameById(id:number){
+    this.http.get<User>(`api/Users/${id}`).subscribe((data)=>{
+      this.user = data
+    })
+    return this.user.firstName
+  }
 }

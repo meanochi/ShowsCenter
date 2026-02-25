@@ -23,11 +23,9 @@ import { PasswordModule } from 'primeng/password';
     CheckboxModule,
     InputTextModule,
     FloatLabel,
-    Dialog,
     PasswordModule,
   ],
   template: `
-    <p-dialog [(visible)]="visible" [style]="{ width: '25rem' }">
       <div class="flex flex-column align-items-center gap-4 mb-5">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -121,7 +119,6 @@ import { PasswordModule } from 'primeng/password';
           (click)="signup()"
         ></button>
       </div>
-    </p-dialog>
   `,
 })
 export class Signup {
@@ -148,6 +145,4 @@ export class Signup {
       },
     });
   }
-  @Input()
-  visible: boolean = false;
 }
