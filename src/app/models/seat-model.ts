@@ -11,4 +11,6 @@ export class Seat {
   showId?: number;
   /** Price for this section (for cart display and total). */
   price?: number;
+  /** DB section row id for this show (sent to lock API; distinct from section type 1–4). */
+  sectionDbId?: number;
 }

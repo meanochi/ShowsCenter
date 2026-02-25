@@ -58,6 +58,8 @@ export class Show {
     centerBalMap:SeatMap =new SeatMap(0, Section.CENTER_BALCONY);
     /** Section IDs returned by the API for this show (1=HALL, 2=RIGHT_BALCONY, 3=LEFT_BALCONY, 4=CENTER_BALCONY). Only these sections are bookable. */
     sectionIdsFromApi: number[] = [];
+    /** Maps section type (1–4) to the section's DB row id for this show. Used when sending lock request. */
+    sectionDbIdByType: { [sectionType: number]: number } = {};
     minPrice: number = 0;
     popularity?: number;
 
@@ -75,6 +77,11 @@ export class Show {
         ].filter((p): p is number => typeof p === 'number' && p > 0);
         if (prices.length === 0) return this.minPrice ?? 0;
         return Math.min(...prices);
+    }
+
+    /** DB section id for this show for the given section type (for lock API). */
+    getSectionDbId(sectionType: number): number | undefined {
+        return this.sectionDbIdByType[sectionType];
     }
 }
 

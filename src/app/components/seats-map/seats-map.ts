@@ -6,6 +6,7 @@ import { CartService } from '../../services/cart-service';
 import { SeatsService } from '../../services/seats-service';
 import { Seat } from '../../models/seat-model';
 import { Show, Section } from '../../models/show-model';
+import { SECTION_TO_ID } from '../../models/show-model';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 
@@ -198,7 +199,14 @@ export class SeatsMap implements OnInit, OnChanges {
     this.pendingKeys.add(key);
     this.cd.detectChanges();
     const price = this.selectedSeatPrice ?? undefined;
-    this.cartSrv.addSeat(this.selectedSeat, showId, price).subscribe({
+    const seatToAdd: Seat = { ...this.selectedSeat };
+    const show = this.show;
+    if (show) {
+      const sectionType = SECTION_TO_ID[seatToAdd.section];
+      const dbId = show.getSectionDbId(sectionType);
+      if (dbId != null) seatToAdd.sectionDbId = dbId;
+    }
+    this.cartSrv.addSeat(seatToAdd, showId, price).subscribe({
       next: () => {
         this.pendingKeys.delete(key);
         this.savingSeat = false;

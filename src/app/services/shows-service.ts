@@ -95,6 +95,10 @@ export class ShowsService {
             .filter((n: number) => !isNaN(n) && n >= 1 && n <= 4);
         item.sections.forEach((sec: any) => {
           const sectionTypeId = Number(sec.sectionTypeId ?? sec.sectionType ?? sec.id);
+          const sectionDbId = Number(sec.id);
+          if (!isNaN(sectionDbId) && sectionDbId > 0) {
+            show.sectionDbIdByType[sectionTypeId] = sectionDbId;
+          }
           const sectionType = SECTION_ID_MAP[sectionTypeId]; 
           
           if (sectionType) {

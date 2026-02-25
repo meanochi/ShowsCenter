@@ -21,6 +21,17 @@ const STEPS = {
   CONFIRMATION: 4,
 } as const;
 
+/** Snapshot of one item for the order confirmation view. */
+export interface ConfirmationItem {
+  showTitle: string;
+  section: string;
+  row: number;
+  col: number;
+  showDate: Date | string;
+  showTime: string;
+  price: number;
+}
+
 /** Luhn check and basic card validation. */
 function luhnCheck(value: string): boolean {
   const digits = value.replace(/\D/g, '');
@@ -83,6 +94,13 @@ export class CheckoutComponent implements OnInit {
   user = signal<User | null>(null);
   userLoadError = signal<string | null>(null);
   orderConfirmationCode = signal<string>('');
+  /** Set after successful placeOrder: order creation date from server. */
+  orderCreatedAt = signal<Date | null>(null);
+  /** Snapshot of ordered items for confirmation (row, col, show date/time, etc.). */
+  confirmationItems = signal<ConfirmationItem[]>([]);
+  totalPaid = signal<number>(0);
+  placingOrder = signal<boolean>(false);
+  placeOrderError = signal<string | null>(null);
   paymentForm: FormGroup;
 
   steps = [
@@ -152,11 +170,12 @@ export class CheckoutComponent implements OnInit {
       this.paymentForm.markAllAsTouched();
       return;
     }
+    if (step === STEPS.PAYMENT && step + 1 === STEPS.CONFIRMATION) {
+      this.placeOrder();
+      return;
+    }
     if (step < STEPS.CONFIRMATION) {
       this.currentStep.set(step + 1);
-      if (step + 1 === STEPS.CONFIRMATION) {
-        this.placeOrder();
-      }
     }
   }
 
@@ -167,12 +186,59 @@ export class CheckoutComponent implements OnInit {
     }
   }
 
-  /** In a real app this would call the backend to complete the order and return an order id. */
+  /** Confirm payment: POST order to server, then clear cart and show confirmation. */
   placeOrder(): void {
-    const code = 'TB-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    this.orderConfirmationCode.set(code);
-    // Optionally call API: this.http.post('/api/Order/confirm', { ... }).subscribe(...);
-    // and clear cart: this.cartSrv.clearCart() if such method exists
+    const items = this.cartItems;
+    const orderItemIds = items.map((s) => s.id).filter((id): id is number => id != null);
+    if (orderItemIds.length === 0) {
+      this.placeOrderError.set('אין פריטים לאישור');
+      return;
+    }
+    this.placingOrder.set(true);
+    this.placeOrderError.set(null);
+    const total = this.totalToPay();
+
+    this.cartSrv.confirmOrder(orderItemIds).subscribe({
+      next: (res) => {
+        this.placingOrder.set(false);
+        const code = res.confirmationCode ?? 'TB-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        this.orderConfirmationCode.set(code);
+        this.orderCreatedAt.set(res.date ? new Date(res.date) : new Date());
+        this.totalPaid.set(total);
+        this.confirmationItems.set(this.buildConfirmationItems(items));
+        this.cartSrv.clearCart();
+        this.cartItems = [];
+        this.currentStep.set(STEPS.CONFIRMATION);
+      },
+      error: (err) => {
+        this.placingOrder.set(false);
+        const msg = err?.error?.message ?? err?.message ?? 'אישור ההזמנה נכשל. נסה שוב.';
+        this.placeOrderError.set(msg);
+      },
+    });
+  }
+
+  private buildConfirmationItems(seats: Seat[]): ConfirmationItem[] {
+    return seats.map((seat) => {
+      const show = this.getShow(seat.showId);
+      const price = this.getSeatPrice(seat);
+      const date = show?.date;
+      const beginTime = show?.beginTime;
+      let showTime = '';
+      if (beginTime != null) {
+        const t = typeof beginTime === 'string' ? beginTime : (beginTime instanceof Date ? beginTime.toTimeString() : '');
+        showTime = String(t).substring(0, 5);
+      }
+      return {
+        showTitle: show?.title ?? 'מופע',
+        section: typeof seat.section === 'string' ? seat.section : String(seat.section),
+        row: seat.row + 1,
+        col: seat.col + 1,
+        showDate: date ?? '',
+        showTime,
+        price,
+      };
+    });
   }
 
   isStepActive(stepIndex: number): boolean {

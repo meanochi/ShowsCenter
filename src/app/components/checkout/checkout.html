@@ -136,8 +136,17 @@
         </form>
         <div class="step-actions">
           <p-button label="הקודם" icon="pi pi-arrow-right" severity="secondary" (onClick)="goPrev()"></p-button>
-          <p-button label="אישור ותשלום" icon="pi pi-check" (onClick)="goNext()"></p-button>
+          <p-button
+            label="אישור ותשלום"
+            icon="pi pi-check"
+            [loading]="placingOrder()"
+            [disabled]="placingOrder()"
+            (onClick)="goNext()"
+          ></p-button>
         </div>
+        @if (placeOrderError()) {
+          <p class="error-message">{{ placeOrderError() }}</p>
+        }
       </div>
     }
 
@@ -147,18 +156,24 @@
         <div class="confirmation-icon">✓</div>
         <h2>ההזמנה בוצעה בהצלחה</h2>
         <p class="confirmation-code">קוד הזמנה: <strong>{{ orderConfirmationCode() }}</strong></p>
+        @if (orderCreatedAt(); as createdAt) {
+          <p class="confirmation-meta">תאריך ושעת יצירת ההזמנה: <strong>{{ createdAt | date: 'dd/MM/yyyy' }} בשעה {{ createdAt | date: 'HH:mm' }}</strong></p>
+        }
         <div class="confirmation-summary">
           <h3>פרטי ההזמנה</h3>
-          @for (seat of cartItems; track seatKey(seat)) {
-            @let show = getShow(seat.showId);
-            <div class="confirmation-item">
-              <span>{{ show?.title ?? 'מופע' }}</span>
-              <span>{{ seat.section }} · {{ getSeatPrice(seat) }}₪</span>
+          @for (item of confirmationItems(); track item.showTitle + item.row + item.col + item.section) {
+            <div class="confirmation-item-detail">
+              <span class="confirmation-item-title">{{ item.showTitle }}</span>
+              <span class="confirmation-item-meta">מקום: {{ item.section }} · שורה {{ item.row }} · כיסא {{ item.col }}</span>
+              @if (item.showDate) {
+                <span class="confirmation-item-meta">מופע: {{ item.showDate | date: 'dd/MM/yyyy' }}@if (item.showTime) { בשעה {{ item.showTime }} }</span>
+              }
+              <span class="confirmation-item-price">{{ item.price }}₪</span>
             </div>
           }
           <div class="confirmation-total">
             <span>סה"כ שולם:</span>
-            <strong>{{ totalToPay() }}₪</strong>
+            <strong>{{ totalPaid() }}₪</strong>
           </div>
         </div>
         <div class="step-actions">

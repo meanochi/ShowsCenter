@@ -17,6 +17,13 @@ export interface LockSeatDTO {
   Status: number;
 }
 
+/** Response from POST /api/Order/confirm */
+export interface ConfirmOrderResponse {
+  orderId?: number | string;
+  confirmationCode?: string;
+  date?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -57,7 +64,8 @@ export class CartService {
     if (uid <= 0) {
       return throwError(() => ({ status: 401, message: 'Login required' }));
     }
-    const sectionId = SECTION_TO_ID[seat.section];
+    // Send the section's DB row id (sectionDbId), not the section type (1–4).
+    const sectionId = seat.sectionDbId ?? SECTION_TO_ID[seat.section];
     const body: LockSeatDTO = {
       UserId: uid,
       ShowId: showId,
@@ -104,6 +112,37 @@ export class CartService {
           console.error('CartService removeSeat failed', err);
         },
       });
+  }
+
+  /**
+   * Confirm order (pay): POST to backend with locked order item ids.
+   * Backend should create the order and update seat status to sold.
+   */
+  confirmOrder(orderItemIds: number[]): Observable<ConfirmOrderResponse> {
+    const uid = this.currentUserId;
+    if (uid <= 0) {
+      return throwError(() => ({ status: 401, message: 'Login required' }));
+    }
+    if (orderItemIds.length === 0) {
+      return throwError(() => ({ status: 400, message: 'No items to confirm' }));
+    }
+    return this.http.post<ConfirmOrderResponse>('/api/Order/confirm', {
+      userId: uid,
+      orderItemIds,
+    }).pipe(
+      tap({
+        error: (err) => console.error('CartService confirmOrder failed', err),
+      })
+    );
+  }
+
+  /** Clear cart state and all reservation timers (call after successful order). */
+  clearCart(): void {
+    const cart = this.cartSubject.value;
+    for (const seat of cart) {
+      if (seat.id != null) this.clearTimer(seat.id);
+    }
+    this.cartSubject.next([]);
   }
 
   private startTimer(seat: Seat): void {
