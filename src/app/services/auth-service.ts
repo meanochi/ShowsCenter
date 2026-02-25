@@ -1,28 +1,34 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // יוצרים סיגנלים ומאתחלים אותם לפי מה שיש בלוקל סטורג'
-  isLoggedIn = signal<boolean>(!!localStorage.getItem('userId'));
-  userName = signal<string>(localStorage.getItem('userName') || 'אורח');
+  isLoggedIn = signal<boolean>(false);
+  userName = signal<string>('אורח');
 
-  // פונקציה מסודרת להתחברות
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    if (isPlatformBrowser(this.platformId) && typeof localStorage !== 'undefined') {
+      this.isLoggedIn.set(!!localStorage.getItem('userId'));
+      this.userName.set(localStorage.getItem('userName') || 'אורח');
+    }
+  }
+
   login(id: string, name: string) {
-    localStorage.setItem('userId', id);
-    localStorage.setItem('userName', name);
-    
-    // מעדכנים את הסיגנלים - כל מי שקורא אותם יתעדכן מיד!
+    if (isPlatformBrowser(this.platformId) && typeof localStorage !== 'undefined') {
+      localStorage.setItem('userId', id);
+      localStorage.setItem('userName', name);
+    }
     this.isLoggedIn.set(true);
     this.userName.set(name);
   }
 
-  // פונקציה מסודרת להתנתקות
   logout() {
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userName');
-    
+    if (isPlatformBrowser(this.platformId) && typeof localStorage !== 'undefined') {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userName');
+    }
     this.isLoggedIn.set(false);
     this.userName.set('אורח');
   }
