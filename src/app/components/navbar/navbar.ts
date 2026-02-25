@@ -52,9 +52,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   // פונקציית התנתקות
   logout() {
     if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('userName');
-      
+
+      this.authService.logout();
       // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
       this.checkLoginStatus();
       

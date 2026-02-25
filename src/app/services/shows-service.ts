@@ -230,9 +230,7 @@ export class ShowsService {
     return of(undefined);
   }
 
-  isManger(id: number): Observable<boolean> {
-    return this.http.get<boolean>(`/api/Users/isManager?id=${id}`);
-  }
+
   findShow(id:number){
     const show:Show | undefined =this.shows.find(p=>p.id===id)
     return show

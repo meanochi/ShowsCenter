@@ -25,6 +25,7 @@ import { Observable } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
 import { ImageService } from '../../services/image-service';
 import { EditShow } from './edit-show/edit-show';
+import { AuthService } from '../../services/auth-service';
 @Component({
   selector: 'app-shows',
   imports: [
@@ -45,12 +46,13 @@ import { EditShow } from './edit-show/edit-show';
     CommonModule,
     DataViewModule,
     SelectModule,
-    EditShow
+    EditShow,
   ],
   templateUrl: './show.html',
   styleUrl: './show.scss',
 })
 export class ShowsComponent {
+  authService: AuthService = inject(AuthService);
   readonly TargetAudience = TargetAudience;
   readonly Sector = Sector;
   private categorySrv = inject(CategorySrvice);
@@ -140,10 +142,6 @@ export class ShowsComponent {
     this.pTitle = this.showSrv.findShow(id)?.title ?? '';
     this.visible = true;
     this.cd.detectChanges();
-  }
-  isManager() {
-    const id: number = Number(localStorage.getItem('user'));
-    return this.showSrv.isManger(id);
   }
   /** Opens only the seat-map drawer (no card details). */
   toChoosePlace(id: number) {
