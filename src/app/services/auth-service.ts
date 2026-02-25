@@ -10,14 +10,14 @@ export class AuthService {
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     if (isPlatformBrowser(this.platformId) && typeof localStorage !== 'undefined') {
-      this.isLoggedIn.set(!!localStorage.getItem('userId'));
+      this.isLoggedIn.set(!!localStorage.getItem('user'));
       this.userName.set(localStorage.getItem('userName') || 'אורח');
     }
   }
 
   login(id: string, name: string) {
     if (isPlatformBrowser(this.platformId) && typeof localStorage !== 'undefined') {
-      localStorage.setItem('userId', id);
+      localStorage.setItem('user', id);
       localStorage.setItem('userName', name);
     }
     this.isLoggedIn.set(true);
@@ -26,7 +26,7 @@ export class AuthService {
 
   logout() {
     if (isPlatformBrowser(this.platformId) && typeof localStorage !== 'undefined') {
-      localStorage.removeItem('userId');
+      localStorage.removeItem('user');
       localStorage.removeItem('userName');
     }
     this.isLoggedIn.set(false);

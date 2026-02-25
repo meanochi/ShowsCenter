@@ -17,7 +17,7 @@ import { AuthService } from '../../services/auth-service';
 export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private navSubscription?: Subscription;
-userSrv: UsersService = inject(UsersService)
+  userSrv: UsersService = inject(UsersService)
   isLoggedIn: boolean = false;
   userName: string = 'אורח';
   public authService = inject(AuthService);

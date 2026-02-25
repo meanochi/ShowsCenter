@@ -11,6 +11,7 @@ import { AuthMessageService } from '../../../services/auth-message-service';
 import { FloatLabel } from 'primeng/floatlabel';
 import { Dialog } from 'primeng/dialog';
 import { PasswordModule } from 'primeng/password';
+import { AuthService } from '../../../services/auth-service';
 
 @Component({
   selector: 'app-login',
@@ -113,14 +114,12 @@ export class Login {
   pass: string = '';
   newUser: any;
   user: User = new User();
+  private authService = inject(AuthService);
   login() {
     this.userSrv.login(this.email, this.pass).subscribe({
       next: (response: any) => {
-        this.user.id = response.id;
-        localStorage.setItem('user', JSON.stringify(this.user.id));
-        if (response.name) {
-          localStorage.setItem('userName', response.name);
-        }
+
+        this.authService.login(response.id, response.firstName);
         this.authMessage.showSuccess('התחברת בהצלחה!');
         this.router.navigate(['/shows']);
       },

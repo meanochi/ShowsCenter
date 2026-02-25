@@ -12,6 +12,7 @@ import { FloatLabel } from 'primeng/floatlabel';
 import { Dialog } from 'primeng/dialog';
 import { Inplace } from 'primeng/inplace';
 import { PasswordModule } from 'primeng/password';
+import { AuthService } from '../../../services/auth-service';
 
 @Component({
   selector: 'app-signup',
@@ -26,6 +27,10 @@ import { PasswordModule } from 'primeng/password';
     PasswordModule,
   ],
   template: `
+  <div
+        class="surface-ground px-4 py-8 md:px-6 lg:px-8 flex align-items-center justify-content-center min-h-screen"
+    >
+      <div class="surface-card p-4 shadow-2 border-round-xl w-full" style="max-width: 400px;">
       <div class="flex flex-column align-items-center gap-4 mb-5">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -119,6 +124,8 @@ import { PasswordModule } from 'primeng/password';
           (click)="signup()"
         ></button>
       </div>
+    </div>
+  </div>
   `,
 })
 export class Signup {
@@ -128,15 +135,11 @@ export class Signup {
   user: User = new User();
   private router = inject(Router);
   private authMessage = inject(AuthMessageService);
-
+  private authService = inject(AuthService);
   signup() {
     this.userSrv.signup(this.newUser).subscribe({
       next: (response: any) => {
-        this.user.id = response.id;
-        localStorage.setItem('user', JSON.stringify(this.user.id));
-        if (response.name) {
-          localStorage.setItem('userName', response.name);
-        }
+        this.authService.login(response.id, response.firstName);
         this.authMessage.showSuccess('נרשמת בהצלחה!');
         this.router.navigate(['/shows']);
       },
