@@ -157,6 +157,27 @@ export class ShowsService {
       CategoryId: show.categoryId,
     };
   }
+  private buildUpdateShowBody(show: Show): Record<string, unknown> {
+    const dateStr = show.date instanceof Date
+      ? show.date.toISOString().slice(0, 10)
+      : String(show.date).slice(0, 10);
+    const beginTimeStr = this.formatTimeForServer(show.beginTime);
+    const endTimeStr = this.formatTimeForServer(show.endTime);
+
+    return {
+      Id: show.id,
+      Title: show.title,
+      Date: dateStr,
+      BeginTime: beginTimeStr,
+      EndTime: endTimeStr,
+      Audience: show.audience,
+      Sector: show.sector,
+      Description: show.description ?? '',
+      ImgUrl: show.imgUrl ?? '',
+      ProviderId: show.providerId,
+      CategoryId: show.categoryId,
+    };
+  }
 
   private formatTimeForServer(value: string | Date | undefined): string {
     if (value == null) return '';
@@ -181,6 +202,34 @@ export class ShowsService {
       }),
     );
   }
+
+  /** PUT update show on server, then reload shows list. Returns observable for success/error handling. */
+  updateShow(show: Show): Observable<Show> {
+    const userId = localStorage.getItem('user');
+    const body = this.buildUpdateShowBody(show);
+    return this.http.put<Show>(`/api/Shows/${show.id}?userId=${userId}`, body).pipe(
+      tap(() => this.loadShows()),
+      catchError((err) => {
+        console.error('updateShow failed', err);
+        throw err;
+      }),
+    );
+  }
+
+  deleteShow(id: number): Observable<void> {
+    const userId = localStorage.getItem('user');
+    if (confirm('האם אתה בטוח שברצונך למחוק את המופע?')) {  
+      return this.http.delete<void>(`/api/Shows/${id}?userId=${userId}`).pipe(
+        tap(() => this.loadShows()),
+        catchError((err) => {
+          console.error('deleteShow failed', err);
+          throw err;
+        }),
+      );
+    }
+    return of(undefined);
+  }
+
 
   findShow(id:number){
     const show:Show | undefined =this.shows.find(p=>p.id===id)

@@ -1,4 +1,4 @@
-@if (!isManager()) {
+@if (!authService.isAdmin()) {
   <div class="col-12">
     <h3>אירועים קרובים:</h3>
     <p-carousel
@@ -69,7 +69,7 @@
           />
         </p-iconField>
       </div>
-      @if (isManager()) {
+      @if (authService.isAdmin()) {
         <div class="mr-auto">
           <app-add-show (showReady)="addShow($event)"></app-add-show>
         </div>
@@ -118,9 +118,10 @@
             <ng-template #footer>
               <div class="flex gap-2 buttons">
                 <p-button icon="pi pi-ellipsis-h" styleClass="h-full" (click)="openShow(p.id)" />
-                @if (isManager()) {
-                  <p-button icon="pi pi-times" class="w-full" styleClass="w-full" />
-                  <p-button icon="pi pi-pencil" class="w-full" styleClass="w-full" />
+
+                @if (authService.isAdmin()) {
+                  <p-button icon="pi pi-times" id="deleteShow" class="w-full" styleClass="w-full" (click)="deleteShow(p.id)" />
+                  <p-button icon="pi pi-pencil" id="editShow" class="w-full" styleClass="w-full" (click)="editShow(p.id)" />
                 } @else {
                   <p-button
                     label="לבחירת מקום החל מ-{{ p.cheapestPrice }}₪"
@@ -236,9 +237,9 @@
 </div>
 
 <div class="flex justify-center">
-  <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
-    <app-show-show [showId]="pId" (openSeatsMap)="openSeatsDrawer($event)"></app-show-show>
-  </p-drawer>
+    <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
+      <app-show-show [showId]="pId" (openSeatsMap)="openSeatsDrawer($event)"></app-show-show>
+    </p-drawer>
   <p-drawer
     [header]="'בחירת מקום – ' + seatsDrawerTitle"
     [(visible)]="seatsDrawerVisible"
@@ -248,4 +249,10 @@
       <app-seats-map [showId]="seatsDrawerShowId" (goToCartClick)="closeSeatsDrawerAndGoToCart()"></app-seats-map>
     }
   </p-drawer>
+  <app-edit-show
+    #editShowRef
+    [show]="showToEdit"
+    [showTriggerButton]="false"
+    (showUpdated)="updateShow($event)"
+  />
 </div>

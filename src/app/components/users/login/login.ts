@@ -118,7 +118,6 @@ export class Login {
   login() {
     this.userSrv.login(this.email, this.pass).subscribe({
       next: (response: any) => {
-
         this.authService.login(response.id, response.firstName);
         this.authMessage.showSuccess('התחברת בהצלחה!');
         this.router.navigate(['/shows']);
