@@ -47,7 +47,7 @@
                 <p class="cart-item-meta">{{ show?.date | date: 'dd/MM/yyyy' }}</p>
                 <p class="cart-item-seat">שורה: {{ seat.row + 1 }} כיסא: {{ seat.col + 1 }}</p>
               </div>
-              <div class="cart-item-price">{{ seat.price ?? 0 }}₪</div>
+              <div class="cart-item-price">{{ getSeatPrice(seat) }}₪</div>
               <div class="cart-item-actions">
                 <button type="button" class="cart-btn cart-btn-remove" (click)="removeSeat(seat)" title="הסר מהסל">✕</button>
                 <button type="button" class="cart-btn cart-btn-edit" title="עריכה">✎</button>

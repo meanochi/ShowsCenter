@@ -56,6 +56,8 @@ export class Show {
     leftBalMap:SeatMap =new SeatMap(0, Section.LEFT_BALCONY);
     rightBalMap:SeatMap =new SeatMap(0, Section.RIGHT_BALCONY);
     centerBalMap:SeatMap =new SeatMap(0, Section.CENTER_BALCONY);
+    /** Section IDs returned by the API for this show (1=HALL, 2=RIGHT_BALCONY, 3=LEFT_BALCONY, 4=CENTER_BALCONY). Only these sections are bookable. */
+    sectionIdsFromApi: number[] = [];
     minPrice: number = 0;
     popularity?: number;
 

@@ -87,13 +87,16 @@ export class ShowsService {
         if (item.beginTime) show.beginTime = item.beginTime.substring(0, 5);
         if (item.endTime) show.endTime = item.endTime.substring(0, 5);
         if (item.sections && Array.isArray(item.sections)) {
+          // Section type = 1 HALL, 2 RIGHT_BALCONY, 3 LEFT_BALCONY, 4 CENTER_BALCONY (not the DB row id)
+          show.sectionIdsFromApi = item.sections
+            .map((s: any) => Number(s.sectionTypeId ?? s.sectionType ?? s.id))
+            .filter((n: number) => !isNaN(n) && n >= 1 && n <= 4);
         item.sections.forEach((sec: any) => {
-          
-          // מציאת סוג ה-Section לפי ה-ID מהשרת
-          const sectionType = SECTION_ID_MAP[sec.id]; 
+          const sectionTypeId = Number(sec.sectionTypeId ?? sec.sectionType ?? sec.id);
+          const sectionType = SECTION_ID_MAP[sectionTypeId]; 
           
           if (sectionType) {
-            const price = typeof sec.price === 'number' ? sec.price : 0;
+            const price = typeof sec.price === 'number' ? sec.price : (Number(sec.price) || 0);
             const mapObj = new SeatMap(price, sectionType);
             switch (sectionType) {
               case Section.HALL: show.hallMap = mapObj; break;
@@ -181,6 +184,30 @@ export class ShowsService {
     const show:Show | undefined =this.shows.find(p=>p.id===id)
     return show
   }
+
+  /** Section price for a show (for cart/slider when seat.price is missing). Accepts Section enum or sectionId number. */
+  getSectionPrice(show: Show | undefined | null, section: Section | number): number {
+    if (!show) return 0;
+    const sec: Section = typeof section === 'number' ? (SECTION_ID_MAP[section] ?? Section.HALL) : section;
+    if (show.hallMap?.section === sec) {
+      const p = show.hallMap?.price;
+      return p != null && typeof p === 'number' ? p : (Number(p) || 0);
+    }
+    if (show.leftBalMap?.section === sec) {
+      const p = show.leftBalMap?.price;
+      return p != null && typeof p === 'number' ? p : (Number(p) || 0);
+    }
+    if (show.rightBalMap?.section === sec) {
+      const p = show.rightBalMap?.price;
+      return p != null && typeof p === 'number' ? p : (Number(p) || 0);
+    }
+    if (show.centerBalMap?.section === sec) {
+      const p = show.centerBalMap?.price;
+      return p != null && typeof p === 'number' ? p : (Number(p) || 0);
+    }
+    return 0;
+  }
+
   categoryById(id:number){
     return this.categories.find(c=>c.id === id)?.name
 }

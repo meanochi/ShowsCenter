@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { Sector, Show, TargetAudience } from '../../models/show-model';
 import { ShowsService } from '../../services/shows-service';
 import { ButtonModule } from 'primeng/button';
@@ -78,6 +79,7 @@ export class ShowsComponent {
   upcomingShows: Show[] = [];
   showsLoadError: string | null = null;
   private cd = inject(ChangeDetectorRef);
+  private router = inject(Router);
   imageSrv: ImageService = inject(ImageService);
   /** Called after add-show succeeds; list refreshes when service loadShows() completes (shows$). */
   addShow(_p: Show) {}
@@ -125,6 +127,7 @@ export class ShowsComponent {
 
     this.showSrv.getFilteredShows({});
 
+    this.categorySrv.loadCategories().subscribe();
     this.categorySrv.categories$.subscribe(data => {
       this.categories = data;
     });
@@ -149,6 +152,12 @@ export class ShowsComponent {
   openSeatsDrawer(showId: number) {
     this.visible = false;
     this.toChoosePlace(showId);
+  }
+
+  /** Close seats drawer and navigate to cart (called from seats-map "מעבר לסל"). */
+  closeSeatsDrawerAndGoToCart() {
+    this.seatsDrawerVisible = false;
+    this.router.navigate(['/cart']);
   }
 
   prepareUpcomingShows() {

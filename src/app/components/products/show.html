@@ -245,7 +245,7 @@
     [fullScreen]="true"
   >
     @if (seatsDrawerShowId) {
-      <app-seats-map [showId]="seatsDrawerShowId"></app-seats-map>
+      <app-seats-map [showId]="seatsDrawerShowId" (goToCartClick)="closeSeatsDrawerAndGoToCart()"></app-seats-map>
     }
   </p-drawer>
 </div>

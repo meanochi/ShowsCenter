@@ -35,12 +35,19 @@ export class CartComponent implements OnInit {
   }
 
   get totalToPay(): number {
-    return this.cartItems.reduce((sum, s) => sum + (s.price ?? 0), 0);
+    return this.cartItems.reduce((sum, s) => sum + this.getSeatPrice(s), 0);
   }
 
   getShow(showId: number | undefined): Show | undefined {
     if (showId == null) return undefined;
     return this.showSrv.findShow(showId);
+  }
+
+  /** Display price: seat.price or show's section price. */
+  getSeatPrice(seat: Seat): number {
+    if (seat.price != null && seat.price > 0) return seat.price;
+    const show = this.getShow(seat.showId);
+    return this.showSrv.getSectionPrice(show ?? null, seat.section);
   }
 
   removeSeat(seat: Seat): void {

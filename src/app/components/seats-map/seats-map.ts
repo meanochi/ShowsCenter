@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Input, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { interval } from 'rxjs';
 import { map, startWith, withLatestFrom } from 'rxjs/operators';
 import { ShowsService } from '../../services/shows-service';
@@ -33,6 +33,8 @@ export class SeatsMap implements OnInit, OnChanges {
 
   /** When set, show the map for this show; otherwise use first show in list. */
   @Input() showId: number | null = null;
+  /** Emitted when user clicks "מעבר לסל" so parent can close drawer and navigate. */
+  @Output() goToCartClick = new EventEmitter<void>();
 
   /** The show whose seating we render. */
   show: Show | null = null;
@@ -59,6 +61,9 @@ export class SeatsMap implements OnInit, OnChanges {
   );
   /** Current remaining seconds (set by subscription) so template can show 0. */
   remainingSeconds: number | null = null;
+
+  /** Cart slider: open when user adds a seat; user can close or open via button. */
+  cartSliderVisible = false;
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['showId']) {
@@ -120,8 +125,14 @@ export class SeatsMap implements OnInit, OnChanges {
   }
 
   isInCart(seat: Seat): boolean {
+    const currentShowId = this.showId ?? this.show?.id ?? null;
+    if (currentShowId == null) return false;
     return this.cartItems.some(
-      (s) => s.section === seat.section && s.row === seat.row && s.col === seat.col
+      (s) =>
+        s.showId === currentShowId &&
+        s.section === seat.section &&
+        s.row === seat.row &&
+        s.col === seat.col
     );
   }
 
@@ -191,6 +202,7 @@ export class SeatsMap implements OnInit, OnChanges {
       next: () => {
         this.pendingKeys.delete(key);
         this.savingSeat = false;
+        this.cartSliderVisible = true;
         this.closeSeatDialog();
         if (this.show) this.loadSeatStatusesFromDb(showId, this.show);
         this.cd.detectChanges();
@@ -231,5 +243,41 @@ export class SeatsMap implements OnInit, OnChanges {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  goToCart(): void {
+    this.cartSliderVisible = false;
+    this.cd.detectChanges();
+    this.goToCartClick.emit();
+  }
+
+  getShowTitleForSeat(seat: Seat): string {
+    const id = seat.showId;
+    if (id == null) return 'מופע';
+    const s = this.showSrv.findShow(id);
+    return s?.title ?? 'מופע';
+  }
+
+  getShowForSeat(seat: Seat): Show | undefined {
+    const id = seat.showId;
+    if (id == null) return undefined;
+    return this.showSrv.findShow(id);
+  }
+
+  /** Display price: seat.price or show's section price. */
+  getSeatPrice(seat: Seat): number {
+    if (seat.price != null && seat.price > 0) return seat.price;
+    const show = this.getShowForSeat(seat);
+    return this.showSrv.getSectionPrice(show ?? null, seat.section);
+  }
+
+  /** True if this show has the given section (from API). sectionId: 1=HALL, 2=RIGHT_BALCONY, 3=LEFT_BALCONY, 4=CENTER_BALCONY. */
+  hasSectionForShow(sectionId: number): boolean {
+    return this.show?.sectionIdsFromApi?.includes(sectionId) ?? false;
+  }
+
+  /** Message for hover when section is not offered in this show. */
+  getSectionUnavailableMessage(sectionId: number): string {
+    return 'יציע זה לא זמין במופע זה';
   }
 }

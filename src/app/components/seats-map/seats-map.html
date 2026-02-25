@@ -28,14 +28,24 @@
 <div class="seats-map-wrapper" dir="rtl">
   @if (show) {
     <div class="seats-card">
-      @if (cartItems.length > 0 && remainingSeconds !== null) {
-        <div class="countdown-bar">
-          <span class="countdown-label">זמן שנותר עד שחרור מושב:</span>
-          <span class="countdown-value">{{ formatCountdown(remainingSeconds) }}</span>
-        </div>
-      }
+      <div class="seats-map-toolbar flex gap-2 align-items-center flex-wrap">
+        @if (cartItems.length > 0 && remainingSeconds !== null) {
+          <div class="countdown-bar">
+            <span class="countdown-label">זמן שנותר עד שחרור מושב:</span>
+            <span class="countdown-value">{{ formatCountdown(remainingSeconds) }}</span>
+          </div>
+        }
+        <p-button label="מעבר לסל" icon="pi pi-shopping-cart" (click)="goToCart()"></p-button>
+        @if (cartItems.length > 0) {
+          <p-button
+            [label]="'סל (' + cartItems.length + ')'"
+            severity="secondary"
+            (click)="cartSliderVisible = true"
+          ></p-button>
+        }
+      </div>
       <div class="seats-layout">
-        <section class="section left-bal">
+        <section class="section left-bal" [class.section-unavailable]="!hasSectionForShow(3)">
           <h4 class="section-title">יציע שמאל</h4>
           <div class="section-grid section-grid-skew-left">
             @for (row of show.leftBalMap.map; track $index) {
@@ -43,12 +53,12 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-available]="getSeatState(seat) === 'available'"
+                    [class.seat-available]="hasSectionForShow(3) && getSeatState(seat) === 'available'"
                     [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
-                    [class.seat-disabled]="getSeatState(seat) === 'unavailable'"
+                    [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(3)"
                     [class.seat-pending]="isPending(seat)"
-                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat)"
-                    [title]="getSeatTitle(seat, show.leftBalMap.price)"
+                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(3)"
+                    [title]="!hasSectionForShow(3) ? getSectionUnavailableMessage(3) : getSeatTitle(seat, show.leftBalMap.price)"
                     type="button"
                     (click)="onSeatClick(seat)"
                   ></button>
@@ -58,7 +68,7 @@
           </div>
         </section>
 
-        <section class="section center-bal">
+        <section class="section center-bal" [class.section-unavailable]="!hasSectionForShow(4)">
           <h4 class="section-title">יציע מרכז</h4>
           <div class="section-grid section-grid-curve-top">
             @for (row of show.centerBalMap.map; track $index) {
@@ -66,12 +76,12 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-available]="getSeatState(seat) === 'available'"
+                    [class.seat-available]="hasSectionForShow(4) && getSeatState(seat) === 'available'"
                     [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
-                    [class.seat-disabled]="getSeatState(seat) === 'unavailable'"
+                    [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(4)"
                     [class.seat-pending]="isPending(seat)"
-                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat)"
-                    [title]="getSeatTitle(seat, show.centerBalMap.price)"
+                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(4)"
+                    [title]="!hasSectionForShow(4) ? getSectionUnavailableMessage(4) : getSeatTitle(seat, show.centerBalMap.price)"
                     type="button"
                     (click)="onSeatClick(seat)"
                   ></button>
@@ -81,7 +91,7 @@
           </div>
         </section>
 
-        <section class="section right-bal">
+        <section class="section right-bal" [class.section-unavailable]="!hasSectionForShow(2)">
           <h4 class="section-title">יציע ימין</h4>
           <div class="section-grid section-grid-skew-right">
             @for (row of show.rightBalMap.map; track $index) {
@@ -89,12 +99,12 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-available]="getSeatState(seat) === 'available'"
+                    [class.seat-available]="hasSectionForShow(2) && getSeatState(seat) === 'available'"
                     [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
-                    [class.seat-disabled]="getSeatState(seat) === 'unavailable'"
+                    [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(2)"
                     [class.seat-pending]="isPending(seat)"
-                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat)"
-                    [title]="getSeatTitle(seat, show.rightBalMap.price)"
+                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(2)"
+                    [title]="!hasSectionForShow(2) ? getSectionUnavailableMessage(2) : getSeatTitle(seat, show.rightBalMap.price)"
                     type="button"
                     (click)="onSeatClick(seat)"
                   ></button>
@@ -104,7 +114,7 @@
           </div>
         </section>
 
-        <section class="section hall">
+        <section class="section hall" [class.section-unavailable]="!hasSectionForShow(1)">
           <h4 class="section-title">אולם</h4>
           <div class="section-grid section-grid-curve-bottom">
             @for (row of show.hallMap.map; track $index; let i = $index) {
@@ -112,12 +122,12 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-available]="getSeatState(seat) === 'available'"
+                    [class.seat-available]="hasSectionForShow(1) && getSeatState(seat) === 'available'"
                     [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
-                    [class.seat-disabled]="getSeatState(seat) === 'unavailable'"
+                    [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(1)"
                     [class.seat-pending]="isPending(seat)"
-                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat)"
-                    [title]="getSeatTitle(seat, show.hallMap.price)"
+                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(1)"
+                    [title]="!hasSectionForShow(1) ? getSectionUnavailableMessage(1) : getSeatTitle(seat, show.hallMap.price)"
                     type="button"
                     (click)="onSeatClick(seat)"
                   ></button>
@@ -129,4 +139,35 @@
       </div>
     </div>
   }
+</div>
+
+<!-- </p-drawer> -->
+
+<!-- Cart side panel: slides in from the left -->
+<div class="cart-side-panel-backdrop" [class.open]="cartSliderVisible" (click)="cartSliderVisible = false"></div>
+<div class="cart-side-panel" [class.open]="cartSliderVisible">
+  <div class="cart-side-panel-header">
+    <h3 class="cart-side-panel-title">הפריטים בסל{{ cartItems.length > 0 ? ' (' + cartItems.length + ')' : '' }}</h3>
+    <button type="button" class="cart-side-panel-close" (click)="cartSliderVisible = false" aria-label="סגור">×</button>
+  </div>
+  <div class="cart-slider-content flex flex-column gap-2">
+    @if (cartItems.length === 0) {
+      <p class="text-color-secondary">אין פריטים בסל</p>
+    } @else {
+      @for (seat of cartItems; track seat.id ?? (seat.section + '-' + seat.row + '-' + seat.col)) {
+        @let show = getShowForSeat(seat);
+        <div class="cart-slider-item p-2 border-1 border-200 border-round">
+          @if (show?.imgUrl) {
+            <img class="cart-slider-img" [src]="'https://localhost:44304/' + show?.imgUrl" [alt]="show?.title ?? ''" />
+          } @else {
+            <div class="cart-slider-img-placeholder"></div>
+          }
+          <p class="font-medium mb-1 mt-1">{{ getShowTitleForSeat(seat) }}</p>
+          <p class="text-sm text-color-secondary mb-0">{{ seat.section }} · שורה {{ seat.row + 1 }} · כיסא {{ seat.col + 1 }}</p>
+          <p class="text-sm mt-1 mb-0 font-semibold">{{ getSeatPrice(seat) }} ₪</p>
+        </div>
+      }
+      <p-button label="מעבר לסל" icon="pi pi-arrow-left" styleClass="w-full mt-2" (click)="goToCart()"></p-button>
+    }
+  </div>
 </div>

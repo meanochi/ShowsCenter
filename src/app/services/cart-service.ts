@@ -66,15 +66,16 @@ export class CartService {
       sectionId,
       Status: 1,
     };
-    return this.http.post<Seat & { id: number }>('/api/Order/lock', body).pipe(
+    return this.http.post<any>('/api/Order/lock', body).pipe(
       map((created) => {
+        const serverPrice = created.price != null && typeof created.price === 'number' ? created.price : (Number((created as any).price) || undefined);
         const cartSeat: Seat = {
           ...seat,
           id: created.id,
           showId,
-          price: price ?? seat.price,
+          price: serverPrice ?? price ?? seat.price,
           userId: uid,
-          section: created.section ?? SECTION_ID_MAP[created.section as number] ?? seat.section,
+          section: created.section != null ? (SECTION_ID_MAP[created.section as number] ?? seat.section) : seat.section,
         };
         const cart = [...this.cartSubject.value, cartSeat];
         this.cartSubject.next(cart);
@@ -91,11 +92,11 @@ export class CartService {
     const id = seat.id;
     if (id == null) return;
     const uid = this.currentUserId;
+    this.clearTimer(id);
     this.http
       .delete(`/api/Order/${id}?userId=${uid}`)
       .subscribe({
         next: () => {
-          this.clearTimer(id);
           const cart = this.cartSubject.value.filter((s) => s.id !== id);
           this.cartSubject.next(cart);
         },
@@ -124,7 +125,7 @@ export class CartService {
 
   private clearTimer(seatId: number): void {
     const existing = this.seatTimers.get(seatId);
-    if (existing) {
+    if (existing != null) {
       clearTimeout(existing);
       this.seatTimers.delete(seatId);
     }
