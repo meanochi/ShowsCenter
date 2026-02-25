@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { Sector, Show, TargetAudience } from '../../models/show-model';
 import { ShowsService } from '../../services/shows-service';
@@ -24,7 +24,7 @@ import { SelectModule } from 'primeng/select';
 import { Observable } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
 import { ImageService } from '../../services/image-service';
-
+import { EditShow } from './edit-show/edit-show';
 @Component({
   selector: 'app-shows',
   imports: [
@@ -45,6 +45,7 @@ import { ImageService } from '../../services/image-service';
     CommonModule,
     DataViewModule,
     SelectModule,
+    EditShow
   ],
   templateUrl: './show.html',
   styleUrl: './show.scss',
@@ -81,6 +82,8 @@ export class ShowsComponent {
   private cd = inject(ChangeDetectorRef);
   private router = inject(Router);
   imageSrv: ImageService = inject(ImageService);
+  showToEdit: Show | null = null;
+  @ViewChild('editShowRef') editShowRef!: EditShow;
   /** Called after add-show succeeds; list refreshes when service loadShows() completes (shows$). */
   addShow(_p: Show) {}
 
@@ -139,7 +142,8 @@ export class ShowsComponent {
     this.cd.detectChanges();
   }
   isManager() {
-    return false;
+    const id: number = Number(localStorage.getItem('user'));
+    return this.showSrv.isManger(id);
   }
   /** Opens only the seat-map drawer (no card details). */
   toChoosePlace(id: number) {
@@ -231,5 +235,23 @@ export class ShowsComponent {
 
   getAllShows() {
     return this.showSrv.shows$;
+  }
+
+  deleteShow(id: number) {
+    this.showSrv.deleteShow(id).subscribe(() => {
+      this.shows = this.shows.filter((s) => s.id !== id);
+    });
+    this.cd.detectChanges();
+  }
+
+  editShow(id: number) {
+    this.showToEdit = this.showSrv.findShow(id) ?? null;
+    setTimeout(() => this.editShowRef?.showDialog(), 0);
+    this.cd.detectChanges();
+  }
+
+  updateShow(show: Show) {
+    this.shows = this.shows.map((s) => s.id === show.id ? show : s);
+    this.cd.detectChanges();
   }
 }
