@@ -219,6 +219,14 @@ showsFromProvider(providerId:number){
 showsFromCategory(categoryId:number){
   return this.shows.filter(p=>p.categoryId === categoryId)
 }
+addSection(price: number | undefined | null, showId: number, sectionType: number): Observable<any> {
+  const body = {
+    price: price,
+    showId: showId,
+    sectionType: sectionType
+  };
+  return this.http.post<any>('/api/Section', body);
+}
 
 }
 

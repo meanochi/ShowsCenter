@@ -8,7 +8,7 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
-import { Section, Sector, Show, TargetAudience } from '../../../models/show-model';
+import { Section, SECTION_TO_ID, Sector, Show, TargetAudience } from '../../../models/show-model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategorySrvice } from '../../../services/category-srvice';
@@ -19,6 +19,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { AvatarModule } from 'primeng/avatar';
 import { Select } from 'primeng/select';
 import { FloatLabelModule } from 'primeng/floatlabel';
+import { forkJoin } from 'rxjs';
 import {
   FileUpload,
   FileUploadEvent,
@@ -190,17 +191,57 @@ export class AddShow {
 
   private sendShowToServer(): void {
     this.showsSrv.addShow(this.show).subscribe({
-      next: () => {
-        this.showReady.emit(this.show);
-        this.reset();
-        this.visible = false;
-        this.submitLoading = false;
+      next: (createdShow: any) => {
+        // Extract the new Show ID returned from the backend
+        const newShowId = createdShow.id || createdShow.Id;
+
+        if (!newShowId) {
+          // Fallback if ID is missing for some reason
+          this.finishShowCreation(createdShow);
+          return;
+        }
+
+        const sectionRequests = [];
+
+        // 1. Hall is ALWAYS created
+        sectionRequests.push(this.showsSrv.addSection(this.hallMap.price, newShowId, SECTION_TO_ID[Section.HALL]));
+
+        // 2. Optional sections - created only if the manager checked them
+        if (this.checked[1]) {
+          sectionRequests.push(this.showsSrv.addSection(this.leftBalMap.price, newShowId, SECTION_TO_ID[Section.LEFT_BALCONY]));
+        }
+        if (this.checked[2]) {
+          sectionRequests.push(this.showsSrv.addSection(this.rightBalMap.price, newShowId, SECTION_TO_ID[Section.RIGHT_BALCONY]));
+        }
+        if (this.checked[3]) {
+          sectionRequests.push(this.showsSrv.addSection(this.centerBalMap.price, newShowId, SECTION_TO_ID[Section.CENTER_BALCONY]));
+        }
+
+        // Execute all section POST requests concurrently
+        forkJoin(sectionRequests).subscribe({
+          next: () => {
+            this.finishShowCreation(createdShow);
+          },
+          error: (err) => {
+            console.error('Error saving sections', err);
+            this.submitLoading = false;
+            this.submitError = 'המופע נוצר, אך חלה שגיאה בשמירת האזורים.';
+          }
+        });
       },
       error: (err) => {
         this.submitLoading = false;
         this.submitError = err?.error?.message ?? err?.message ?? 'שמירת המופע נכשלה';
       },
     });
+  }
+
+  // Helper method to finalize UI state after all API calls finish
+  private finishShowCreation(createdShow: any) {
+    this.showReady.emit(createdShow);
+    this.reset();
+    this.visible = false;
+    this.submitLoading = false;
   }
   reset() {
     this.title = '';
