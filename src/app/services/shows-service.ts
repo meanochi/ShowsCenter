@@ -45,7 +45,7 @@ export class ShowsService {
     });
   }
 
-  public getFilteredShows(filters: any) {
+  public getFilteredShows(filters: any) { 
     this.loadShows(filters);
   }
 
@@ -60,6 +60,8 @@ export class ShowsService {
 
     params = params.set('skip', filters.skip?.toString() ?? '1000');
     params = params.set('position', filters.position?.toString() ?? '1');
+    params = params.set('sortField',filters.sortField?.toString()??'Title')
+    params = params.set('sortOrder',filters.sortOrder?.toString()??'1')
 
     const categoryIds = this.normalizeCategoryIds(filters.categoryId);
     if (categoryIds.length > 0) {

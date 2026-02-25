@@ -111,7 +111,7 @@ export class ShowsComponent {
     this.sortOptions = [
       { label: 'מחיר: מהנמוך לגבוה', value: 'price' },
       { label: 'מחיר: מהגבוה לנמוך', value: '!price' },
-      { label: 'פופולריות', value: '!popularity' },
+      { label: 'פופולריות', value: 'popularity' },
       { label: 'שם המופע (א-ת)', value: 'title' }
     ];
     this.prepareUpcomingShows();
@@ -171,15 +171,13 @@ export class ShowsComponent {
 
   onSortChange(event: any) {
     const value = event.value;
-
-    if (value.indexOf('!') === 0) {
+    if (value.indexOf('!') === 0 ) {
       this.sortOrder = -1; // סדר יורד
       this.sortField = value.substring(1, value.length);
     } else {
       this.sortOrder = 1; // סדר עולה
       this.sortField = value;
     }
-
     this.applyFilters();
   }
 
