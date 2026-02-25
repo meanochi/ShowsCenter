@@ -5,6 +5,7 @@ import { Signup } from './components/users/signup/signup';
 import { AboutComponent } from './components/about/about';
 import { CartComponent } from './components/cart/cart';
 import { PersonalAreaComponent } from './components/personal-area/personal-area';
+import { CheckoutComponent } from './components/checkout/checkout';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/shows', pathMatch: 'full' },
@@ -13,6 +14,7 @@ export const routes: Routes = [
   { path: 'signup', component: Signup },
   { path: 'about', component: AboutComponent },
   { path: 'cart', component: CartComponent },
+  { path: 'checkout', component: CheckoutComponent },
   { path: 'personal-area', component: PersonalAreaComponent },
   { path: '**', redirectTo: '/shows' },
 ];

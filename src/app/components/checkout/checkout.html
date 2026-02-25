@@ -1,0 +1,171 @@
+<div class="checkout-page" dir="rtl">
+  <h1 class="checkout-title">השלמת רכישה</h1>
+
+  <!-- Stepper -->
+  <div class="checkout-stepper">
+    @for (step of steps; track step.index) {
+      <div
+        class="step-item"
+        [class.active]="isStepActive(step.index)"
+        [class.completed]="isStepCompleted(step.index)"
+      >
+        <span class="step-number">{{ step.index }}</span>
+        <span class="step-label">{{ step.label }}</span>
+        @if (step.index < steps.length) {
+          <span class="step-connector"></span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Step content -->
+  <div class="checkout-content">
+    <!-- Step 1: Order Summary -->
+    @if (currentStepValue === STEPS.ORDER_SUMMARY) {
+      <div class="step-panel">
+        <h2>סיכום הזמנה</h2>
+        @if (cartItems.length === 0) {
+          <p class="empty-message">אין פריטים בסל.</p>
+          <p-button label="חזרה לסל" routerLink="/cart"></p-button>
+        } @else {
+          <div class="order-items">
+            @for (seat of cartItems; track seatKey(seat)) {
+              @let show = getShow(seat.showId);
+              <div class="order-item">
+                <div class="order-item-info">
+                  <span class="order-item-title">{{ show?.title ?? 'מופע' }}</span>
+                  <span class="order-item-meta">{{ seat.section }} · שורה {{ seat.row + 1 }} כיסא {{ seat.col + 1 }}</span>
+                  @if (show?.date) {
+                    <span class="order-item-date">{{ show?.date | date: 'dd/MM/yyyy' }}</span>
+                  }
+                </div>
+                <div class="order-item-price">{{ getSeatPrice(seat) }}₪</div>
+              </div>
+            }
+          </div>
+          <div class="order-total">
+            <span>סה"כ לתשלום:</span>
+            <strong>{{ totalToPay() }}₪</strong>
+          </div>
+          <div class="step-actions">
+            <p-button label="הבא — פרטי משתמש" icon="pi pi-arrow-left" (onClick)="goNext()"></p-button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Step 2: User Details -->
+    @if (currentStepValue === STEPS.USER_DETAILS) {
+      <div class="step-panel">
+        <h2>פרטי משתמש</h2>
+        @if (userLoadError()) {
+          <p class="error-message">{{ userLoadError() }}</p>
+        } @else if (user(); as u) {
+          <div class="user-details-card">
+            <p><strong>שם:</strong> {{ u.firstName }} {{ u.lastName }}</p>
+            <p><strong>אימייל:</strong> {{ u.emailAddress }}</p>
+            <p><strong>טלפון:</strong> {{ u.phoneNumber || '—' }}</p>
+            <a routerLink="/personal-area" class="edit-profile-link">עריכת פרטים</a>
+          </div>
+        } @else {
+          <p class="loading-message">טוען פרטים...</p>
+        }
+        <div class="step-actions">
+          <p-button label="הקודם" icon="pi pi-arrow-right" severity="secondary" (onClick)="goPrev()"></p-button>
+          <p-button label="הבא — תשלום" icon="pi pi-arrow-left" (onClick)="goNext()"></p-button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 3: Payment -->
+    @if (currentStepValue === STEPS.PAYMENT) {
+      <div class="step-panel">
+        <h2>פרטי תשלום</h2>
+        <form [formGroup]="paymentForm" class="payment-form">
+          <div class="p-inputgroup">
+            <input
+              pInputText
+              formControlName="cardNumber"
+              placeholder="מספר כרטיס"
+              (input)="onCardNumberInput($event)"
+              maxlength="19"
+            />
+          </div>
+          @if (paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched) {
+            <small class="field-error">
+              @if (paymentForm.get('cardNumber')?.errors?.['required']) {
+                שדה חובה
+              } @else if (paymentForm.get('cardNumber')?.errors?.['pattern']) {
+                מספר כרטיס לא תקין (13–19 ספרות)
+              } @else if (paymentForm.get('cardNumber')?.errors?.['luhn']) {
+                מספר כרטיס לא תקין
+              }
+            </small>
+          }
+          <div class="p-inputgroup">
+            <input
+              pInputText
+              formControlName="expiry"
+              placeholder="תוקף (MM/YY)"
+              maxlength="7"
+            />
+          </div>
+          @if (paymentForm.get('expiry')?.invalid && paymentForm.get('expiry')?.touched) {
+            <small class="field-error">
+              @if (paymentForm.get('expiry')?.errors?.['required']) {
+                שדה חובה
+              } @else if (paymentForm.get('expiry')?.errors?.['expired']) {
+                כרטיס שפג תוקף
+              } @else {
+                פורמט: MM/YY
+              }
+            </small>
+          }
+          <div class="p-inputgroup">
+            <input
+              pInputText
+              formControlName="cvv"
+              type="password"
+              placeholder="CVV (3–4 ספרות)"
+              maxlength="4"
+            />
+          </div>
+          @if (paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched) {
+            <small class="field-error">CVV: 3 או 4 ספרות</small>
+          }
+        </form>
+        <div class="step-actions">
+          <p-button label="הקודם" icon="pi pi-arrow-right" severity="secondary" (onClick)="goPrev()"></p-button>
+          <p-button label="אישור ותשלום" icon="pi pi-check" (onClick)="goNext()"></p-button>
+        </div>
+      </div>
+    }
+
+    <!-- Step 4: Confirmation -->
+    @if (currentStepValue === STEPS.CONFIRMATION) {
+      <div class="step-panel confirmation-panel">
+        <div class="confirmation-icon">✓</div>
+        <h2>ההזמנה בוצעה בהצלחה</h2>
+        <p class="confirmation-code">קוד הזמנה: <strong>{{ orderConfirmationCode() }}</strong></p>
+        <div class="confirmation-summary">
+          <h3>פרטי ההזמנה</h3>
+          @for (seat of cartItems; track seatKey(seat)) {
+            @let show = getShow(seat.showId);
+            <div class="confirmation-item">
+              <span>{{ show?.title ?? 'מופע' }}</span>
+              <span>{{ seat.section }} · {{ getSeatPrice(seat) }}₪</span>
+            </div>
+          }
+          <div class="confirmation-total">
+            <span>סה"כ שולם:</span>
+            <strong>{{ totalToPay() }}₪</strong>
+          </div>
+        </div>
+        <div class="step-actions">
+          <p-button label="חזרה למופעים" icon="pi pi-home" routerLink="/shows"></p-button>
+          <p-button label="לסל" icon="pi pi-shopping-cart" routerLink="/cart" severity="secondary"></p-button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
