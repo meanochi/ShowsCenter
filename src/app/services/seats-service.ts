@@ -1,39 +1,34 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Seat } from '../models/seat-model';
-import { Show, OrderedSeatDto, SECTION_ID_MAP, Section } from '../models/show-model';
-import { ShowsService } from './shows-service';
+
+/** Seat status from DB: 0 = available, 1 = reserved (10 min), 2 = sold. */
 
 @Injectable({
   providedIn: 'root',
 })
 export class SeatsService {
-  private showSrv = inject(ShowsService);
+  constructor(private http: HttpClient) {}
 
-  /**
-   * Get ordered (reserved/sold) seats for a show as Seat[].
-   * Uses GET /api/Shows/${showId} which returns a Show object containing orderedSeats;
-   * that list is converted to Seat[] (each with status = true for disabled in map).
-   */
+  /** Get ordered (reserved/sold) seats for a show from GET /api/OrderedSeat/showId/{showId}. */
   getOrderedSeats(showId: number): Observable<Seat[]> {
-    return this.showSrv.getShowById(showId).pipe(
-      map((show) => this.orderedSeatsToSeatList(show.orderedSeats ?? []))
+    return this.http.get<any[]>(`/api/OrderedSeat/showId/${showId}`).pipe(
+      map((data) =>
+        data.map((dto) => {
+          const seat = new Seat();
+          seat.id = dto.id;
+          seat.row = dto.row;
+          seat.col = dto.col;
+          seat.userId = dto.userId ?? 0;
+          /** 1 = reserved, 2 = sold => unavailable on map */
+          seat.status = dto.status === 1 || dto.status === 2;
+          seat.sectionDbId = dto.sectionSectionType;
+          return seat;
+        })
+      )
     );
   }
-
-  /**
-   * Convert API ordered-seat DTOs to Seat[] for use in map (each seat has status = true so it is disabled).
-   */
-  orderedSeatsToSeatList(dtos: OrderedSeatDto[]): Seat[] {
-    return dtos.map((dto) => {
-      const section: Section = SECTION_ID_MAP[dto.sectionId] ?? Section.HALL;
-      const seat = new Seat();
-      seat.section = section;
-      seat.row = dto.row;
-      seat.col = dto.col;
-      seat.status = true;
-      return seat;
-    });
-  }
 }
+

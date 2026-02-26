@@ -6,6 +6,7 @@ import { CartService } from '../../services/cart-service';
 import { Seat } from '../../models/seat-model';
 import { Show, Section } from '../../models/show-model';
 import { SECTION_TO_ID } from '../../models/show-model';
+import { SeatsService } from '../../services/seats-service';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 
@@ -28,6 +29,7 @@ const SECTION_ID_TO_MAP = {
 export class SeatsMap implements OnInit, OnChanges {
   private showSrv: ShowsService = inject(ShowsService);
   private cartSrv: CartService = inject(CartService);
+  private seatsSrv: SeatsService = inject(SeatsService);
   private cd: ChangeDetectorRef = inject(ChangeDetectorRef);
 
   /** When set, show the map for this show; otherwise use first show in list. */
@@ -93,9 +95,10 @@ export class SeatsMap implements OnInit, OnChanges {
     }
   }
 
-  /** Mark ordered seats (from Show.orderedSeats from API) as unavailable on the show's map. Must run after show is loaded, before/during map render. */
+  /** Apply DB seat statuses (0=available, 1=reserved, 2=sold) to the show's map: reset all to available, then mark ordered seats unavailable. */
   private applyOrderedSeatsToMap(show: Show): void {
-    const list = show.orderedSeats ?? [];
+    const showId = show.id;
+    if (!showId) return;
     for (const grid of [show.hallMap, show.rightBalMap, show.leftBalMap, show.centerBalMap]) {
       for (const row of grid.map) {
         for (const seat of row) {
@@ -103,15 +106,18 @@ export class SeatsMap implements OnInit, OnChanges {
         }
       }
     }
-    for (const dto of list) {
-      const getMap = SECTION_ID_TO_MAP[dto.sectionId as keyof typeof SECTION_ID_TO_MAP];
-      if (!getMap) continue;
-      const grid = getMap(show);
-      const row = grid[dto.row];
-      if (row && row[dto.col]) {
-        row[dto.col].status = true;
+    this.seatsSrv.getOrderedSeats(showId).subscribe((list) => {
+      for (const dto of list) {
+        const getMap = SECTION_ID_TO_MAP[dto.sectionDbId as keyof typeof SECTION_ID_TO_MAP];
+        if (!getMap) continue;
+        const grid = getMap(show);
+        const row = grid[dto.row];
+        if (row && row[dto.col]) {
+          row[dto.col].status = dto.status;
+        }
       }
-    }
+      this.cd.detectChanges();
+    });
   }
 
   ngOnInit(): void {
