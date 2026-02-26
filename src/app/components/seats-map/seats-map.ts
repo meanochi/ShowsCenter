@@ -85,14 +85,14 @@ export class SeatsMap implements OnInit, OnChanges {
 
   /** Apply DB seat statuses (0=available, 1=reserved, 2=sold) to the show's map. */
   private loadSeatStatusesFromDb(showId: number, show: Show): void {
-    this.seatsSrv.getSeatStatuses(showId).subscribe((list) => {
+    this.seatsSrv.getOrderedSeats(showId).subscribe((list) => {
       for (const dto of list) {
-        const getMap = SECTION_ID_TO_MAP[dto.sectionId as keyof typeof SECTION_ID_TO_MAP];
+        const getMap = SECTION_ID_TO_MAP[dto.sectionDbId as keyof typeof SECTION_ID_TO_MAP];
         if (!getMap) continue;
         const grid = getMap(show);
         const row = grid[dto.row];
         if (row && row[dto.col]) {
-          row[dto.col].status = dto.status !== 0; // 1 or 2 => unavailable
+          row[dto.col].status = dto.status !== false; // 1 or 2 => unavailable
         }
       }
       this.cd.detectChanges();
