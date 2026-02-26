@@ -1,21 +1,42 @@
 .auth-success-banner {
-  background: var(--green-500, #22c55e);
+  background: var(--success-color);
   color: white;
   text-align: center;
-  padding: 0.75rem 1rem;
-  font-weight: 600;
+  padding: 1rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
 }
 
-*{
-    font-family:'Assistant';
+* {
+  font-family: 'Assistant', -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
 @font-face {
-    font-family: 'Assistant';
-    src: url('../../public/Assistant-VariableFont_wght.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
+  font-family: 'Assistant';
+  src: url('../../public/Assistant-VariableFont_wght.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
-input, #on_label{
-    font-family: 'Assistant';
+
+input, #on_label {
+  font-family: 'Assistant', sans-serif;
+}
+
+.main-content {
+  min-height: calc(100vh - 140px);
+  padding: 2rem 1.5rem;
+  background: var(--bg-secondary);
+}
+
+/* App container */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s ease;
 }
 

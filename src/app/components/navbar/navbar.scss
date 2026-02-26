@@ -2,24 +2,112 @@
   display: block;
   width: 100%;
 }
-nav{
+
+nav {
   justify-content: space-between;
+  background: var(--bg-primary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-sm);
+  padding: 1rem 1.5rem;
 }
+
 .nav-link {
-    text-decoration: none;
-    color: var(--text-color);
-    font-weight: 500;
-    font-size: 1.1rem;
-    transition: color 0.2s ease-in-out;
-  
-    &:hover {
-      color: var(--primary-color);
-    }
-}
-  
-.active-link {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+
+  &:hover {
     color: var(--primary-color);
+    background: var(--bg-tertiary);
+  }
+}
+
+.active-link {
+  color: var(--primary-color) !important;
+  font-weight: 600;
+  background: var(--bg-tertiary);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+/* Logo styling */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.02);
+  }
+  
+  img {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .logo-text {
+    font-size: 1.5rem;
     font-weight: 700;
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 2px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Navigation menu */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* User section */
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  .welcome-text {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+}
+
+/* Button overrides */
+.p-button {
+  border-radius: var(--radius-md) !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.p-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  nav {
+    padding: 0.75rem 1rem;
+  }
+  
+  .logo-text {
+    font-size: 1.25rem !important;
+  }
+  
+  .nav-menu {
+    gap: 0.25rem;
+  }
+  
+  .nav-link {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
 }

@@ -1,21 +1,21 @@
-<nav class="w-full flex justify-between items-center p-3 mb-4 shadow-sm" style="background-color: var(--surface-card); border-bottom: 1px solid var(--surface-border);">
+<nav class="w-full flex justify-between items-center mb-4">
   
-  <div class="flex items-center gap-3 cursor-pointer" routerLink="/">
+  <div class="logo-container" routerLink="/">
     <img src="log.png" alt="Shows Center Logo" style="width: 45px; height: 45px; object-fit: contain;">
-    <span class="text-2xl font-bold" style="color: var(--primary-color);">Shows Center</span>
+    <span class="logo-text">Shows Center</span>
   </div>
 
-  <div class="flex items-center gap-5">
+  <div class="nav-menu">
     <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="nav-link">מופעים</a>
     <a routerLink="/about" routerLinkActive="active-link" class="nav-link">אודות וצור קשר</a>
     <a routerLink="/cart" routerLinkActive="active-link" class="nav-link">סל קניות</a>
     <a routerLink="/personal-area" routerLinkActive="active-link" class="nav-link">אזור אישי</a>
   </div>
 
-  <div class="flex items-center gap-3">
+  <div class="user-section">
     @if (isLoggedIn()) {
       <div class="flex items-center gap-3">
-        <span class="font-medium text-lg">שלום, {{ authService.userName() }}</span>
+        <span class="welcome-text">שלום, {{ authService.userName() }}</span>
         <p-button 
           label="התנתק" 
           icon="pi pi-sign-out" 
