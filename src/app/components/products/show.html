@@ -16,11 +16,12 @@
               <img
                 alt="Card"
                 class="w-full cardImg"
-                [src]="p.imgUrl && typeof p.imgUrl === 'string' ? p.imgUrl : 'timeBank.png'"
+                [src]="p.imgUrl ? 'https://localhost:44304/' + p.imgUrl : 'timeBank.png'"
                 style="height: 120px; object-fit: cover"
               />
             </ng-template>
             <ng-template #title>
+              <div class="text-xs text-color-secondary mb-1">{{ showSrv.categoryById(p.categoryId) }}</div>
               <div [style]="{ 'font-size': '15px' }">
                 {{ p.title }}
               </div>
@@ -36,13 +37,23 @@
             <ng-template #footer>
               <div class="flex gap-2 buttons">
                 <p-button icon="pi pi-ellipsis-h" styleClass="h-full" (click)="openShow(p.id)" />
-                <p-button
-                  label="לבחירת מקום החל מ-{{ p.cheapestPrice }}₪"
-                  class="flex-grow-1"
-                  styleClass="h-full p-1"
-                  (click)="toChoosePlace(p.id)"
-                  [style]="{ 'font-size': '13px' }"
-                />
+                @if (p.isPast) {
+                  <p-button
+                    label="המופע כבר התקיים"
+                    class="flex-grow-1"
+                    styleClass="h-full p-1"
+                    [disabled]="true"
+                    [style]="{ 'font-size': '13px' }"
+                  />
+                } @else {
+                  <p-button
+                    label="לבחירת מקום החל מ-{{ p.cheapestPrice }}₪"
+                    class="flex-grow-1"
+                    styleClass="h-full p-1"
+                    (click)="toChoosePlace(p.id)"
+                    [style]="{ 'font-size': '13px' }"
+                  />
+                }
               </div>
             </ng-template>
           </p-card>
@@ -91,16 +102,13 @@
               <img
                 alt="Card"
                 class="w-full cardImg"
-                [src]="p.imgUrl ? 'https://localhost:44304/'+ p.imgUrl : 'timeBank.png'"
+                [src]="p.imgUrl ? 'https://localhost:44304/' + p.imgUrl : 'timeBank.png'"
                 style="height: 200px; object-fit: cover"
               />
             </ng-template>
             <ng-template #title>
+              <div class="text-xs text-color-secondary mb-1">{{ showSrv.categoryById(p.categoryId) }}</div>
               <div class="h-3rem">
-                {{ showSrv.categoryById(p.categoryId) }}
-                @if (showSrv.categoryById(p.categoryId)) {
-                  :
-                }
                 {{ p.title }}
               </div>
             </ng-template>
@@ -120,8 +128,27 @@
                 <p-button icon="pi pi-ellipsis-h" styleClass="h-full" (click)="openShow(p.id)" />
 
                 @if (authService.isAdmin()) {
-                  <p-button icon="pi pi-times" id="deleteShow" class="w-full" styleClass="w-full" (click)="deleteShow(p.id)" />
-                  <p-button icon="pi pi-pencil" id="editShow" class="w-full" styleClass="w-full" (click)="editShow(p.id)" />
+                  <p-button
+                    icon="pi pi-times"
+                    id="deleteShow"
+                    class="w-full"
+                    styleClass="w-full"
+                    (click)="deleteShow(p.id)"
+                  />
+                  <p-button
+                    icon="pi pi-pencil"
+                    id="editShow"
+                    class="w-full"
+                    styleClass="w-full"
+                    (click)="editShow(p.id)"
+                  />
+                } @else if (p.isPast) {
+                  <p-button
+                    label="המופע כבר התקיים"
+                    class="flex-grow-1"
+                    styleClass="h-full p-2"
+                    [disabled]="true"
+                  />
                 } @else {
                   <p-button
                     label="לבחירת מקום החל מ-{{ p.cheapestPrice }}₪"
@@ -136,13 +163,27 @@
         </div>
       }
     </div>
+    <p-paginator
+      [first]="(currentPage - 1) * pageSize"
+      [rows]="pageSize"
+      [totalRecords]="totalRecords"
+      (onPageChange)="onPageChange($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="עמוד {currentPage} מתוך {totalPages}"
+      styleClass="mt-3"
+    />
     <!-- </ng-template>
     </p-dataView> -->
   </div>
   <div class="col-4 md:col-3 lg:col-3 xl:col-2 pl-3 pr-0 gap-2 flex flex-column">
     <p-card styleClass="mb-2 shadow-1">
       <ng-template #content>
-        <p-button label="נקה סינון" icon="pi pi-filter-slash" styleClass="w-full p-button-outlined" (click)="clearFilters()"></p-button>
+        <p-button
+          label="נקה סינון"
+          icon="pi pi-filter-slash"
+          styleClass="w-full p-button-outlined"
+          (click)="clearFilters()"
+        ></p-button>
       </ng-template>
     </p-card>
     <!-- sorting -->
@@ -237,16 +278,23 @@
 </div>
 
 <div class="flex justify-center">
-    <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
-      <app-show-show [showId]="pId" (openSeatsMap)="openSeatsDrawer($event)"></app-show-show>
-    </p-drawer>
+  <p-drawer [header]="pTitle" [(visible)]="visible" [fullScreen]="true">
+    <app-show-show
+      [showId]="pId"
+      (openSeatsMap)="openSeatsDrawer($event)"
+      (openShowDetails)="openShowDetailsFromDrawer($event)"
+    ></app-show-show>
+  </p-drawer>
   <p-drawer
     [header]="'בחירת מקום – ' + seatsDrawerTitle"
     [(visible)]="seatsDrawerVisible"
     [fullScreen]="true"
   >
     @if (seatsDrawerShowId) {
-      <app-seats-map [showId]="seatsDrawerShowId" (goToCartClick)="closeSeatsDrawerAndGoToCart()"></app-seats-map>
+      <app-seats-map
+        [showId]="seatsDrawerShowId"
+        (goToCartClick)="closeSeatsDrawerAndGoToCart()"
+      ></app-seats-map>
     }
   </p-drawer>
   <app-edit-show

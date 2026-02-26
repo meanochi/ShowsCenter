@@ -41,8 +41,8 @@ export class Show {
     id: number =0;
     title: string = '';
     date: Date = new Date();
-    beginTime: Date = new Date();
-    endTime: Date = new Date();
+    beginTime: Date | string = new Date();
+    endTime: Date | string = new Date();
     audience: TargetAudience  = TargetAudience.ADULTS;
     sector: Sector = Sector.WOMEN;
     description: string ='';
@@ -62,6 +62,8 @@ export class Show {
     sectionDbIdByType: { [sectionType: number]: number } = {};
     minPrice: number = 0;
     popularity?: number;
+    /** Ordered (reserved or sold) seats for this show from GET show by id. Used to mark seats unavailable on map. */
+    orderedSeats?: OrderedSeatDto[];
 
     constructor(init?: Partial<Show>) {
         Object.assign(this, init);
@@ -83,6 +85,48 @@ export class Show {
     getSectionDbId(sectionType: number): number | undefined {
         return this.sectionDbIdByType[sectionType];
     }
+
+    /** True if the show's date (and end time) has already passed. */
+    get isPast(): boolean {
+        const d = new Date(this.date);
+        const et = this.endTime;
+      
+        if (typeof et === 'string' && et.includes(':')) {
+          const [hours, minutes] = et.split(':').map(val => parseInt(val, 10));
+          d.setHours(hours || 0, minutes || 0, 0, 0);
+        } else if (et instanceof Date) {
+          d.setHours(et.getHours(), et.getMinutes(), 0, 0);
+        } else {
+          d.setHours(23, 59, 59, 999);
+        }
+      
+        return d.getTime() < Date.now();
+      }
+
+    /** Total number of seats across sections offered in this show. */
+    get totalSeats(): number {
+        let n = 0;
+        const ids = this.sectionIdsFromApi ?? [];
+        if (ids.includes(1)) n += (this.hallMap?.map?.flat().length ?? 0);
+        if (ids.includes(2)) n += (this.rightBalMap?.map?.flat().length ?? 0);
+        if (ids.includes(3)) n += (this.leftBalMap?.map?.flat().length ?? 0);
+        if (ids.includes(4)) n += (this.centerBalMap?.map?.flat().length ?? 0);
+        return n;
+    }
+
+    /** True if all seats are taken (ordered/sold). */
+    get isFull(): boolean {
+        const total = this.totalSeats;
+        const taken = (this.orderedSeats ?? []).length;
+        return total > 0 && taken >= total;
+    }
+}
+
+/** One ordered seat from API (sectionId 1–4, row/col indices). */
+export interface OrderedSeatDto {
+    sectionId: number;
+    row: number;
+    col: number;
 }
 
 

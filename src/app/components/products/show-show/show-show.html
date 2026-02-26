@@ -50,16 +50,25 @@
         class="flex flex-column md:flex-row-reverse align-items-center justify-content-between gap-3 border-top-1 surface-border pt-4"
       >
         <div class="flex flex-column align-items-center text-center w-full md:w-auto">
-          <div class="text-2xl text-blue-600 font-bold mb-2 font-mono">05:06:05:20</div>
-          <span class="text-sm text-500 mb-3">עד המופע נשארו עוד</span>
-
-          <button
-            pButton
-            label="לבחירת מקום"
-            icon="pi pi-arrow-left"
-            class="p-button-outlined p-button-lg w-full"
-            (click)="openSeatsMap.emit(showId)"
-          ></button>
+          @if (showProd.isPast) {
+            <button
+              pButton
+              label="המופע כבר התקיים"
+              icon="pi pi-arrow-left"
+              class="p-button-outlined p-button-lg w-full p-button-disabled"
+              [disabled]="true"
+            ></button>
+          } @else {
+            <div class="text-2xl text-blue-600 font-bold mb-2 font-mono">{{ countdownLabel }}</div>
+            <span class="text-sm text-500 mb-3">עד המופע נשארו עוד</span>
+            <button
+              pButton
+              label="לבחירת מקום"
+              icon="pi pi-arrow-left"
+              class="p-button-outlined p-button-lg w-full"
+              (click)="openSeatsMap.emit(showId)"
+            ></button>
+          }
         </div>
 
         <!-- <div class="flex gap-2 w-full md:w-auto justify-content-center">
@@ -88,7 +97,7 @@
     >
       <ng-template let-item pTemplate="item">
         <div
-          class="border-1 surface-border border-round m-2 text-center p-3 shadow-1 h-full surface-card"
+          class="border-1 surface-border border-round m-2 text-center p-3 shadow-1 h-full surface-card flex flex-column"
         >
           <div class="mb-3 relative bg-gray-100 border-round" style="height: 120px">
             <img
@@ -98,6 +107,30 @@
           </div>
           <div class="font-bold text-700">{{ item.title }}</div>
           <div class="font-bold text-700">{{ item.date | date: 'dd.MM.yyyy' }}</div>
+          <div class="flex gap-2 mt-2 flex-1 align-items-end justify-content-center">
+            <button
+              pButton
+              icon="pi pi-ellipsis-h"
+              class="p-button-rounded p-button-text"
+              (click)="openShowDetails.emit(item.id)"
+              pTooltip="פרטי המופע"
+            ></button>
+            @if (item.isPast) {
+              <button
+                pButton
+                label="המופע כבר התקיים"
+                class="p-button-outlined p-button-sm flex-grow-1"
+                [disabled]="true"
+              ></button>
+            } @else {
+              <button
+                pButton
+                [label]="'לבחירת מקום החל מ-' + item.cheapestPrice + '₪'"
+                class="p-button-outlined p-button-sm flex-grow-1"
+                (click)="openSeatsMap.emit(item.id)"
+              ></button>
+            }
+          </div>
         </div>
       </ng-template>
     </p-carousel>

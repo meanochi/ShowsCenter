@@ -28,6 +28,12 @@
 <div class="seats-map-wrapper" dir="rtl">
   @if (show) {
     <div class="seats-card">
+      @if (show.isFull) {
+        <div class="seats-full-message p-3 mb-3 surface-ground border-1 border-200 border-round text-center">
+          <i class="pi pi-info-circle mr-2"></i>
+          <strong>המופע מלא</strong> – אין כרטיסים זמינים כרגע.
+        </div>
+      }
       <div class="seats-map-toolbar flex gap-2 align-items-center flex-wrap">
         @if (cartItems.length > 0 && remainingSeconds !== null) {
           <div class="countdown-bar">

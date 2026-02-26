@@ -62,6 +62,7 @@ import { AuthService } from '../../../services/auth-service';
               [(ngModel)]="newUser.firstName"
               name="fname"
               class="w-full"
+              autocomplete="given-name"
             />
             <label for="fname" class="block text-900 font-medium">שם פרטי</label>
           </p-floatLabel>
@@ -75,6 +76,7 @@ import { AuthService } from '../../../services/auth-service';
               [(ngModel)]="newUser.lastName"
               name="lname"
               class="w-full"
+              autocomplete="family-name"
             />
             <label for="lname" class="block text-900 font-medium">שם משפחה</label>
           </p-floatLabel>
@@ -88,6 +90,7 @@ import { AuthService } from '../../../services/auth-service';
               [(ngModel)]="newUser.phoneNumber"
               name="phone"
               class="w-full"
+              autocomplete="tel"
             />
             <label for="phone" class="block text-900 font-medium">מספר טלפון</label>
           </p-floatLabel>
@@ -101,6 +104,7 @@ import { AuthService } from '../../../services/auth-service';
               [(ngModel)]="newUser.emailAddress"
               name="email"
               class="w-full"
+              autocomplete="email"
             />
             <label for="email1" class="block text-900 font-medium">כתובת דוא"ל</label>
           </p-floatLabel>

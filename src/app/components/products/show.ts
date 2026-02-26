@@ -21,6 +21,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { SelectItem } from 'primeng/api';
 import { DataViewModule } from 'primeng/dataview';
 import { SelectModule } from 'primeng/select';
+import { PaginatorModule } from 'primeng/paginator';
 import { Observable } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
 import { ImageService } from '../../services/image-service';
@@ -46,6 +47,7 @@ import { AuthService } from '../../services/auth-service';
     CommonModule,
     DataViewModule,
     SelectModule,
+    PaginatorModule,
     EditShow,
   ],
   templateUrl: './show.html',
@@ -79,6 +81,16 @@ export class ShowsComponent {
   sortOptions: SelectItem[] = [];
   sortOrder: number = 1;
   sortField: string = 'title';
+  /** Paging: skip = items per page, position = 1-based page number */
+  pageSize: number = 12;
+  currentPage: number = 1;
+  /** Total records for paginator; if API doesn't return total, we estimate so "Next" appears when we got a full page. */
+  get totalRecords(): number {
+    if (this.shows.length < this.pageSize) {
+      return (this.currentPage - 1) * this.pageSize + this.shows.length;
+    }
+    return (this.currentPage * this.pageSize) + 1;
+  }
   upcomingShows: Show[] = [];
   showsLoadError: string | null = null;
   private cd = inject(ChangeDetectorRef);
@@ -119,18 +131,24 @@ export class ShowsComponent {
       { label: 'פופולריות', value: 'popularity' },
       { label: 'שם המופע (א-ת)', value: 'title' }
     ];
-    this.prepareUpcomingShows();
+    this.showSrv.loadUpcomingShows();
+    this.showSrv.upcomingShows$.subscribe((list) => {
+      this.upcomingShows = list;
+      this.cd.detectChanges();
+    });
     this.showSrv.showsLoadError$.subscribe((err) => {
       this.showsLoadError = err;
       this.cd.detectChanges();
     });
     this.shows$.subscribe((shows) => {
       this.shows = shows; // template binds to this.shows – must update when service emits
-      this.prepareUpcomingShows();
       this.cd.detectChanges();
     });
 
-    this.showSrv.getFilteredShows({});
+    this.showSrv.getFilteredShows({
+      skip: this.pageSize,
+      position: this.currentPage,
+    });
 
     this.categorySrv.loadCategories().subscribe();
     this.categorySrv.categories$.subscribe(data => {
@@ -140,8 +158,11 @@ export class ShowsComponent {
   openShow(id: number) {
     this.pId = id;
     this.pTitle = this.showSrv.findShow(id)?.title ?? '';
-    this.visible = true;
     this.cd.detectChanges();
+    setTimeout(() => {
+      this.visible = true;
+      this.cd.detectChanges();
+    }, 0);
   }
   /** Opens only the seat-map drawer (no card details). */
   toChoosePlace(id: number) {
@@ -156,19 +177,17 @@ export class ShowsComponent {
     this.toChoosePlace(showId);
   }
 
+  /** Called from show-show "עוד בקטגוריה" when user clicks "..." on a related show; switch details drawer to that show. */
+  openShowDetailsFromDrawer(showId: number) {
+    this.pId = showId;
+    this.pTitle = this.showSrv.findShow(showId)?.title ?? '';
+    this.cd.detectChanges();
+  }
+
   /** Close seats drawer and navigate to cart (called from seats-map "מעבר לסל"). */
   closeSeatsDrawerAndGoToCart() {
     this.seatsDrawerVisible = false;
     this.router.navigate(['/cart']);
-  }
-
-  prepareUpcomingShows() {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    this.upcomingShows = [...this.showSrv.shows]
-      .filter((s) => new Date(s.date) >= now)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 15);
   }
 
   onSortChange(event: any) {
@@ -200,7 +219,11 @@ export class ShowsComponent {
     this.priceRange = [0, 1000];
     this.sortOrder = 1;
     this.sortField = 'title';
-    this.showSrv.getFilteredShows({});
+    this.currentPage = 1;
+    this.showSrv.getFilteredShows({
+      skip: this.pageSize,
+      position: this.currentPage,
+    });
   }
 
   /** Strip to Hebrew + spaces so backend Contains() matches DB (DB may have different emoji). */
@@ -223,10 +246,17 @@ export class ShowsComponent {
       maxPrice: useFullRange ? undefined : maxP,
       sortField: this.sortField,
       sortOrder: this.sortOrder,
-      skip: 1000,
-      position: 1,
+      skip: this.pageSize,
+      position: this.currentPage,
     };
     this.showSrv.getFilteredShows(filterParams);
+  }
+
+  onPageChange(event: { page?: number; first?: number; rows?: number }) {
+    const page = event.page ?? 0;
+    this.currentPage = page + 1; // PrimeNG page is 0-based, API position is 1-based
+    this.applyFilters();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   getAllShows() {

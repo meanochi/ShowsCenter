@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -18,7 +18,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private navSubscription?: Subscription;
   userSrv: UsersService = inject(UsersService)
-  isLoggedIn: boolean = false;
+  // isLoggedIn: boolean = false;
+  isLoggedIn = signal<boolean>(false);
   userName: string = 'אורח';
   public authService = inject(AuthService);
   
@@ -39,13 +40,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (raw) {
       try {
         JSON.parse(raw);
-        this.isLoggedIn = true;
+        this.isLoggedIn.set(true);
         this.userName = localStorage.getItem('userName') || 'משתמש';
       } catch {
-        this.isLoggedIn = false;
+        this.isLoggedIn.set(false);
       }
     } else {
-      this.isLoggedIn = false;
+      this.isLoggedIn.set(false);
     }
   }
 

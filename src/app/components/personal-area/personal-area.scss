@@ -10,7 +10,44 @@ h1 {
   margin-bottom: 2rem;
 }
 
+h2 {
+  color: #444;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
 p {
   color: #666;
   font-size: 1.1rem;
+}
+
+.error-msg {
+  color: #c00;
+}
+
+.update-details-section {
+  text-align: right;
+  margin-top: 2rem;
+}
+
+.form-card {
+  background: var(--p-card-background, #fff);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.save-msg {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.save-msg.success {
+  color: #0a0;
+}
+
+.save-msg.error {
+  color: #c00;
 }

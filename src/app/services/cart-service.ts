@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { Seat } from '../models/seat-model';
 import { SECTION_TO_ID, SECTION_ID_MAP, Section } from '../models/show-model';
+import { UsersService } from './users-service';
 
 const LOCK_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -57,7 +58,7 @@ export class CartService {
   /** Timestamp (ms) when the seat that expires first will expire. Null if cart is empty. */
   soonestExpiresAt$ = this.soonestExpiresAtSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private usersSrv: UsersService) {}
 
   addSeat(seat: Seat, showId: number, price?: number): Observable<Seat> {
     const uid = this.currentUserId;
@@ -143,6 +144,40 @@ export class CartService {
       if (seat.id != null) this.clearTimer(seat.id);
     }
     this.cartSubject.next([]);
+  }
+
+  /**
+   * Load cart from server: get user by id, take orders with status 1 (reserved), set cart and start 10-min timers.
+   * Call on app/cart init when logged in so cart shows server state.
+   */
+  loadCartFromUser(): void {
+    const uid = this.currentUserId;
+    if (uid <= 0) return;
+    this.usersSrv.getUserById(uid).subscribe({
+      next: (user) => {
+        const orders = user?.orders ?? [];
+        const cartSeats = orders
+          .filter((o) => o.status === 1)
+          .map((o): Seat => {
+            const section = SECTION_ID_MAP[o.sectionId as keyof typeof SECTION_ID_MAP] ?? Section.HALL;
+            return {
+              id: o.id,
+              showId: o.showId,
+              row: o.row,
+              col: o.col,
+              section,
+              price: o.price,
+              userId: o.userId ?? uid,
+              status: o.status !== 0,
+            };
+          });
+        this.cartSubject.next(cartSeats);
+        for (const seat of cartSeats) {
+          this.startTimer(seat);
+        }
+      },
+      error: (err) => console.error('CartService loadCartFromUser failed', err),
+    });
   }
 
   private startTimer(seat: Seat): void {

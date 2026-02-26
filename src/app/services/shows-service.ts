@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { Category } from '../models/category-model';
 import { CategorySrvice } from './category-srvice';
 import { Sector, Show, TargetAudience, SECTION_ID_MAP, Section } from '../models/show-model';
+import { OrderedSeatDto } from '../models/show-model';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, tap, catchError } from 'rxjs/operators';
 import { SeatMap } from '../models/map-model';
@@ -19,6 +20,9 @@ export class ShowsService {
   // הוסף משתנה BehaviorSubject כדי לנהל את הנתונים
   private showsSubject = new BehaviorSubject<Show[]>([]);
   shows$ = this.showsSubject.asObservable(); // זה מה שהקומפוננטה תירשם אליו
+  /** Upcoming shows for carousel only – not affected by filters/paging. */
+  private upcomingShowsSubject = new BehaviorSubject<Show[]>([]);
+  upcomingShows$ = this.upcomingShowsSubject.asObservable();
   /** Set when loadShows fails (e.g. 404 – backend not running). Cleared on success. */
   private showsLoadErrorSubject = new BehaviorSubject<string | null>(null);
   showsLoadError$ = this.showsLoadErrorSubject.asObservable();
@@ -36,6 +40,54 @@ export class ShowsService {
     return !isNaN(single) ? [single] : [];
   }
 
+  /** Map one API show item to Show model (sections, maps, orderedSeats). */
+  private mapShowFromApi(item: any): Show {
+    const show = new Show(item);
+    show.date = new Date(item.date);
+    if (item.beginTime) show.beginTime = item.beginTime.substring(0, 5);
+    if (item.endTime) show.endTime = item.endTime.substring(0, 5);
+    if (item.sections && Array.isArray(item.sections)) {
+      show.sectionIdsFromApi = item.sections
+        .map((s: any) => Number(s.sectionTypeId ?? s.sectionType ?? s.id))
+        .filter((n: number) => !isNaN(n) && n >= 1 && n <= 4);
+      item.sections.forEach((sec: any) => {
+        const sectionTypeId = Number(sec.sectionTypeId ?? sec.sectionType ?? sec.id);
+        const sectionDbId = Number(sec.id);
+        if (!isNaN(sectionDbId) && sectionDbId > 0) {
+          show.sectionDbIdByType[sectionTypeId] = sectionDbId;
+        }
+        const sectionType = SECTION_ID_MAP[sectionTypeId];
+        if (sectionType) {
+          const price = typeof sec.price === 'number' ? sec.price : (Number(sec.price) || 0);
+          const mapObj = new SeatMap(price, sectionType);
+          switch (sectionType) {
+            case Section.HALL: show.hallMap = mapObj; break;
+            case Section.RIGHT_BALCONY: show.rightBalMap = mapObj; break;
+            case Section.LEFT_BALCONY: show.leftBalMap = mapObj; break;
+            case Section.CENTER_BALCONY: show.centerBalMap = mapObj; break;
+          }
+        }
+      });
+    }
+    show.orderedSeats = Array.isArray(item.orderedSeats)
+      ? item.orderedSeats.map((s: any) => ({
+          sectionId: Number(s.sectionId ?? s.sectionTypeId ?? s.sectionType ?? 0),
+          row: Number(s.row ?? 0),
+          col: Number(s.col ?? 0),
+        }))
+      : [];
+    const sectionPrices = [
+      show.hallMap?.price,
+      show.leftBalMap?.price,
+      show.rightBalMap?.price,
+      show.centerBalMap?.price,
+    ].filter((p): p is number => typeof p === 'number' && p > 0);
+    if (sectionPrices.length > 0 && (show.minPrice == null || show.minPrice === 0)) {
+      show.minPrice = Math.min(...sectionPrices);
+    }
+    return show;
+  }
+
   private _loadShowsInit() {
     // this.loadShows();
     
@@ -45,11 +97,16 @@ export class ShowsService {
     });
   }
 
-  public getFilteredShows(filters: any) { 
-    this.loadShows(filters);
+  public getFilteredShows(filters: any) {
+    this.loadShows(filters, false);
   }
 
-  private loadShows(filters: any = {}) {
+  /** Load upcoming shows for carousel only (no filters, no paging). Independent of getFilteredShows. */
+  loadUpcomingShows(): void {
+    this.loadShows({ skip: 200, position: 1 }, true);
+  }
+
+  private loadShows(filters: any = {}, forUpcoming: boolean = false) {
     let params = new HttpParams();
     if (filters.description) {
       params = params.set('description', filters.description);
@@ -83,50 +140,20 @@ export class ShowsService {
     }
     this.http.get<any[]>('/api/Shows', { params })
     .pipe(
-      map(data => data.map(item => {
-        const show = new Show(item);
-        show.date = new Date(item.date); 
-        if (item.beginTime) show.beginTime = item.beginTime.substring(0, 5);
-        if (item.endTime) show.endTime = item.endTime.substring(0, 5);
-        if (item.sections && Array.isArray(item.sections)) {
-          // Section type = 1 HALL, 2 RIGHT_BALCONY, 3 LEFT_BALCONY, 4 CENTER_BALCONY (not the DB row id)
-          show.sectionIdsFromApi = item.sections
-            .map((s: any) => Number(s.sectionTypeId ?? s.sectionType ?? s.id))
-            .filter((n: number) => !isNaN(n) && n >= 1 && n <= 4);
-        item.sections.forEach((sec: any) => {
-          const sectionTypeId = Number(sec.sectionTypeId ?? sec.sectionType ?? sec.id);
-          const sectionDbId = Number(sec.id);
-          if (!isNaN(sectionDbId) && sectionDbId > 0) {
-            show.sectionDbIdByType[sectionTypeId] = sectionDbId;
-          }
-          const sectionType = SECTION_ID_MAP[sectionTypeId]; 
-          
-          if (sectionType) {
-            const price = typeof sec.price === 'number' ? sec.price : (Number(sec.price) || 0);
-            const mapObj = new SeatMap(price, sectionType);
-            switch (sectionType) {
-              case Section.HALL: show.hallMap = mapObj; break;
-              case Section.RIGHT_BALCONY: show.rightBalMap = mapObj; break;
-              case Section.LEFT_BALCONY: show.leftBalMap = mapObj; break;
-              case Section.CENTER_BALCONY: show.centerBalMap = mapObj; break;
-            }
-          }
-        });
-        const sectionPrices = [
-          show.hallMap?.price,
-          show.leftBalMap?.price,
-          show.rightBalMap?.price,
-          show.centerBalMap?.price,
-        ].filter((p): p is number => typeof p === 'number' && p > 0);
-        if (sectionPrices.length > 0 && (show.minPrice == null || show.minPrice === 0)) {
-          show.minPrice = Math.min(...sectionPrices);
-        }
-      }
-        return show;
-      }))
+      map(data => data.map(item => this.mapShowFromApi(item)))
     ).subscribe({
       next: (shows) => {
         this.showsLoadErrorSubject.next(null);
+        if (forUpcoming) {
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          const upcoming = [...shows]
+            .filter((s) => new Date(s.date) >= now)
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .slice(0, 15);
+          this.upcomingShowsSubject.next(upcoming);
+          return;
+        }
         this.shows = shows;
         this.showsSubject.next(shows); // עדכון כל מי שמאזין
       },
@@ -199,7 +226,7 @@ export class ShowsService {
     const userId = localStorage.getItem('user');
     const body = this.buildAddShowBody(show);
     return this.http.post<Show>(`/api/Shows?userId=${userId}`, body).pipe(
-      tap(() => this.loadShows()),
+      tap(() => this.loadShows({})),
       catchError((err) => {
         console.error('addShow failed', err);
         throw err;
@@ -212,7 +239,7 @@ export class ShowsService {
     const userId = localStorage.getItem('user');
     const body = this.buildUpdateShowBody(show);
     return this.http.put<Show>(`/api/Shows/${show.id}?userId=${userId}`, body).pipe(
-      tap(() => this.loadShows()),
+      tap(() => this.loadShows({})),
       catchError((err) => {
         console.error('updateShow failed', err);
         throw err;
@@ -224,7 +251,7 @@ export class ShowsService {
     const userId = localStorage.getItem('user');
     if (confirm('האם אתה בטוח שברצונך למחוק את המופע?')) {  
       return this.http.delete<void>(`/api/Shows/${id}?userId=${userId}`).pipe(
-        tap(() => this.loadShows()),
+        tap(() => this.loadShows({})),
         catchError((err) => {
           console.error('deleteShow failed', err);
           throw err;
@@ -235,9 +262,28 @@ export class ShowsService {
   }
 
 
-  findShow(id:number){
-    const show:Show | undefined =this.shows.find(p=>p.id===id)
-    return show
+  findShow(id: number): Show | undefined {
+    const s = this.shows.find(p => p.id === id);
+    if (s) return s;
+    return this.upcomingShowsSubject.getValue().find(p => p.id === id);
+  }
+
+  /**
+   * Get show by id (for seats map). Returns show with orderedSeats from API.
+   * On 404 or error, returns show from cache with orderedSeats = [] so map can still render.
+   */
+  getShowById(id: number): Observable<Show> {
+    return this.http.get<any>(`/api/Shows/${id}`).pipe(
+      map((item) => this.mapShowFromApi(item)),
+      catchError(() => {
+        const s = this.findShow(id);
+        if (s) {
+          s.orderedSeats = s.orderedSeats ?? [];
+          return of(s);
+        }
+        return of(new Show({ id, orderedSeats: [] }));
+      })
+    );
   }
 
   /** Section price for a show (for cart/slider when seat.price is missing). Accepts Section enum or sectionId number. */

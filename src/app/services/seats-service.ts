@@ -1,30 +1,39 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-
-/** Seat status from DB: 0 = available, 1 = reserved (10 min), 2 = sold. */
-export interface SeatStatusDto {
-  sectionId: number;
-  row: number;
-  col: number;
-  status: number;
-}
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { Seat } from '../models/seat-model';
+import { Show, OrderedSeatDto, SECTION_ID_MAP, Section } from '../models/show-model';
+import { ShowsService } from './shows-service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SeatsService {
-  constructor(private http: HttpClient) {}
+  private showSrv = inject(ShowsService);
 
   /**
-   * Load seat statuses for a show from the DB.
-   * Backend should return array of { sectionId, row, col, status }.
-   * status: 0 = available, 1 = reserved, 2 = sold.
+   * Get ordered (reserved/sold) seats for a show as Seat[].
+   * Uses GET /api/Shows/${showId} which returns a Show object containing orderedSeats;
+   * that list is converted to Seat[] (each with status = true for disabled in map).
    */
-  getSeatStatuses(showId: number): Observable<SeatStatusDto[]> {
-    return this.http
-      .get<SeatStatusDto[]>(`/api/Shows/${showId}/seats`)
-      .pipe(catchError(() => of([])));
+  getOrderedSeats(showId: number): Observable<Seat[]> {
+    return this.showSrv.getShowById(showId).pipe(
+      map((show) => this.orderedSeatsToSeatList(show.orderedSeats ?? []))
+    );
+  }
+
+  /**
+   * Convert API ordered-seat DTOs to Seat[] for use in map (each seat has status = true so it is disabled).
+   */
+  orderedSeatsToSeatList(dtos: OrderedSeatDto[]): Seat[] {
+    return dtos.map((dto) => {
+      const section: Section = SECTION_ID_MAP[dto.sectionId] ?? Section.HALL;
+      const seat = new Seat();
+      seat.section = section;
+      seat.row = dto.row;
+      seat.col = dto.col;
+      seat.status = true;
+      return seat;
+    });
   }
 }

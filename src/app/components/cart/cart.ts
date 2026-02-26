@@ -26,6 +26,9 @@ export class CartComponent implements OnInit {
 
   ngOnInit(): void {
     this.isLoggedIn = this.cartSrv.isLoggedIn;
+    if (this.isLoggedIn) {
+      this.cartSrv.loadCartFromUser();
+    }
     this.cartSrv.cart$.subscribe((items) => {
       this.cartItems = items;
       if (items.some((s) => s.showId != null)) {
