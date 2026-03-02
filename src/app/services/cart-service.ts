@@ -161,64 +161,128 @@ export class CartService {
   }
 
   /** Clear cart state and all reservation timers (call after successful order). */
+  // clearCart(): void {
+  //   const cart = this.cartSubject.value;
+  //   for (const seat of cart) {
+  //     if (seat.id != null) this.clearTimer(seat.id);
+  //   }
+  //   this.cartSubject.next([]);
+  //   this.loadedCartUserId = 0;
+  // }
   clearCart(): void {
-    const cart = this.cartSubject.value;
-    for (const seat of cart) {
-      if (seat.id != null) this.clearTimer(seat.id);
-    }
-    this.cartSubject.next([]);
-    this.loadedCartUserId = 0;
-  }
+  // 1. ניקוי יסודי של כל הטיימרים שקיימים ב-Map (בלי קשר למה שיש בסל כרגע)
+  this.seatTimers.forEach(timer => clearTimeout(timer));
+  this.seatTimers.clear();
+  this.seatExpiresAt.clear();
+
+  // 2. איפוס הנתונים היסודי
+  this.cartSubject.next([]);
+  this.loadedCartUserId = 0;
+
+  // 3. איפוס ה-Observable שמציג את זמן התפוגה הקרוב
+  this.soonestExpiresAtSubject.next(null);
+  
+  console.log('הסל וכל הטיימרים נוקו בהצלחה');
+}
 
   /**
    * Load cart from server: get user by id, take orders with status 1 (reserved), set cart and start 10-min timers.
    * Call on app/cart init when logged in so cart shows server state.
    */
+  // loadCartFromUser(force = false): void {
+  //   const uid = this.currentUserId;
+  //   if (uid <= 0) return;
+  //   if (!force && this.loadedCartUserId === uid) return;
+  //   this.usersSrv.getUserById(uid).subscribe({
+  //     next: (user) => {
+  //       const rawOrders =
+  //         (user as unknown as { orders?: unknown; Orders?: unknown })?.orders ??
+  //         (user as unknown as { orders?: unknown; Orders?: unknown })?.Orders ??
+  //         [];
+  //       const orders = Array.isArray(rawOrders) ? rawOrders : [];
+  //       const cartSeats = orders[0].orderedSeats
+  //         .map((o:any) => this.normalizeOrderItem(o, uid))
+  //         .filter((o:any): o is NormalizedOrderItem => o != null && o.status === 1)
+  //         .map((o:any): Seat => {
+  //           const section = SECTION_ID_MAP[o.sectionSectionType as keyof typeof SECTION_ID_MAP] ?? Section.HALL;
+  //           return {
+  //             id: o.id,
+  //             showId: o.showId,
+  //             row: o.row,
+  //             col: o.col,
+  //             sectionId:o.sectionId,
+  //             section:SECTION_ID_MAP[o.sectionSectionType],
+  //             sectionSectionType:o.sectionSectionType,
+  //             price: o.price,
+  //             userId: o.userId ?? uid,
+  //             status: o.status !== 0,
+  //           };
+  //         });
+  //       const previous = this.cartSubject.value;
+  //       for (const seat of previous) {
+  //         if (seat.id != null) this.clearTimer(seat.id);
+  //       }
+  //       this.cartSubject.next(cartSeats);
+  //       for (const seat of cartSeats) {
+  //         this.startTimer(seat);
+  //       }
+  //       this.loadedCartUserId = uid;
+  //     },
+  //     error: (err) => {
+  //       console.error('CartService loadCartFromUser failed', err);
+  //       this.loadedCartUserId = 0;
+  //     },
+  //   });
+  // }
+
   loadCartFromUser(force = false): void {
-    const uid = this.currentUserId;
-    if (uid <= 0) return;
-    if (!force && this.loadedCartUserId === uid) return;
-    this.usersSrv.getUserById(uid).subscribe({
-      next: (user) => {
-        const rawOrders =
-          (user as unknown as { orders?: unknown; Orders?: unknown })?.orders ??
-          (user as unknown as { orders?: unknown; Orders?: unknown })?.Orders ??
-          [];
-        const orders = Array.isArray(rawOrders) ? rawOrders : [];
-        const cartSeats = orders[0].orderedSeats
-          .map((o:any) => this.normalizeOrderItem(o, uid))
-          .filter((o:any): o is NormalizedOrderItem => o != null && o.status === 1)
-          .map((o:any): Seat => {
-            const section = SECTION_ID_MAP[o.sectionSectionType as keyof typeof SECTION_ID_MAP] ?? Section.HALL;
-            return {
-              id: o.id,
-              showId: o.showId,
-              row: o.row,
-              col: o.col,
-              sectionId:o.sectionId,
-              section:SECTION_ID_MAP[o.sectionSectionType],
-              sectionSectionType:o.sectionSectionType,
-              price: o.price,
-              userId: o.userId ?? uid,
-              status: o.status !== 0,
-            };
-          });
-        const previous = this.cartSubject.value;
-        for (const seat of previous) {
-          if (seat.id != null) this.clearTimer(seat.id);
+  const uid = this.currentUserId;
+  if (uid <= 0) return;
+  if (!force && this.loadedCartUserId === uid) return;
+
+  this.usersSrv.getUserById(uid).subscribe({
+    next: (user: any) => {
+      // חילוץ בטוח של המידע
+      const orders = user?.orders || user?.Orders || [];
+      if (orders.length === 0) {
+        this.cartSubject.next([]);
+        return;
+      }
+
+      // איסוף כל המושבים מכל ההזמנות הפעילות (סטטוס 1)
+      const allSeats: Seat[] = [];
+      orders.forEach((order: any) => {
+        if (order.orderedSeats) {
+          const normalized = order.orderedSeats
+            .map((o: any) => this.normalizeOrderItem(o, uid))
+            .filter((o: any) => o != null && o.status === 1)
+            .map((o: any) => this.mapToSeat(o, uid));
+          allSeats.push(...normalized);
         }
-        this.cartSubject.next(cartSeats);
-        for (const seat of cartSeats) {
-          this.startTimer(seat);
-        }
-        this.loadedCartUserId = uid;
-      },
-      error: (err) => {
-        console.error('CartService loadCartFromUser failed', err);
-        this.loadedCartUserId = 0;
-      },
-    });
-  }
+      });
+
+      this.cartSubject.next(allSeats);
+      this.loadedCartUserId = uid;
+    },
+    error: (err) => console.error('Load cart failed', err)
+  });
+}
+
+// פונקציית עזר למיפוי (להוציא מחוץ ל-subscribe לניקיון הקוד)
+private mapToSeat(o: any, uid: number): Seat {
+  return {
+    id: o.id,
+    showId: o.showId,
+    row: o.row,
+    col: o.col,
+    sectionId: o.sectionId,
+    section: SECTION_ID_MAP[o.sectionSectionType],
+    sectionSectionType: o.sectionSectionType,
+    price: o.price,
+    userId: o.userId ?? uid,
+    status: true,
+  };
+}
 
   private normalizeOrderItem(input: unknown, fallbackUserId: number): NormalizedOrderItem | null {
     if (input == null || typeof input !== 'object') return null;

@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { UsersService } from '../../services/users-service';
 import { AuthService } from '../../services/auth-service';
 import { Inject, PLATFORM_ID } from '@angular/core';
+import { CartService } from '../../services/cart-service';
 
 @Component({
   selector: 'app-navbar',
@@ -17,6 +18,7 @@ import { Inject, PLATFORM_ID } from '@angular/core';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private cartSrv = inject(CartService)
   private navSubscription?: Subscription;
   userSrv: UsersService = inject(UsersService)
   // isLoggedIn: boolean = false;
@@ -62,6 +64,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.authService.logout();
       // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
       this.checkLoginStatus();
+      this.cartSrv.clearCart()
       
       // ניתוב חזרה לדף הבית
       this.router.navigate(['/']);
