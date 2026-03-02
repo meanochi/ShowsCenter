@@ -5,17 +5,18 @@ import { map, tap } from 'rxjs/operators';
 import { Seat } from '../models/seat-model';
 import { SECTION_TO_ID, SECTION_ID_MAP, Section } from '../models/show-model';
 import { UsersService } from './users-service';
+import { Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 const LOCK_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
 export interface LockSeatDTO {
-  UserId: number;
-  ShowId: number;
-  Row: number;
-  Col: number;
+  userId: number;   // שונה מ-UserId
+  showId: number;   // שונה מ-ShowId
+  row: number;
+  col: number;
   sectionId: number;
-  /** 1 = reserved for user (orderedSeats.status in DB). */
-  Status: number;
+  status: number;
 }
 
 /** Response from POST /api/Order/confirm */
@@ -25,11 +26,26 @@ export interface ConfirmOrderResponse {
   date?: string;
 }
 
+interface NormalizedOrderItem {
+  id: number;
+  showId: number;
+  sectionSectionType: number;
+  sectionId:number,
+  row: number;
+  col: number;
+  status: number;
+  price: number;
+  userId: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class CartService {
+  private loadedCartUserId = 0;
+
   private get currentUserId(): number {
+    if (isPlatformBrowser(this.platformId)) {
     const raw = localStorage.getItem('user');
     if (raw == null) return 0;
     try {
@@ -38,6 +54,8 @@ export class CartService {
     } catch {
       return 0;
     }
+  }
+  return 0;
   }
 
   /** Returns current user id if logged in, else 0. */
@@ -58,22 +76,27 @@ export class CartService {
   /** Timestamp (ms) when the seat that expires first will expire. Null if cart is empty. */
   soonestExpiresAt$ = this.soonestExpiresAtSubject.asObservable();
 
-  constructor(private http: HttpClient, private usersSrv: UsersService) {}
+  constructor(private http: HttpClient, private usersSrv: UsersService,@Inject(PLATFORM_ID) private platformId: Object) {}
 
   addSeat(seat: Seat, showId: number, price?: number): Observable<Seat> {
     const uid = this.currentUserId;
+    console.log('CartService Debug:', {
+        parameterShowId: showId,
+        seatObjectShowId: seat.showId,
+        userId: uid
+    });
     if (uid <= 0) {
       return throwError(() => ({ status: 401, message: 'Login required' }));
     }
     // Send the section's DB row id (sectionDbId), not the section type (1–4).
-    const sectionId = seat.sectionDbId ?? SECTION_TO_ID[seat.section];
+    const sectionId = seat.sectionSectionType ?? SECTION_TO_ID[seat.section];
     const body: LockSeatDTO = {
-      UserId: uid,
-      ShowId: showId,
-      Row: seat.row,
-      Col: seat.col,
-      sectionId,
-      Status: 1,
+      userId: uid,
+      showId: showId,   // כאן אנחנו מבטיחים שזה נכנס
+      row: seat.row,
+      col: seat.col,
+      sectionId: sectionId,
+      status: 1,
     };
     return this.http.post<any>('/api/Order/lock', body).pipe(
       map((created) => {
@@ -144,40 +167,79 @@ export class CartService {
       if (seat.id != null) this.clearTimer(seat.id);
     }
     this.cartSubject.next([]);
+    this.loadedCartUserId = 0;
   }
 
   /**
    * Load cart from server: get user by id, take orders with status 1 (reserved), set cart and start 10-min timers.
    * Call on app/cart init when logged in so cart shows server state.
    */
-  loadCartFromUser(): void {
+  loadCartFromUser(force = false): void {
     const uid = this.currentUserId;
     if (uid <= 0) return;
+    if (!force && this.loadedCartUserId === uid) return;
     this.usersSrv.getUserById(uid).subscribe({
       next: (user) => {
-        const orders = user?.orders ?? [];
-        const cartSeats = orders
-          .filter((o) => o.status === 1)
-          .map((o): Seat => {
-            const section = SECTION_ID_MAP[o.sectionId as keyof typeof SECTION_ID_MAP] ?? Section.HALL;
+        const rawOrders =
+          (user as unknown as { orders?: unknown; Orders?: unknown })?.orders ??
+          (user as unknown as { orders?: unknown; Orders?: unknown })?.Orders ??
+          [];
+        const orders = Array.isArray(rawOrders) ? rawOrders : [];
+        const cartSeats = orders[0].orderedSeats
+          .map((o:any) => this.normalizeOrderItem(o, uid))
+          .filter((o:any): o is NormalizedOrderItem => o != null && o.status === 1)
+          .map((o:any): Seat => {
+            const section = SECTION_ID_MAP[o.sectionSectionType as keyof typeof SECTION_ID_MAP] ?? Section.HALL;
             return {
               id: o.id,
               showId: o.showId,
               row: o.row,
               col: o.col,
-              section,
+              sectionId:o.sectionId,
+              section:SECTION_ID_MAP[o.sectionSectionType],
+              sectionSectionType:o.sectionSectionType,
               price: o.price,
               userId: o.userId ?? uid,
               status: o.status !== 0,
             };
           });
+        const previous = this.cartSubject.value;
+        for (const seat of previous) {
+          if (seat.id != null) this.clearTimer(seat.id);
+        }
         this.cartSubject.next(cartSeats);
         for (const seat of cartSeats) {
           this.startTimer(seat);
         }
+        this.loadedCartUserId = uid;
       },
-      error: (err) => console.error('CartService loadCartFromUser failed', err),
+      error: (err) => {
+        console.error('CartService loadCartFromUser failed', err);
+        this.loadedCartUserId = 0;
+      },
     });
+  }
+
+  private normalizeOrderItem(input: unknown, fallbackUserId: number): NormalizedOrderItem | null {
+    if (input == null || typeof input !== 'object') return null;
+    const obj = input as Record<string, unknown>;
+    const id = this.toNumber(obj['id'] ?? obj['Id'] ?? obj['orderId'] ?? obj['orderedSeatId']);
+    const showId = this.toNumber(obj['showId'] ?? obj['ShowId']);
+    const sectionId=this.toNumber(obj['SectionId'] ?? obj['sectionId']);
+    const sectionSectionType = this.toNumber(obj['sectionSectionType'] ?? obj['sectionTypeId']);    
+    const row = this.toNumber(obj['row'] ?? obj['Row']);
+    const col = this.toNumber(obj['col'] ?? obj['Col']);
+    const status = this.toNumber(obj['status'] ?? obj['Status']);
+    const userId = this.toNumber(obj['userId'] ?? obj['UserId']) || fallbackUserId;
+    const price = this.toNumber(obj['price'] ?? obj['Price']) || 0;
+
+    if (id <= 0 || showId <= 0 || row < 0 || col < 0 || sectionSectionType <= 0) return null;
+    return { id, showId, sectionId,sectionSectionType , row, col, status, userId, price };
+  }
+
+  private toNumber(value: unknown): number {
+    const n = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(n) ? n : 0;
   }
 
   private startTimer(seat: Seat): void {

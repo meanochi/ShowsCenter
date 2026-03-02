@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -8,6 +8,7 @@ import { PasswordModule } from 'primeng/password';
 import { User } from '../../models/user-model';
 import { UsersService } from '../../services/users-service';
 import { AuthService } from '../../services/auth-service';
+import { Inject, PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'app-personal-area',
@@ -24,6 +25,7 @@ import { AuthService } from '../../services/auth-service';
   styleUrls: ['./personal-area.scss'],
 })
 export class PersonalAreaComponent implements OnInit {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
   private usersSrv = inject(UsersService);
   private authSrv = inject(AuthService);
 
@@ -49,18 +51,20 @@ export class PersonalAreaComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const userId = Number(localStorage.getItem('user'));
-    if (!userId) {
-      this.loadError.set('יש להתחבר כדי לראות את האזור האישי');
-      return;
+    if (isPlatformBrowser(this.platformId)) {
+      const userId = Number(localStorage.getItem('user'));
+      if (!userId) {
+        this.loadError.set('יש להתחבר כדי לראות את האזור האישי');
+        return;
+      }
+      this.usersSrv.getUserById(userId).subscribe({
+        next: (u) => {
+          this.user.set(u);
+          this.editUser = this.trimUser({ ...u, password: '' });
+        },
+        error: () => this.loadError.set('לא ניתן לטעון פרטי משתמש'),
+      });
     }
-    this.usersSrv.getUserById(userId).subscribe({
-      next: (u) => {
-        this.user.set(u);
-        this.editUser = this.trimUser({ ...u, password: '' });
-      },
-      error: () => this.loadError.set('לא ניתן לטעון פרטי משתמש'),
-    });
   }
 
   save(): void {

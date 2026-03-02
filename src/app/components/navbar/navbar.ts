@@ -1,11 +1,12 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { UsersService } from '../../services/users-service';
 import { AuthService } from '../../services/auth-service';
+import { Inject, PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'app-navbar',
@@ -22,6 +23,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isLoggedIn = signal<boolean>(false);
   userName: string = 'אורח';
   public authService = inject(AuthService);
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
   
   ngOnInit() {
     this.checkLoginStatus();
@@ -36,17 +39,19 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   // פונקציה שבודקת האם המשתמש מחובר (login שומר ב-'user')
   checkLoginStatus() {
-    const raw = localStorage.getItem('user');
-    if (raw) {
-      try {
-        JSON.parse(raw);
-        this.isLoggedIn.set(true);
-        this.userName = localStorage.getItem('userName') || 'משתמש';
-      } catch {
+    if (isPlatformBrowser(this.platformId)) {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        try {
+          JSON.parse(raw);
+          this.isLoggedIn.set(true);
+          this.userName = localStorage.getItem('userName') || 'משתמש';
+        } catch {
+          this.isLoggedIn.set(false);
+        }
+      } else {
         this.isLoggedIn.set(false);
       }
-    } else {
-      this.isLoggedIn.set(false);
     }
   }
 

@@ -137,6 +137,7 @@ export class CheckoutComponent implements OnInit {
       this.router.navigate(['/cart']);
       return;
     }
+    this.cartSrv.loadCartFromUser(true);
     this.cartSrv.cart$.subscribe((items) => {
       this.cartItems = items;
     });

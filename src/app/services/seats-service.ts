@@ -21,10 +21,12 @@ export class SeatsService {
           seat.id = dto.id;
           seat.row = dto.row;
           seat.col = dto.col;
-          seat.userId = dto.userId ?? 0;
+          seat.userId = dto.userId ?? dto.orderUserId ?? 0;
           /** 1 = reserved, 2 = sold => unavailable on map */
-          seat.status = dto.status === 1 || dto.status === 2;
-          seat.sectionDbId = dto.sectionSectionType;
+          seat.status = dto.status
+          seat.sectionSectionType = dto.sectionSectionType;
+          seat.userId = dto.orderUserId;
+          seat.showId = dto.showId;
           return seat;
         })
       )

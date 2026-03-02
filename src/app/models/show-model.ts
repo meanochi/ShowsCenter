@@ -63,7 +63,7 @@ export class Show {
     minPrice: number = 0;
     popularity?: number;
     /** Ordered (reserved or sold) seats for this show from GET show by id. Used to mark seats unavailable on map. */
-    orderedSeats?: OrderedSeatDto[];
+    orderedSeats: OrderedSeatDto[] = [];
 
     constructor(init?: Partial<Show>) {
         Object.assign(this, init);
@@ -127,6 +127,8 @@ export interface OrderedSeatDto {
     sectionId: number;
     row: number;
     col: number;
+    orderUserId: number;
+    sectionSectionType:number;
 }
 
 
