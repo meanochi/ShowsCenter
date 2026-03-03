@@ -127,7 +127,7 @@ export class CartService {
     if (orderItemIds.length === 0) {
       return throwError(() => ({ status: 400, message: 'No items to confirm' }));
     }
-    return this.http.post<ConfirmOrderResponse>('/api/Order/confirm', {
+    return this.http.post('/api/Order', {
       userId: uid,
       orderItemIds,
     }).pipe(
@@ -147,29 +147,29 @@ export class CartService {
   }
 
   /**
-   * Load cart from server: get user by id, take orders with status 1 (reserved), set cart and start 10-min timers.
-   * Call on app/cart init when logged in so cart shows server state.
+   * Load cart from server: GET /api/OrderedSeat/userId/{userId}, keep only status 1 (reserved), set cart and start 10-min timers.
+   * Call on app/cart init when logged in so cart shows server state. Updates are observable via cart$.
    */
   loadCartFromUser(): void {
     const uid = this.currentUserId;
     if (uid <= 0) return;
-    this.usersSrv.getUserById(uid).subscribe({
-      next: (user) => {
-        const orders = user?.orders ?? [];
-        const cartSeats = orders
-          .filter((o) => o.status === 1)
-          .map((o): Seat => {
-            const section = SECTION_ID_MAP[o.sectionId as keyof typeof SECTION_ID_MAP] ?? Section.HALL;
+    this.http.get<any[]>(`/api/OrderedSeat/userId/${uid}`).subscribe({
+      next: (data) => {
+        const cartSeats: Seat[] = (data ?? [])
+          .filter((dto: any) => dto.status === 1)
+          .map((dto: any) => {
+            const section = SECTION_ID_MAP[dto.sectionSectionType as keyof typeof SECTION_ID_MAP] ?? Section.HALL;
             return {
-              id: o.id,
-              showId: o.showId,
-              row: o.row,
-              col: o.col,
+              id: dto.id,
+              showId: dto.showId,
+              row: dto.row,
+              col: dto.col,
               section,
-              price: o.price,
-              userId: o.userId ?? uid,
-              status: o.status !== 0,
-            };
+              sectionDbId: dto.sectionSectionType,
+              price: dto.price,
+              userId: dto.userId ?? uid,
+              status: true,
+            } as Seat;
           });
         this.cartSubject.next(cartSeats);
         for (const seat of cartSeats) {
