@@ -1,11 +1,9 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
-import { UsersService } from '../../services/users-service';
-import { AuthService } from '../../services/auth-service';
 
 @Component({
   selector: 'app-navbar',
@@ -17,12 +15,10 @@ import { AuthService } from '../../services/auth-service';
 export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private navSubscription?: Subscription;
-  userSrv: UsersService = inject(UsersService)
-  // isLoggedIn: boolean = false;
-  isLoggedIn = signal<boolean>(false);
+
+  isLoggedIn: boolean = false;
   userName: string = 'אורח';
-  public authService = inject(AuthService);
-  
+
   ngOnInit() {
     this.checkLoginStatus();
     this.navSubscription = this.router.events
@@ -40,21 +36,22 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (raw) {
       try {
         JSON.parse(raw);
-        this.isLoggedIn.set(true);
+        this.isLoggedIn = true;
         this.userName = localStorage.getItem('userName') || 'משתמש';
       } catch {
-        this.isLoggedIn.set(false);
+        this.isLoggedIn = false;
       }
     } else {
-      this.isLoggedIn.set(false);
+      this.isLoggedIn = false;
     }
   }
 
   // פונקציית התנתקות
   logout() {
     if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-
-      this.authService.logout();
+      localStorage.removeItem('user');
+      localStorage.removeItem('userName');
+      
       // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
       this.checkLoginStatus();
       

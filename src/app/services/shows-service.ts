@@ -74,6 +74,8 @@ export class ShowsService {
           sectionId: Number(s.sectionId ?? s.sectionTypeId ?? s.sectionType ?? 0),
           row: Number(s.row ?? 0),
           col: Number(s.col ?? 0),
+          orderUserId: Number(s.orderUserId),
+          sectionSectionType: Number(s.sectionSectionType),
         }))
       : [];
     const sectionPrices = [

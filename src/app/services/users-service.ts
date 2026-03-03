@@ -1,15 +1,18 @@
-import { Injectable } from '@angular/core';
+import { Injectable,Injector,inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { User } from '../models/user-model';
+import { CartService } from './cart-service';
 
 @Injectable({
   providedIn: 'root',
 })
 
 export class UsersService {
+    constructor(private http: HttpClient,private injector: Injector) {}
   user: User = new User()
+  //private cartSrv = inject(CartService);
   /** Returns status and body so caller can treat 204 as failed login. */
   login(email: string, pass: string): Observable<{ status: number; body: any }> {
     const data = {
@@ -17,6 +20,14 @@ export class UsersService {
       emailAddress: email
     };
     return this.http.post('/api/Users/loginUser', data, { observe: 'response' }).pipe(
+      tap(res => {
+        const userData=res.body as {id:number | null}
+        if (userData && userData.id) {
+          localStorage.setItem('user', JSON.stringify(userData.id));
+          const cartSrv = this.injector.get(CartService);
+          cartSrv.loadCartFromUser(true); 
+        }
+      }),
       map(res => ({ status: res.status, body: res.body }))
     );
   }
@@ -38,7 +49,6 @@ export class UsersService {
   signup(user:User){
     return this.http.post('/api/Users/user', user);
   }
-  constructor(private http: HttpClient) {}
 
   /** Get user by id for checkout/profile display. */
   getUserById(id: number): Observable<User> {

@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { interval } from 'rxjs';
-import { map, startWith, withLatestFrom } from 'rxjs/operators';
+import { filter, map, startWith, take, withLatestFrom } from 'rxjs/operators';
 import { ShowsService } from '../../services/shows-service';
 import { CartService } from '../../services/cart-service';
 import { Seat } from '../../models/seat-model';
@@ -31,6 +31,7 @@ export class SeatsMap implements OnInit, OnChanges {
   private cartSrv: CartService = inject(CartService);
   private seatsSrv: SeatsService = inject(SeatsService);
   private cd: ChangeDetectorRef = inject(ChangeDetectorRef);
+  orderedSeats: Seat[] = [];
 
   /** When set, show the map for this show; otherwise use first show in list. */
   @Input() showId: number | null = null;
@@ -65,35 +66,80 @@ export class SeatsMap implements OnInit, OnChanges {
 
   /** Cart slider: open when user adds a seat; user can close or open via button. */
   cartSliderVisible = false;
+  private initialized = false;
+
+  ngOnInit(): void {
+    this.initialized = true;
+    if (this.cartSrv.isLoggedIn) {
+      this.cartSrv.loadCartFromUser();
+    }
+    this.updateShowFromInput();
+    if (this.showId == null || this.showId <= 0) {
+      this.showSrv.shows$
+        .pipe(
+          filter((shows) => shows.length > 0),
+          take(1)
+        )
+        .subscribe((shows) => {
+          if (!this.show) {
+            this.showSrv.getShowById(shows[0].id).subscribe((show) => {
+              this.show = show;
+              this.applyOrderedSeatsToMap(show);
+              //this.loadOrderedSeats()
+              this.cd.detectChanges();
+            });
+          }
+        });
+    }
+    this.cartSrv.cart$.subscribe((items) => {
+      this.cartItems = items;
+      this.cd.detectChanges();
+    });
+    this.remainingSeconds$.subscribe((sec) => {
+      this.remainingSeconds = sec;
+      this.cd.detectChanges();
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (!this.initialized) return;
     if (changes['showId']) {
       this.updateShowFromInput();
     }
   }
 
   private updateShowFromInput(): void {
-    // Load show first (GET /api/Shows/${id} returns Show with orderedSeats); only then render map and mark those seats disabled.
-    if (this.showId != null && this.showId > 0) {
-      this.showSrv.getShowById(this.showId).subscribe((show) => {
-        this.show = show;
-        this.applyOrderedSeatsToMap(show);
-        this.cd.detectChanges();
-      });
-    } else {
-      const first = this.showSrv.shows.length > 0 ? this.showSrv.shows[0] : null;
-      if (first) {
-        this.showSrv.getShowById(first.id).subscribe((show) => {
-          this.show = show;
-          this.applyOrderedSeatsToMap(show);
-          this.cd.detectChanges();
-        });
-      } else {
-        this.show = null;
-        this.cd.detectChanges();
-      }
-    }
+  const idToLoad = this.showId || (this.showSrv.shows.length > 0 ? this.showSrv.shows[0].id : null);
+  
+  if (idToLoad && idToLoad > 0) {
+    this.showSrv.getShowById(idToLoad).subscribe((show) => {
+      this.show = show;
+      // קריאה מסודרת לטעינת המושבים התפוסים מיד לאחר טעינת המופע
+      if (this.show) {
+          this.applyOrderedSeatsToMap(this.show);
+        }
+      //this.loadOrderedSeats(); 
+    });
   }
+}
+
+  loadOrderedSeats() {
+    const idToUse = this.showId ?? this.show?.id;
+    if (!idToUse) return;
+
+    this.seatsSrv.getOrderedSeats(idToUse).subscribe({
+      next: (seats) => {
+        this.orderedSeats = seats;
+        // עדכון הסטטוסים במפה הויזואלית בהתאם לנתונים החדשים
+        if (this.show) {
+          this.applyOrderedSeatsToMap(this.show);
+        }
+        this.cd.detectChanges();
+      },
+      error: (err) => console.error('טעינת מושבים נכשלה', err)
+    });
+  }
+  
 
   /** Apply DB seat statuses (0=available, 1=reserved, 2=sold) to the show's map: reset all to available, then mark ordered seats unavailable. */
   private applyOrderedSeatsToMap(show: Show): void {
@@ -106,46 +152,24 @@ export class SeatsMap implements OnInit, OnChanges {
         }
       }
     }
-    this.seatsSrv.getOrderedSeats(showId).subscribe((list) => {
-      for (const dto of list) {
-        const getMap = SECTION_ID_TO_MAP[dto.sectionDbId as keyof typeof SECTION_ID_TO_MAP];
+    if ( show.orderedSeats)
+      for (const dto of show.orderedSeats) {
+        const getMap = SECTION_ID_TO_MAP[dto.sectionSectionType as keyof typeof SECTION_ID_TO_MAP];
         if (!getMap) continue;
-        const grid = getMap(show);
-        const row = grid[dto.row];
+        const seatMatrix = getMap(show);
+        const row = seatMatrix[dto.row];
         if (row && row[dto.col]) {
-          row[dto.col].status = dto.status;
+          row[dto.col].status = true;
+          row[dto.col].userId = dto.orderUserId;
+          row[dto.col].sectionSectionType = dto.sectionSectionType;
+          row[dto.col].sectionId = dto.sectionId;
         }
       }
+    
       this.cd.detectChanges();
-    });
   }
-
-  ngOnInit(): void {
-    this.updateShowFromInput();
-    this.showSrv.shows$.subscribe((shows) => {
-      if (this.showId != null && this.showId > 0) {
-        this.showSrv.getShowById(this.showId).subscribe((show) => {
-          this.show = show;
-          this.applyOrderedSeatsToMap(show);
-          this.cd.detectChanges();
-        });
-      } else if (!this.show && shows.length > 0) {
-        this.showSrv.getShowById(shows[0].id).subscribe((show) => {
-          this.show = show;
-          this.applyOrderedSeatsToMap(show);
-          this.cd.detectChanges();
-        });
-      }
-      this.cd.detectChanges();
-    });
-    this.cartSrv.cart$.subscribe((items) => {
-      this.cartItems = items;
-      this.cd.detectChanges();
-    });
-    this.remainingSeconds$.subscribe((sec) => {
-      this.remainingSeconds = sec;
-      this.cd.detectChanges();
-    });
+  isSeatDisabled(seat:any){
+    return this.getSeatState(seat) !== 'available' || this.isPending(seat) || !this.hasSectionForShow(3);
   }
 
   seatKey(seat: Seat): string {
@@ -168,9 +192,21 @@ export class SeatsMap implements OnInit, OnChanges {
     return this.pendingKeys.has(this.seatKey(seat));
   }
 
-  getSeatState(seat: Seat): SeatState {
-    if (this.isInCart(seat)) return 'in-cart';
-    if (seat.status) return 'unavailable';
+  getSeatState(seat: Seat): string {
+  // האם המושב הזה מופיע ברשימת התפוסים של המופע הזה?
+    const isOrdered = this.show?.orderedSeats.find(os => 
+      os.row === seat.row && 
+      os.col === seat.col && 
+      os.sectionSectionType === seat.sectionSectionType
+    );
+
+    if (isOrdered) {
+    // אם ה-userId שלי תואם למי שהזמין - הכיסא בסל שלי
+      if (isOrdered.orderUserId === this.cartSrv.getCurrentUserId()) {
+        return 'in-cart'; 
+      }
+        return 'unavailable'; // צובע באפור ונועל
+    }
     return 'available';
   }
 
@@ -217,6 +253,7 @@ export class SeatsMap implements OnInit, OnChanges {
     if (!showId) return;
     if (this.getSeatState(this.selectedSeat) !== 'available') {
       this.seatConflictMessage = 'המושב נבחר בינתיים על ידי משתמש אחר.';
+      this.loadOrderedSeats()
       this.cd.detectChanges();
       return;
     }
@@ -231,7 +268,7 @@ export class SeatsMap implements OnInit, OnChanges {
     if (show) {
       const sectionType = SECTION_TO_ID[seatToAdd.section];
       const dbId = show.getSectionDbId(sectionType);
-      if (dbId != null) seatToAdd.sectionDbId = dbId;
+      if (dbId != null) seatToAdd.sectionSectionType = dbId;
     }
     this.cartSrv.addSeat(seatToAdd, showId, price).subscribe({
       next: () => {
@@ -322,4 +359,6 @@ export class SeatsMap implements OnInit, OnChanges {
   getSectionUnavailableMessage(sectionId: number): string {
     return 'יציע זה לא זמין במופע זה';
   }
+
+
 }
