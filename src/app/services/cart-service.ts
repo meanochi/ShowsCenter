@@ -202,8 +202,8 @@ export class CartService {
 }
 
   /**
-   * Load cart from server: get user by id, take orders with status 1 (reserved), set cart and start 10-min timers.
-   * Call on app/cart init when logged in so cart shows server state.
+   * Load cart from server: GET /api/OrderedSeat/userId/{userId}, keep only status 1 (reserved), set cart and start 10-min timers.
+   * Call on app/cart init when logged in so cart shows server state. Updates are observable via cart$.
    */
   // loadCartFromUser(force = false): void {
   //   const uid = this.currentUserId;

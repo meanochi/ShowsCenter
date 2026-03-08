@@ -1,13 +1,9 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
-import { UsersService } from '../../services/users-service';
-import { AuthService } from '../../services/auth-service';
-import { Inject, PLATFORM_ID } from '@angular/core';
-import { CartService } from '../../services/cart-service';
 
 @Component({
   selector: 'app-navbar',
@@ -18,16 +14,11 @@ import { CartService } from '../../services/cart-service';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
-  private cartSrv = inject(CartService)
   private navSubscription?: Subscription;
-  userSrv: UsersService = inject(UsersService)
-  // isLoggedIn: boolean = false;
-  isLoggedIn = signal<boolean>(false);
-  userName: string = 'אורח';
-  public authService = inject(AuthService);
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
-  
+  isLoggedIn: boolean = false;
+  userName: string = 'אורח';
+
   ngOnInit() {
     this.checkLoginStatus();
     this.navSubscription = this.router.events
@@ -41,30 +32,28 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   // פונקציה שבודקת האם המשתמש מחובר (login שומר ב-'user')
   checkLoginStatus() {
-    if (isPlatformBrowser(this.platformId)) {
-      const raw = localStorage.getItem('user');
-      if (raw) {
-        try {
-          JSON.parse(raw);
-          this.isLoggedIn.set(true);
-          this.userName = localStorage.getItem('userName') || 'משתמש';
-        } catch {
-          this.isLoggedIn.set(false);
-        }
-      } else {
-        this.isLoggedIn.set(false);
+    const raw = localStorage.getItem('user');
+    if (raw) {
+      try {
+        JSON.parse(raw);
+        this.isLoggedIn = true;
+        this.userName = localStorage.getItem('userName') || 'משתמש';
+      } catch {
+        this.isLoggedIn = false;
       }
+    } else {
+      this.isLoggedIn = false;
     }
   }
 
   // פונקציית התנתקות
   logout() {
     if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-
-      this.authService.logout();
+      localStorage.removeItem('user');
+      localStorage.removeItem('userName');
+      
       // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
       this.checkLoginStatus();
-      this.cartSrv.clearCart()
       
       // ניתוב חזרה לדף הבית
       this.router.navigate(['/']);
