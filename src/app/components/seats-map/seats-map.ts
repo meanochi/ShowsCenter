@@ -1,4 +1,14 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { interval } from 'rxjs';
 import { filter, map, startWith, take, withLatestFrom } from 'rxjs/operators';
 import { ShowsService } from '../../services/shows-service';
@@ -58,8 +68,8 @@ export class SeatsMap implements OnInit, OnChanges {
     startWith(0),
     withLatestFrom(this.cartSrv.soonestExpiresAt$),
     map(([, soonest]) =>
-      soonest == null ? null : Math.max(0, Math.ceil((soonest - Date.now()) / 1000))
-    )
+      soonest == null ? null : Math.max(0, Math.ceil((soonest - Date.now()) / 1000)),
+    ),
   );
   /** Current remaining seconds (set by subscription) so template can show 0. */
   remainingSeconds: number | null = null;
@@ -78,7 +88,7 @@ export class SeatsMap implements OnInit, OnChanges {
       this.showSrv.shows$
         .pipe(
           filter((shows) => shows.length > 0),
-          take(1)
+          take(1),
         )
         .subscribe((shows) => {
           if (!this.show) {
@@ -108,18 +118,19 @@ export class SeatsMap implements OnInit, OnChanges {
   }
 
   private updateShowFromInput(): void {
-  const idToLoad = this.showId || (this.showSrv.shows.length > 0 ? this.showSrv.shows[0].id : null);
-  
-  if (idToLoad && idToLoad > 0) {
-    this.showSrv.getShowById(idToLoad).subscribe((show) => {
-      this.show = show;
-      // קריאה מסודרת לטעינת המושבים התפוסים מיד לאחר טעינת המופע
-      if (this.show) {
-          this.loadOrderedSeats(); 
+    const idToLoad =
+      this.showId || (this.showSrv.shows.length > 0 ? this.showSrv.shows[0].id : null);
+
+    if (idToLoad && idToLoad > 0) {
+      this.showSrv.getShowById(idToLoad).subscribe((show) => {
+        this.show = show;
+        // קריאה מסודרת לטעינת המושבים התפוסים מיד לאחר טעינת המופע
+        if (this.show) {
+          this.loadOrderedSeats();
         }
-    });
+      });
+    }
   }
-}
 
   loadOrderedSeats() {
     const idToUse = this.showId ?? this.show?.id;
@@ -134,7 +145,7 @@ export class SeatsMap implements OnInit, OnChanges {
         }
         this.cd.detectChanges();
       },
-      error: (err) => console.error('טעינת מושבים נכשלה', err)
+      error: (err) => console.error('טעינת מושבים נכשלה', err),
     });
   }
 
@@ -145,7 +156,8 @@ export class SeatsMap implements OnInit, OnChanges {
 
   /** Prefer fresh ordered seats from OrderedSeat endpoint; fallback to show.orderedSeats when empty. */
   private getOrderedSeatsSource(show: Show | null = this.show): any[] {
-    if (Array.isArray(this.orderedSeats) && this.orderedSeats.length > 0) return this.orderedSeats as any[];
+    if (Array.isArray(this.orderedSeats) && this.orderedSeats.length > 0)
+      return this.orderedSeats as any[];
     return (show?.orderedSeats ?? []) as any[];
   }
 
@@ -162,7 +174,9 @@ export class SeatsMap implements OnInit, OnChanges {
 
     // If sectionId is DB row id, map it back to section type via show.sectionDbIdByType.
     if (sectionId > 4 && show?.sectionDbIdByType) {
-      const found = Object.entries(show.sectionDbIdByType).find(([, dbId]) => Number(dbId) === sectionId);
+      const found = Object.entries(show.sectionDbIdByType).find(
+        ([, dbId]) => Number(dbId) === sectionId,
+      );
       if (found) return Number(found[0]);
     }
 
@@ -218,12 +232,16 @@ export class SeatsMap implements OnInit, OnChanges {
         if (sectionId > 0) row[colIndex].sectionId = sectionId;
       }
     }
-    
-      this.cd.detectChanges();
+
+    this.cd.detectChanges();
   }
-  isSeatDisabled(seat: Seat){
+  isSeatDisabled(seat: Seat) {
     const sectionType = SECTION_TO_ID[seat.section] ?? 1;
-    return this.getSeatState(seat) !== 'available' || this.isPending(seat) || !this.hasSectionForShow(sectionType);
+    return (
+      this.getSeatState(seat) !== 'available' ||
+      this.isPending(seat) ||
+      !this.hasSectionForShow(sectionType)
+    );
   }
 
   seatKey(seat: Seat): string {
@@ -238,7 +256,7 @@ export class SeatsMap implements OnInit, OnChanges {
         s.showId === currentShowId &&
         s.section === seat.section &&
         s.row === seat.row &&
-        s.col === seat.col
+        s.col === seat.col,
     );
   }
 
@@ -249,11 +267,12 @@ export class SeatsMap implements OnInit, OnChanges {
   getSeatState(seat: Seat): SeatState {
     const seatsToCheck = this.getOrderedSeatsSource(this.show);
     const sectionType = SECTION_TO_ID[seat.section] ?? 1;
-    const isOrdered = seatsToCheck.find((os: any) =>
-      this.isOrderedSeatTaken(os) &&
-      this.toNumber(os.row) === seat.row &&
-      this.toNumber(os.col) === seat.col &&
-      this.resolveOrderedSeatSectionType(os, this.show) === sectionType
+    const isOrdered = seatsToCheck.find(
+      (os: any) =>
+        this.isOrderedSeatTaken(os) &&
+        this.toNumber(os.row) === seat.row &&
+        this.toNumber(os.col) === seat.col &&
+        this.resolveOrderedSeatSectionType(os, this.show) === sectionType,
     );
 
     if (isOrdered) {
@@ -289,11 +308,16 @@ export class SeatsMap implements OnInit, OnChanges {
 
   getPriceForSeat(seat: Seat): number | null {
     if (!this.show) return null;
-    const p = this.show.hallMap.section === seat.section ? this.show.hallMap.price
-      : this.show.leftBalMap.section === seat.section ? this.show.leftBalMap.price
-      : this.show.rightBalMap.section === seat.section ? this.show.rightBalMap.price
-      : this.show.centerBalMap.section === seat.section ? this.show.centerBalMap.price
-      : null;
+    const p =
+      this.show.hallMap.section === seat.section
+        ? this.show.hallMap.price
+        : this.show.leftBalMap.section === seat.section
+          ? this.show.leftBalMap.price
+          : this.show.rightBalMap.section === seat.section
+            ? this.show.rightBalMap.price
+            : this.show.centerBalMap.section === seat.section
+              ? this.show.centerBalMap.price
+              : null;
     return p != null && p > 0 ? p : null;
   }
 
@@ -313,7 +337,7 @@ export class SeatsMap implements OnInit, OnChanges {
     if (!showId) return;
     if (this.getSeatState(this.selectedSeat) !== 'available') {
       this.seatConflictMessage = 'המושב נבחר בינתיים על ידי משתמש אחר.';
-      this.loadOrderedSeats()
+      this.loadOrderedSeats();
       this.cd.detectChanges();
       return;
     }
@@ -352,7 +376,11 @@ export class SeatsMap implements OnInit, OnChanges {
         }
         const status = err?.status;
         const msg = err?.error?.message ?? err?.message ?? '';
-        if (status === 409 || status === 400 || /taken|נבחר|occupied|unavailable/i.test(String(msg))) {
+        if (
+          status === 409 ||
+          status === 400 ||
+          /taken|נבחר|occupied|unavailable/i.test(String(msg))
+        ) {
           this.seatConflictMessage = 'המושב נבחר בינתיים על ידי משתמש אחר.';
           this.showSrv.getShowById(showId).subscribe((show) => {
             this.show = show;
@@ -373,7 +401,8 @@ export class SeatsMap implements OnInit, OnChanges {
     const p = price != null && price > 0 ? `${price} ₪` : '';
 
     const state = this.getSeatState(seat);
-    if (state === 'mine-unpaid') return p ? `${base} • ${p} • שמור עבורך (טרם שולם)` : `${base} • שמור עבורך (טרם שולם)`;
+    if (state === 'mine-unpaid')
+      return p ? `${base} • ${p} • שמור עבורך (טרם שולם)` : `${base} • שמור עבורך (טרם שולם)`;
     if (state === 'mine-paid') return p ? `${base} • ${p} • שולם עבורך` : `${base} • שולם עבורך`;
     if (state === 'unavailable') return p ? `${base} • ${p} • לא זמין` : `${base} • לא זמין`;
     return p ? `${base} • ${p} • פנוי` : `${base} • פנוי`;
@@ -420,6 +449,4 @@ export class SeatsMap implements OnInit, OnChanges {
   getSectionUnavailableMessage(sectionId: number): string {
     return 'יציע זה לא זמין במופע זה';
   }
-
-
 }
