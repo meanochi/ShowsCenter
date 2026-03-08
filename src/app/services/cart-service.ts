@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -7,6 +7,9 @@ import { SECTION_TO_ID, SECTION_ID_MAP, Section } from '../models/show-model';
 import { UsersService } from './users-service';
 import { Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { OrderService } from './order-service';
+import { Order } from '../models/order-model';
+import { ShowsService } from './shows-service';
 
 const LOCK_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -36,6 +39,7 @@ interface NormalizedOrderItem {
   status: number;
   price: number;
   userId: number;
+  orderId: number;
 }
 
 @Injectable({
@@ -43,6 +47,8 @@ interface NormalizedOrderItem {
 })
 export class CartService {
   private loadedCartUserId = 0;
+
+  private showsSrv = inject(ShowsService)
 
   private get currentUserId(): number {
     if (isPlatformBrowser(this.platformId)) {
@@ -112,6 +118,9 @@ export class CartService {
         const cart = [...this.cartSubject.value, cartSeat];
         this.cartSubject.next(cart);
         this.startTimer(cartSeat);
+        // const currentSaved = JSON.parse(localStorage.getItem('my_persistent_cart') || '[]');
+        // currentSaved.push(cartSeat);
+        // localStorage.setItem('my_persistent_cart', JSON.stringify(currentSaved));
         return cartSeat;
       }),
       tap({
@@ -142,6 +151,7 @@ export class CartService {
    * Confirm order (pay): POST to backend with locked order item ids.
    * Backend should create the order and update seat status to sold.
    */
+  cartItems:Seat[]=[]
   confirmOrder(orderItemIds: number[]): Observable<ConfirmOrderResponse> {
     const uid = this.currentUserId;
     if (uid <= 0) {
@@ -150,9 +160,15 @@ export class CartService {
     if (orderItemIds.length === 0) {
       return throwError(() => ({ status: 400, message: 'No items to confirm' }));
     }
-    return this.http.post<ConfirmOrderResponse>('/api/Order/confirm', {
+    //לתקן שיהיה price אמיתי
+    this.cart$.subscribe((items) => {
+      this.cartItems = items;
+    });
+    const orderId=this.cartItems[0].orderId ?? 0;
+    const total=0;
+    return this.http.put<ConfirmOrderResponse>(`/api/Order/${orderId}`, {
       userId: uid,
-      orderItemIds,
+      price:total
     }).pipe(
       tap({
         error: (err) => console.error('CartService confirmOrder failed', err),
@@ -281,6 +297,7 @@ private mapToSeat(o: any, uid: number): Seat {
     price: o.price,
     userId: o.userId ?? uid,
     status: true,
+    orderId:o.orderId
   };
 }
 
@@ -296,9 +313,10 @@ private mapToSeat(o: any, uid: number): Seat {
     const status = this.toNumber(obj['status'] ?? obj['Status']);
     const userId = this.toNumber(obj['userId'] ?? obj['UserId']) || fallbackUserId;
     const price = this.toNumber(obj['price'] ?? obj['Price']) || 0;
+    const orderId=this.toNumber(obj['orderId'] ?? obj['OrderId']) || 0;
 
     if (id <= 0 || showId <= 0 || row < 0 || col < 0 || sectionSectionType <= 0) return null;
-    return { id, showId, sectionId,sectionSectionType , row, col, status, userId, price };
+    return { id, showId, sectionId,sectionSectionType , row, col, status, userId, price, orderId};
   }
 
   private toNumber(value: unknown): number {

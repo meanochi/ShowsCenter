@@ -27,6 +27,7 @@ export class SeatsService {
           seat.sectionSectionType = dto.sectionSectionType;
           seat.userId = dto.orderUserId;
           seat.showId = dto.showId;
+          seat.orderId = dto.orderId;
           return seat;
         })
       )

@@ -129,6 +129,7 @@ export interface OrderedSeatDto {
     col: number;
     orderUserId: number;
     sectionSectionType:number;
+    status:number;
 }
 
 
