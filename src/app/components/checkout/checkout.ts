@@ -120,11 +120,11 @@ export class CheckoutComponent implements OnInit {
         '',
         [
           Validators.required,
-          (control: AbstractControl) => {
-            const raw = (control.value || '').replace(/\s/g, '');
-            if (raw.length < 13 || raw.length > 19) return { pattern: true };
-            return luhnCheck(raw) ? null : { luhn: true };
-          },
+          // (control: AbstractControl) => {
+          //   const raw = (control.value || '').replace(/\s/g, '');
+          //   if (raw.length < 13 || raw.length > 19) return { pattern: true };
+          //   return luhnCheck(raw) ? null : { luhn: true };
+          // },
         ],
       ],
       expiry: ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/([0-9]{2}|[0-9]{4})$/), expiryValidator]],

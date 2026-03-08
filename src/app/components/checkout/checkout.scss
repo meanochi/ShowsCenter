@@ -1,20 +1,21 @@
 .checkout-page {
-  max-width: 720px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 0.5rem 0.2rem 1.5rem;
 }
 
 .checkout-title {
   text-align: center;
-  margin-bottom: 2rem;
-  font-size: 1.75rem;
+  margin-bottom: 1.7rem;
+  font-size: 2rem;
+  letter-spacing: 0.01em;
 }
 
 .checkout-stepper {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: 0.2rem;
   margin-bottom: 2rem;
   flex-wrap: wrap;
 }
@@ -26,11 +27,12 @@
   position: relative;
 
   .step-number {
-    width: 2rem;
-    height: 2rem;
+    width: 2.2rem;
+    height: 2.2rem;
     border-radius: 50%;
-    background: var(--surface-200);
-    color: var(--text-color-secondary);
+    background: var(--surface-100);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -41,62 +43,65 @@
 
   .step-label {
     font-size: 0.9rem;
-    color: var(--text-color-secondary);
+    color: var(--text-secondary);
   }
 
   &.active .step-number {
     background: var(--primary-color);
-    color: var(--primary-color-contrast);
+    color: #fff;
+    border-color: var(--primary-color);
   }
 
   &.active .step-label {
-    color: var(--text-color);
+    color: var(--text-primary);
     font-weight: 600;
   }
 
   &.completed .step-number {
-    background: var(--green-500);
+    background: var(--success-color);
     color: white;
+    border-color: var(--success-color);
   }
 
   &.completed .step-label {
-    color: var(--text-color-secondary);
+    color: var(--text-secondary);
   }
 
   .step-connector {
-    width: 2rem;
+    width: 1.9rem;
     height: 2px;
     background: var(--surface-300);
     margin: 0 0.25rem;
   }
 
   &.completed .step-connector {
-    background: var(--green-500);
+    background: var(--success-color);
   }
 }
 
 .checkout-content {
   background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 12px;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 1.7rem 2rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .step-panel h2 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 1rem;
   font-size: 1.25rem;
 }
 
 .empty-message,
 .loading-message {
-  color: var(--text-color-secondary);
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
 .error-message {
-  color: var(--red-500);
+  color: var(--error-color);
   margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 .order-items {
@@ -110,10 +115,10 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 0.75rem;
+  padding: 0.8rem;
   background: var(--surface-50);
-  border-radius: 8px;
-  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
 }
 
 .order-item-info {
@@ -124,13 +129,13 @@
 
 .order-item-title {
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--text-primary);
 }
 
 .order-item-meta,
 .order-item-date {
   font-size: 0.9rem;
-  color: var(--text-color-secondary);
+  color: var(--text-secondary);
 }
 
 .order-item-price {
@@ -143,7 +148,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 0;
-  border-top: 1px solid var(--surface-border);
+  border-top: 1px solid var(--border-light);
   font-size: 1.1rem;
 
   strong {
@@ -153,8 +158,8 @@
 
 .user-details-card {
   background: var(--surface-50);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
   padding: 1.25rem;
   margin-bottom: 1rem;
 
@@ -168,11 +173,12 @@
   margin-top: 0.75rem;
   color: var(--primary-color);
   font-weight: 600;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
+  border-bottom: 1px dashed var(--primary-color);
 
   &:hover {
-    text-decoration: none;
+    border-bottom-style: solid;
   }
 }
 
@@ -194,7 +200,7 @@
 
 .field-error {
   display: block;
-  color: var(--red-500);
+  color: var(--error-color);
   font-size: 0.85rem;
   margin-top: 0.25rem;
 }
@@ -211,10 +217,10 @@
 }
 
 .confirmation-icon {
-  width: 4rem;
-  height: 4rem;
+  width: 4.1rem;
+  height: 4.1rem;
   border-radius: 50%;
-  background: var(--green-500);
+  background: var(--success-color);
   color: white;
   font-size: 2rem;
   font-weight: bold;
@@ -235,7 +241,7 @@
 
 .confirmation-meta {
   font-size: 0.95rem;
-  color: var(--text-color-secondary);
+  color: var(--text-secondary);
   margin: 0 0 1rem 0;
 }
 
@@ -245,8 +251,8 @@
   margin: 0 auto 1.5rem;
   padding: 1rem;
   background: var(--surface-50);
-  border-radius: 8px;
-  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
 
   h3 {
     margin: 0 0 0.75rem 0;
@@ -275,12 +281,12 @@
 
   .confirmation-item-title {
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--text-primary);
   }
 
   .confirmation-item-meta {
     font-size: 0.9rem;
-    color: var(--text-color-secondary);
+    color: var(--text-secondary);
   }
 
   .confirmation-item-price {
@@ -294,7 +300,7 @@
   justify-content: space-between;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid var(--surface-border);
+  border-top: 1px solid var(--border-light);
   font-size: 1rem;
 
   strong {

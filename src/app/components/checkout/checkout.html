@@ -89,6 +89,7 @@
               placeholder="מספר כרטיס"
               (input)="onCardNumberInput($event)"
               maxlength="19"
+              autocomplete="cc-number"
             />
           </div>
           @if (paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched) {
@@ -97,8 +98,8 @@
                 שדה חובה
               } @else if (paymentForm.get('cardNumber')?.errors?.['pattern']) {
                 מספר כרטיס לא תקין (13–19 ספרות)
-              } @else if (paymentForm.get('cardNumber')?.errors?.['luhn']) {
-                מספר כרטיס לא תקין
+              <!-- } @else if (paymentForm.get('cardNumber')?.errors?.['luhn']) {
+                מספר כרטיס לא תקין -->
               }
             </small>
           }
@@ -108,6 +109,7 @@
               formControlName="expiry"
               placeholder="תוקף (MM/YY)"
               maxlength="7"
+              autocomplete="cc-exp"
             />
           </div>
           @if (paymentForm.get('expiry')?.invalid && paymentForm.get('expiry')?.touched) {
@@ -128,6 +130,7 @@
               type="password"
               placeholder="CVV (3–4 ספרות)"
               maxlength="4"
+              autocomplete="cc-csc"
             />
           </div>
           @if (paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched) {

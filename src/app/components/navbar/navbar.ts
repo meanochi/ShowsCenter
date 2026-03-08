@@ -4,8 +4,8 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
-import { UsersService } from '../../services/users-service';
 import { AuthService } from '../../services/auth-service';
+import { UsersService } from '../../services/users-service';
 import { Inject, PLATFORM_ID } from '@angular/core';
 import { CartService } from '../../services/cart-service';
 
@@ -14,20 +14,20 @@ import { CartService } from '../../services/cart-service';
   standalone: true,
   imports: [CommonModule, RouterModule, ButtonModule],
   templateUrl: './navbar.html',
-  styleUrl: './navbar.scss'
+  styleUrl: './navbar.scss',
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
-  private cartSrv = inject(CartService)
+  private cartSrv = inject(CartService);
   private navSubscription?: Subscription;
-  userSrv: UsersService = inject(UsersService)
+  public authService = inject(AuthService);
+  userSrv: UsersService = inject(UsersService);
   // isLoggedIn: boolean = false;
   isLoggedIn = signal<boolean>(false);
   userName: string = 'אורח';
-  public authService = inject(AuthService);
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
-  
+
   ngOnInit() {
     this.checkLoginStatus();
     this.navSubscription = this.router.events
@@ -60,12 +60,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
   // פונקציית התנתקות
   logout() {
     if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-
       this.authService.logout();
       // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
       this.checkLoginStatus();
-      this.cartSrv.clearCart()
-      
+      this.cartSrv.clearCart();
+
       // ניתוב חזרה לדף הבית
       this.router.navigate(['/']);
     }

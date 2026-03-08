@@ -1,247 +1,127 @@
-.searchBox {
-  .p-inputtext {
-    border-radius: var(--border-radius-lg);
-    border: 2px solid var(--border-color);
-    padding: 0.75rem 1rem 0.75rem 3rem;
-    font-size: 1rem;
-    transition: all 0.3s ease;
+;:host {
+  display: block;
+}
 
-    &:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
-    }
-  }
+.shows-page {
+  display: block;
+}
 
-  .p-icon {
-    color: var(--text-secondary);
-  }
+.shows-upcoming {
+  margin-bottom: 0.5rem;
+}
+
+h3 {
+  margin-bottom: 0.9rem;
+  font-size: 1.28rem;
+}
+
+.shows-layout {
+  align-items: start;
+}
+
+.shows-main {
+  min-width: 0;
+}
+
+.shows-toolbar {
+  align-items: center;
+}
+
+.searchBox .p-inputtext {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  padding: 0.72rem 1rem 0.72rem 2.6rem;
+}
+
+.searchBox .p-inputtext:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgb(var(--primary-rgb) / 0.12);
+}
+
+:host ::ng-deep .show-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+:host ::ng-deep .show-card .p-card-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+:host ::ng-deep .show-card .p-card-content {
+  flex: 1;
+}
+
+:host ::ng-deep .show-card-compact .p-card-body {
+  padding: 0.85rem;
 }
 
 .cardImg {
-  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-  transition: transform 0.3s ease;
-
-  &:hover {
-    transform: scale(1.05);
-  }
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  transition: transform 0.25s ease;
 }
 
-.p-card {
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
-  overflow: hidden;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .p-card-header {
-    padding: 0;
-  }
-
-  .p-card-body {
-    padding: 1.5rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .p-card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-  }
-
-  .p-card-subtitle {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-  }
-
-  .p-card-content {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    flex: 1;
-  }
-
-  .p-card-footer {
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-  }
+.show-card:hover .cardImg {
+  transform: scale(1.03);
 }
 
 .buttons {
   display: flex;
-  gap: 8px;
-
-  .p-button {
-    border-radius: var(--border-radius-md);
-    font-weight: 500;
-    transition: all 0.3s ease;
-
-    &:not(.p-button-outlined) {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      border: none;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-      }
-    }
-  }
+  gap: 0.48rem;
 }
 
-.p-carousel {
-  .p-carousel-content {
-    .p-carousel-container {
-      .p-carousel-items-content {
-        .p-carousel-items-container {
-          .p-carousel-item {
-            padding: 0.5rem;
-          }
-        }
-      }
-    }
-  }
-
-  .p-carousel-indicators {
-    .p-carousel-indicator {
-      button {
-        background-color: var(--primary-color);
-        border-radius: 50%;
-        width: 12px;
-        height: 12px;
-      }
-    }
-  }
+.buttons .p-button {
+  border-radius: var(--radius-sm);
 }
 
-.p-paginator {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  padding: 1rem;
-
-  .p-paginator-pages {
-    .p-paginator-page {
-      border-radius: var(--border-radius-md);
-      margin: 0 0.25rem;
-      transition: all 0.3s ease;
-
-      &.p-highlight {
-        background: var(--primary-color);
-        color: white;
-      }
-
-      &:hover:not(.p-highlight) {
-        background: var(--background-secondary);
-      }
-    }
-  }
+.shows-filters {
+  position: sticky;
+  top: 0.7rem;
+  height: fit-content;
 }
 
-.p-drawer {
-  .p-drawer-header {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
-    padding: 1.5rem 2rem;
-
-    .p-drawer-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-
-    .p-drawer-header-icons {
-      .p-drawer-header-close-button {
-        color: white;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: var(--border-radius-md);
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.2);
-        }
-      }
-    }
-  }
+:host ::ng-deep .filter-card .p-card-body {
+  padding: 0.95rem;
 }
 
-// Filter sidebar styles
-.col-4.md\:col-3 {
-  .p-card {
-    margin-bottom: 1rem;
-
-    .p-card-header {
-      background: var(--background-secondary);
-      border-bottom: 1px solid var(--border-color);
-      padding: 1rem 1.5rem;
-
-      .p-card-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-      }
-    }
-
-    .p-checkbox {
-      .p-checkbox-box {
-        border-radius: var(--border-radius-sm);
-        border: 2px solid var(--border-color);
-        transition: all 0.3s ease;
-
-        &.p-highlight {
-          background: var(--primary-color);
-          border-color: var(--primary-color);
-        }
-      }
-    }
-
-    .p-slider {
-      .p-slider-range {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      }
-
-      .p-slider-handle {
-        background: var(--primary-color);
-        border: 2px solid white;
-        box-shadow: var(--shadow-md);
-      }
-    }
-  }
+:host ::ng-deep .filter-card .p-card-title {
+  margin-bottom: 0.6rem;
+  font-size: 0.99rem;
 }
 
-// Responsive improvements
+:host ::ng-deep .p-paginator {
+  margin: 0.2rem 0.5rem 0;
+  background: #fff;
+}
+
+:host ::ng-deep .p-carousel .p-carousel-item {
+  padding: 0.4rem;
+}
+
+:host ::ng-deep .p-drawer .p-drawer-header {
+  background: linear-gradient(130deg, #173870, #1f5fd6);
+  color: #fff;
+}
+
+:host ::ng-deep .p-drawer .p-drawer-header .p-drawer-title {
+  font-size: 1.12rem;
+}
+
 @media (max-width: 768px) {
-  .grid {
-    .col-8, .col-4 {
-      width: 100%;
-    }
+  .grid .col-8,
+  .grid .col-4 {
+    width: 100%;
   }
 
-  .p-carousel {
-    .p-carousel-content {
-      .p-carousel-container {
-        .p-carousel-items-content {
-          .p-carousel-items-container {
-            .p-carousel-item {
-              padding: 0.25rem;
-            }
-          }
-        }
-      }
-    }
+  .shows-filters {
+    position: static;
   }
 
-  .p-card {
-    .p-card-body {
-      padding: 1rem;
-    }
+  :host ::ng-deep .show-card .p-card-body {
+    padding: 0.85rem;
   }
 }
