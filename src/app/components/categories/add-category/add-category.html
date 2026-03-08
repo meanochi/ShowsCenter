@@ -1,10 +1,11 @@
-<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem' }" (onHide)="hideDialog()">
+<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '26rem' }" (onHide)="hideDialog()" class="quick-dialog">
   <ng-template #header>
     <div class="inline-flex items-center justify-center gap-2">
       <span class="font-bold whitespace-nowrap">הוסף קטגוריה חדש</span>
     </div>
   </ng-template>
 
+  <div class="dialog-form" dir="rtl">
   <div class="flex items-center gap-4 mb-2 mt-1">
     <p-floatlabel variant="on">
       <input
@@ -20,10 +21,11 @@
   </div>
 
   @if (submitError) {
-    <div class="p-2 mb-2 surface-100 border-round text-red-600 text-sm">
+    <div class="dialog-error p-2 mb-2 border-round text-sm">
       {{ submitError }}
     </div>
   }
+  </div>
 
   <ng-template #footer>
     <p-button

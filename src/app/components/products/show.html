@@ -1,5 +1,6 @@
+<div class="shows-page" dir="rtl">
 @if (!authService.isAdmin()) {
-  <div class="col-12">
+  <div class="col-12 shows-upcoming">
     <h3>אירועים קרובים:</h3>
     <p-carousel
       [value]="upcomingShows"
@@ -11,7 +12,7 @@
     >
       <ng-template let-p pTemplate="item">
         <div class="mb-1 p-2 flex flex-row-reverse align-items-center justify-content-center">
-          <p-card class="flex flex-column h-full">
+          <p-card styleClass="show-card show-card-compact flex flex-column h-full">
             <ng-template #header>
               <img
                 alt="Card"
@@ -63,10 +64,10 @@
     </p-carousel>
   </div>
 }
-<div class="grid">
-  <div class="col-8 md:col-9 lg:col-9 xl:col-10">
+<div class="shows-layout grid">
+  <div class="shows-main col-8 md:col-9 lg:col-9 xl:col-10">
     <h3>כל האירועים:</h3>
-    <div class="grid flex w-full mr-auto ml-auto gap-2">
+    <div class="shows-toolbar grid flex w-full mr-auto ml-auto gap-2">
       <div class="flex-1 col-6">
         <p-iconField iconPosition="left" class="searchBox">
           <p-inputIcon styleClass="pi pi-search" />
@@ -97,7 +98,7 @@
       <!-- @for (p of items; track p.id) {  -->
       @for (p of shows; track p.id) {
         <div class="col-12 md:col-6 lg:col-4 xl:col-4">
-          <p-card styleClass="flex flex-column h-full">
+          <p-card styleClass="show-card flex flex-column h-full">
             <ng-template #header>
               <img
                 alt="Card"
@@ -175,8 +176,8 @@
     <!-- </ng-template>
     </p-dataView> -->
   </div>
-  <div class="col-4 md:col-3 lg:col-3 xl:col-2 pl-3 pr-0 gap-2 flex flex-column">
-    <p-card styleClass="mb-2 shadow-1">
+  <div class="shows-filters col-4 md:col-3 lg:col-3 xl:col-2 pl-3 pr-0 gap-2 flex flex-column">
+    <p-card styleClass="filter-card mb-2 shadow-1">
       <ng-template #content>
         <p-button
           label="נקה סינון"
@@ -187,7 +188,7 @@
       </ng-template>
     </p-card>
     <!-- sorting -->
-    <p-card header="מיון מופעים" styleClass="mb-2 shadow-1">
+    <p-card header="מיון מופעים" styleClass="filter-card mb-2 shadow-1">
       <div class="p-inputgroup">
         <span class="p-inputgroup-addon"><i class="pi pi-sort-alt"></i></span>
         <p-select
@@ -200,7 +201,7 @@
       </div>
     </p-card>
     <!-- price- from... to... -->
-    <p-card>
+    <p-card styleClass="filter-card">
       <ng-template #subtitle>טווח מחירים: {{ priceRange[0] }}₪ - {{ priceRange[1] }}₪</ng-template>
       <ng-template #content>
         <p-slider
@@ -214,7 +215,7 @@
         </p-slider>
       </ng-template>
     </p-card>
-    <p-card class="">
+    <p-card styleClass="filter-card">
       <ng-template #title> סינון לפי קטגוריות:</ng-template>
       <ng-template #content>
         <div class="flex flex-column gap-1">
@@ -234,7 +235,7 @@
         </div>
       </ng-template>
     </p-card>
-    <p-card>
+    <p-card styleClass="filter-card">
       <ng-template #title>סינון לפי קהל יעד:</ng-template>
       <ng-template #content>
         <div class="flex flex-column gap-1">
@@ -254,7 +255,7 @@
         </div>
       </ng-template>
     </p-card>
-    <p-card>
+    <p-card styleClass="filter-card">
       <ng-template #title>סינון לפי מגזר:</ng-template>
       <ng-template #content>
         <div class="flex flex-column gap-1">
@@ -303,4 +304,5 @@
     [showTriggerButton]="false"
     (showUpdated)="updateShow($event)"
   />
+</div>
 </div>

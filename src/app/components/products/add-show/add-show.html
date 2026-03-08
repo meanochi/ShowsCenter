@@ -1,16 +1,15 @@
-<div #container class="flex justify-center gap-4">
+<div #container class="show-form-shell flex justify-center gap-4" dir="rtl">
   <app-add-provider #addProviderRef (providerAdded)="onProviderAdded($event)" />
   <app-add-category #addCategoryRef (categoryAdded)="onCategoryAdded($event)" />
 
-  <app-add-category #addCategoryRef (categoryAdded)="onCategoryAdded($event)" />
-
-  <p-button (click)="showDialog()" label="הוסף מופע" />
-  <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '25rem' }" class="dialog">
+  <p-button (click)="showDialog()" label="הוסף מופע" styleClass="show-form-open-btn" />
+  <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '32rem' }" class="dialog">
     <ng-template #header>
       <div class="inline-flex items-center justify-center gap-2">
         <span class="font-bold whitespace-nowrap">הוסף מופע חדש</span>
       </div>
     </ng-template>
+    <div class="show-form-grid">
     <div class="flex items-center gap-4 mb-2 mt-1">
       <p-floatlabel variant="on">
         <input
@@ -312,6 +311,7 @@
         {{ submitError }}
       </div>
     }
+  </div>
     <ng-template #footer>
       <p-button
         label="Cancel"

@@ -1,7 +1,6 @@
-<nav class="w-full flex justify-between items-center mb-4">
-  
+<nav class="main-nav" dir="rtl">
   <div class="logo-container" routerLink="/">
-    <img src="log.png" alt="Shows Center Logo" style="width: 45px; height: 45px; object-fit: contain;">
+    <img src="log.png" alt="Shows Center Logo">
     <span class="logo-text">Shows Center</span>
   </div>
 
@@ -13,7 +12,7 @@
   </div>
 
   <div class="user-section">
-    @if (isLoggedIn()) {
+    @if (isLoggedIn) {
       <div class="flex items-center gap-3">
         <span class="welcome-text">שלום, {{ authService.userName() }}</span>
         <p-button 
@@ -42,5 +41,4 @@
       </p-button>
     }
   </div>
-
 </nav>

@@ -4,7 +4,7 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
-
+import { AuthService } from '../../services/auth-service';
 @Component({
   selector: 'app-navbar',
   standalone: true,
@@ -15,7 +15,7 @@ import { ButtonModule } from 'primeng/button';
 export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private navSubscription?: Subscription;
-
+  authService = inject(AuthService);
   isLoggedIn: boolean = false;
   userName: string = 'אורח';
 
