@@ -59,7 +59,29 @@ export class CartComponent implements OnInit {
 
   /** Status for display: saved = שמור לך!, available = זמין, unavailable = לא זמין. */
   getSeatStatus(_seat: Seat): CartSeatStatus {
-    return 'saved';
+    
+    const isInCart = this.cartItems.find(s => s.id === _seat.id);
+      if (isInCart) return 'saved';
+
+    //בדיקה אם המושב תפוס על ידי מישהו אחר (דרך המידע מהמופע)
+    const show = this.showSrv.shows.find(s => s.id === (_seat.showId ?? 0));
+    if (show && show.orderedSeats) {
+      let occupied = false;
+      for (const order of show.orderedSeats) {
+        if (order.orderUserId !== this.cartSrv.getCurrentUserId()) {
+          const foundSeat = show.orderedSeats?.find((os: any) => 
+            os.col === _seat.col && os.row === _seat.row && os.sectionId === _seat.sectionId
+          );
+          if (foundSeat) {
+            occupied = true;
+            break;
+          }
+        }
+      }
+      if (occupied) return 'unavailable';
+    }
+
+    return 'available';
   }
 
   goToPayment(): void {

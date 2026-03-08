@@ -12,7 +12,7 @@
   </div>
 
   <div class="user-section">
-    @if (isLoggedIn) {
+    @if (isLoggedIn()) {
       <div class="flex items-center gap-3">
         <span class="welcome-text">שלום, {{ authService.userName() }}</span>
         <p-button 

@@ -14,4 +14,5 @@ export class Seat {
   /** DB section row id for this show (sent to lock API; distinct from section type 1–4). */
   sectionId?:number;
   sectionSectionType?: number;
+  orderId:number=0;
 }

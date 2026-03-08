@@ -202,7 +202,7 @@ export class SeatsMap implements OnInit, OnChanges {
 
     if (isOrdered) {
     // אם ה-userId שלי תואם למי שהזמין - הכיסא בסל שלי
-      if (isOrdered.orderUserId === this.cartSrv.getCurrentUserId()) {
+      if (isOrdered.orderUserId === this.cartSrv.getCurrentUserId()/* && isOrdered.status==1*/ ) {
         return 'in-cart'; 
       }
         return 'unavailable'; // צובע באפור ונועל
