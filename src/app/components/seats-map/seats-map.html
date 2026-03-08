@@ -49,6 +49,12 @@
             (click)="cartSliderVisible = true"
           ></p-button>
         }
+        <div class="seat-legend">
+          <span class="legend-item"><i class="seat-dot seat-dot-available"></i> פנוי</span>
+          <span class="legend-item"><i class="seat-dot seat-dot-mine-unpaid"></i> שלי - נשמר (טרם שולם)</span>
+          <span class="legend-item"><i class="seat-dot seat-dot-mine-paid"></i> שלי - שולם</span>
+          <span class="legend-item"><i class="seat-dot seat-dot-unavailable"></i> לא זמין</span>
+        </div>
       </div>
       <div class="seats-layout">
         <section class="section left-bal" [class.section-unavailable]="!hasSectionForShow(3)">
@@ -60,7 +66,8 @@
                   <button
                     class="seat-button"
                     [class.seat-available]="hasSectionForShow(3) && getSeatState(seat) === 'available'"
-                    [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
+                    [class.seat-mine-unpaid]="getSeatState(seat) === 'mine-unpaid'"
+                    [class.seat-mine-paid]="getSeatState(seat) === 'mine-paid'"
                     [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(3)"
                     [class.seat-pending]="isPending(seat)"
                     [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(3)"
@@ -83,7 +90,8 @@
                   <button
                     class="seat-button"
                     [class.seat-available]="hasSectionForShow(4) && getSeatState(seat) === 'available'"
-                    [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
+                    [class.seat-mine-unpaid]="getSeatState(seat) === 'mine-unpaid'"
+                    [class.seat-mine-paid]="getSeatState(seat) === 'mine-paid'"
                     [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(4)"
                     [class.seat-pending]="isPending(seat)"
                     [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(4)"
@@ -106,7 +114,8 @@
                   <button
                     class="seat-button"
                     [class.seat-available]="hasSectionForShow(2) && getSeatState(seat) === 'available'"
-                    [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
+                    [class.seat-mine-unpaid]="getSeatState(seat) === 'mine-unpaid'"
+                    [class.seat-mine-paid]="getSeatState(seat) === 'mine-paid'"
                     [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(2)"
                     [class.seat-pending]="isPending(seat)"
                     [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(2)"
@@ -129,7 +138,8 @@
                   <button
                     class="seat-button"
                     [class.seat-available]="hasSectionForShow(1) && getSeatState(seat) === 'available'"
-                    [class.seat-in-cart]="getSeatState(seat) === 'in-cart'"
+                    [class.seat-mine-unpaid]="getSeatState(seat) === 'mine-unpaid'"
+                    [class.seat-mine-paid]="getSeatState(seat) === 'mine-paid'"
                     [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(1)"
                     [class.seat-pending]="isPending(seat)"
                     [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(1)"

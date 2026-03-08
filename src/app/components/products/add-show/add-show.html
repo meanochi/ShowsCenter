@@ -53,7 +53,7 @@
                 text
                 size="small"
                 icon="pi pi-plus"
-                (onClick)="openAddCategory()"
+                (click)="addCategoryRef.showDialog(); $event.stopPropagation()"
               />
             </div>
           </ng-template>
@@ -134,7 +134,7 @@
             <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
           </ng-template>
         </p-datepicker>
-        <label for="time_input">שעת המופע</label>
+        <label for="time_input">שעת התחלה</label>
       </p-floatlabel>
     </div>
     <div class="flex items-center gap-4 mb-2">
@@ -152,7 +152,7 @@
             <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
           </ng-template>
         </p-datepicker>
-        <label for="time_input">משך זמן</label>
+        <label for="time_input">שעת סיום</label>
       </p-floatlabel>
     </div>
     <div class="flex items-center gap-2 mb-2">
@@ -254,7 +254,7 @@
                 text
                 size="small"
                 icon="pi pi-plus"
-                (onClick)="openAddProvider()"
+                (click)="addProviderRef.showDialog(); $event.stopPropagation()"
               />
             </div>
           </ng-template>

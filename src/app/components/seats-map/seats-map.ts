@@ -10,7 +10,7 @@ import { SeatsService } from '../../services/seats-service';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 
-export type SeatState = 'available' | 'in-cart' | 'unavailable';
+export type SeatState = 'available' | 'mine-unpaid' | 'mine-paid' | 'unavailable';
 
 /** sectionId from DB: 1=HALL, 2=RIGHT_BALCONY, 3=LEFT_BALCONY, 4=CENTER_BALCONY */
 const SECTION_ID_TO_MAP = {
@@ -84,8 +84,7 @@ export class SeatsMap implements OnInit, OnChanges {
           if (!this.show) {
             this.showSrv.getShowById(shows[0].id).subscribe((show) => {
               this.show = show;
-              this.applyOrderedSeatsToMap(show);
-              //this.loadOrderedSeats()
+              this.loadOrderedSeats();
               this.cd.detectChanges();
             });
           }
@@ -116,9 +115,8 @@ export class SeatsMap implements OnInit, OnChanges {
       this.show = show;
       // קריאה מסודרת לטעינת המושבים התפוסים מיד לאחר טעינת המופע
       if (this.show) {
-          this.applyOrderedSeatsToMap(this.show);
+          this.loadOrderedSeats(); 
         }
-      //this.loadOrderedSeats(); 
     });
   }
 }
@@ -139,7 +137,55 @@ export class SeatsMap implements OnInit, OnChanges {
       error: (err) => console.error('טעינת מושבים נכשלה', err)
     });
   }
-  
+
+  private toNumber(value: unknown): number {
+    const n = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  /** Prefer fresh ordered seats from OrderedSeat endpoint; fallback to show.orderedSeats when empty. */
+  private getOrderedSeatsSource(show: Show | null = this.show): any[] {
+    if (Array.isArray(this.orderedSeats) && this.orderedSeats.length > 0) return this.orderedSeats as any[];
+    return (show?.orderedSeats ?? []) as any[];
+  }
+
+  /** 1..4 section type from multiple backend shapes (sectionSectionType / sectionTypeId / sectionId / DB section id). */
+  private resolveOrderedSeatSectionType(dto: any, show: Show | null = this.show): number {
+    const direct =
+      this.toNumber(dto?.sectionSectionType) ||
+      this.toNumber(dto?.sectionTypeId) ||
+      this.toNumber(dto?.sectionType);
+    if (direct >= 1 && direct <= 4) return direct;
+
+    const sectionId = this.toNumber(dto?.sectionId);
+    if (sectionId >= 1 && sectionId <= 4) return sectionId;
+
+    // If sectionId is DB row id, map it back to section type via show.sectionDbIdByType.
+    if (sectionId > 4 && show?.sectionDbIdByType) {
+      const found = Object.entries(show.sectionDbIdByType).find(([, dbId]) => Number(dbId) === sectionId);
+      if (found) return Number(found[0]);
+    }
+
+    return 0;
+  }
+
+  /** Ordered seat status: 0 available, 1 reserved, 2 sold. */
+  private isOrderedSeatTaken(dto: any): boolean {
+    const status = this.getOrderedSeatStatus(dto);
+    return status === 1 || status === 2;
+  }
+
+  private getOrderedSeatUserId(dto: any): number {
+    return this.toNumber(dto?.orderUserId ?? dto?.userId);
+  }
+
+  private getOrderedSeatStatus(dto: any): number {
+    const explicit = this.toNumber(dto?.orderStatus ?? dto?.status ?? dto?.Status);
+    if (explicit === 0 || explicit === 1 || explicit === 2) return explicit;
+    if (typeof dto?.status === 'boolean') return dto.status ? 1 : 0;
+    // Fallback: if backend returned item without explicit status, treat as reserved.
+    return 1;
+  }
 
   /** Apply DB seat statuses (0=available, 1=reserved, 2=sold) to the show's map: reset all to available, then mark ordered seats unavailable. */
   private applyOrderedSeatsToMap(show: Show): void {
@@ -152,24 +198,32 @@ export class SeatsMap implements OnInit, OnChanges {
         }
       }
     }
-    if ( show.orderedSeats)
-      for (const dto of show.orderedSeats) {
-        const getMap = SECTION_ID_TO_MAP[dto.sectionSectionType as keyof typeof SECTION_ID_TO_MAP];
-        if (!getMap) continue;
-        const seatMatrix = getMap(show);
-        const row = seatMatrix[dto.row];
-        if (row && row[dto.col]) {
-          row[dto.col].status = true;
-          row[dto.col].userId = dto.orderUserId;
-          row[dto.col].sectionSectionType = dto.sectionSectionType;
-          row[dto.col].sectionId = dto.sectionId;
-        }
+    const seatsToApply = this.getOrderedSeatsSource(show);
+    for (const dto of seatsToApply) {
+      if (!this.isOrderedSeatTaken(dto)) continue;
+      const sectionType = this.resolveOrderedSeatSectionType(dto, show);
+      const getMap = SECTION_ID_TO_MAP[sectionType as keyof typeof SECTION_ID_TO_MAP];
+      if (!getMap) continue;
+      const seatMatrix = getMap(show);
+      const rowIndex = this.toNumber(dto.row);
+      const colIndex = this.toNumber(dto.col);
+      const row = seatMatrix[rowIndex];
+      if (row && row[colIndex]) {
+        const status = this.getOrderedSeatStatus(dto);
+        row[colIndex].status = status !== 0;
+        row[colIndex].orderStatus = status;
+        row[colIndex].userId = this.getOrderedSeatUserId(dto);
+        row[colIndex].sectionSectionType = sectionType;
+        const sectionId = this.toNumber(dto.sectionId);
+        if (sectionId > 0) row[colIndex].sectionId = sectionId;
       }
+    }
     
       this.cd.detectChanges();
   }
-  isSeatDisabled(seat:any){
-    return this.getSeatState(seat) !== 'available' || this.isPending(seat) || !this.hasSectionForShow(3);
+  isSeatDisabled(seat: Seat){
+    const sectionType = SECTION_TO_ID[seat.section] ?? 1;
+    return this.getSeatState(seat) !== 'available' || this.isPending(seat) || !this.hasSectionForShow(sectionType);
   }
 
   seatKey(seat: Seat): string {
@@ -192,20 +246,26 @@ export class SeatsMap implements OnInit, OnChanges {
     return this.pendingKeys.has(this.seatKey(seat));
   }
 
-  getSeatState(seat: Seat): string {
-  // האם המושב הזה מופיע ברשימת התפוסים של המופע הזה?
-    const isOrdered = this.show?.orderedSeats.find(os => 
-      os.row === seat.row && 
-      os.col === seat.col && 
-      os.sectionSectionType === seat.sectionSectionType
+  getSeatState(seat: Seat): SeatState {
+    const seatsToCheck = this.getOrderedSeatsSource(this.show);
+    const sectionType = SECTION_TO_ID[seat.section] ?? 1;
+    const isOrdered = seatsToCheck.find((os: any) =>
+      this.isOrderedSeatTaken(os) &&
+      this.toNumber(os.row) === seat.row &&
+      this.toNumber(os.col) === seat.col &&
+      this.resolveOrderedSeatSectionType(os, this.show) === sectionType
     );
 
     if (isOrdered) {
-    // אם ה-userId שלי תואם למי שהזמין - הכיסא בסל שלי
-      if (isOrdered.orderUserId === this.cartSrv.getCurrentUserId()/* && isOrdered.status==1*/ ) {
-        return 'in-cart'; 
+      const orderedStatus = this.getOrderedSeatStatus(isOrdered);
+      const orderedUserId = this.getOrderedSeatUserId(isOrdered);
+      // If seat belongs to current user: status 1 => red (saved/not paid), status 2 => blue (paid).
+      if (orderedUserId > 0 && orderedUserId === this.cartSrv.getCurrentUserId()) {
+        if (orderedStatus === 2) return 'mine-paid';
+        return 'mine-unpaid';
       }
-        return 'unavailable'; // צובע באפור ונועל
+      // Ordered seat of someone else is always disabled/grey.
+      return 'unavailable';
     }
     return 'available';
   }
@@ -278,7 +338,7 @@ export class SeatsMap implements OnInit, OnChanges {
         this.closeSeatDialog();
         this.showSrv.getShowById(showId).subscribe((show) => {
           this.show = show;
-          this.applyOrderedSeatsToMap(show);
+          this.loadOrderedSeats();
           this.cd.detectChanges();
         });
       },
@@ -296,7 +356,7 @@ export class SeatsMap implements OnInit, OnChanges {
           this.seatConflictMessage = 'המושב נבחר בינתיים על ידי משתמש אחר.';
           this.showSrv.getShowById(showId).subscribe((show) => {
             this.show = show;
-            this.applyOrderedSeatsToMap(show);
+            this.loadOrderedSeats();
             this.cd.detectChanges();
           });
         } else {
@@ -313,7 +373,8 @@ export class SeatsMap implements OnInit, OnChanges {
     const p = price != null && price > 0 ? `${price} ₪` : '';
 
     const state = this.getSeatState(seat);
-    if (state === 'in-cart') return p ? `${base} • ${p} • שמור עבורך` : `${base} • שמור עבורך`;
+    if (state === 'mine-unpaid') return p ? `${base} • ${p} • שמור עבורך (טרם שולם)` : `${base} • שמור עבורך (טרם שולם)`;
+    if (state === 'mine-paid') return p ? `${base} • ${p} • שולם עבורך` : `${base} • שולם עבורך`;
     if (state === 'unavailable') return p ? `${base} • ${p} • לא זמין` : `${base} • לא זמין`;
     return p ? `${base} • ${p} • פנוי` : `${base} • פנוי`;
   }

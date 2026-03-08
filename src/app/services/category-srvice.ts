@@ -19,10 +19,17 @@ export class CategorySrvice {
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
-  private buildAddProviderBody(category: Category): Record<string, unknown> {
+  private buildCategoryBody(category: Category): Record<string, unknown> {
     return {
       Name: category.name ?? '',
     };
+  }
+
+  private getCurrentUserId(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem('user');
+    }
+    return null;
   }
 
   // תיקון שם הפונקציה מ-loadCategoriers ל-loadCategories
@@ -45,12 +52,8 @@ export class CategorySrvice {
   }
 
   addCategory(category: Category): Observable<Category> {
-    let userId = null;
-    if (isPlatformBrowser(this.platformId)) {
-      userId = localStorage.getItem('user');
-    }
-
-    const body = this.buildAddProviderBody(category);
+    const userId = this.getCurrentUserId();
+    const body = this.buildCategoryBody(category);
     return this.http.post<Category>(`/api/Category?userId=${userId}`, body).pipe(
       tap((created) => {
         // עדכון הרשימה המקומית בזיכרון מיד עם הצלחת הפעולה
@@ -64,4 +67,33 @@ export class CategorySrvice {
     );
   
 }
+
+  updateCategory(category: Category): Observable<Category> {
+    const userId = this.getCurrentUserId();
+    const body = this.buildCategoryBody(category);
+    return this.http.put<Category>(`/api/Category/${category.id}?userId=${userId}`, body).pipe(
+      tap((updated) => {
+        const current = this.categoriesSubject.value;
+        this.categoriesSubject.next(current.map((c) => (c.id === updated.id ? updated : c)));
+      }),
+      catchError((err) => {
+        console.error('updateCategory failed', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  deleteCategory(id: number): Observable<void> {
+    const userId = this.getCurrentUserId();
+    return this.http.delete<void>(`/api/Category/${id}?userId=${userId}`).pipe(
+      tap(() => {
+        const current = this.categoriesSubject.value;
+        this.categoriesSubject.next(current.filter((c) => c.id !== id));
+      }),
+      catchError((err) => {
+        console.error('deleteCategory failed', err);
+        return throwError(() => err);
+      })
+    );
+  }
 }

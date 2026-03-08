@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, forkJoin, Observable, of } from 'rxjs';
 import { Category } from '../models/category-model';
 import { CategorySrvice } from './category-srvice';
 import { Sector, Show, TargetAudience, SECTION_ID_MAP, Section } from '../models/show-model';
@@ -70,13 +70,28 @@ export class ShowsService {
       });
     }
     show.orderedSeats = Array.isArray(item.orderedSeats)
-      ? item.orderedSeats.map((s: any) => ({
-          sectionId: Number(s.sectionId ?? s.sectionTypeId ?? s.sectionType ?? 0),
-          row: Number(s.row ?? 0),
-          col: Number(s.col ?? 0),
-          orderUserId: Number(s.orderUserId),
-          sectionSectionType: Number(s.sectionSectionType),
-        }))
+      ? item.orderedSeats.map((s: any) => {
+          const sectionId = Number(s.sectionId ?? s.SectionId ?? 0);
+          const directSectionType = Number(s.sectionSectionType ?? s.sectionTypeId ?? s.sectionType ?? 0);
+          let sectionSectionType = !isNaN(directSectionType) ? directSectionType : 0;
+          if (sectionSectionType < 1 || sectionSectionType > 4) {
+            if (sectionId >= 1 && sectionId <= 4) {
+              sectionSectionType = sectionId;
+            } else if (sectionId > 4) {
+              const byDbId = Object.entries(show.sectionDbIdByType).find(([, dbId]) => Number(dbId) === sectionId);
+              sectionSectionType = byDbId ? Number(byDbId[0]) : 0;
+            }
+          }
+          const status = Number(s.status ?? s.Status ?? 1);
+          return {
+            sectionId: !isNaN(sectionId) ? sectionId : 0,
+            row: Number(s.row ?? 0),
+            col: Number(s.col ?? 0),
+            orderUserId: Number(s.orderUserId ?? s.userId ?? s.UserId ?? 0),
+            sectionSectionType: !isNaN(sectionSectionType) ? sectionSectionType : 0,
+            status: !isNaN(status) ? status : 1,
+          };
+        })
       : [];
     const sectionPrices = [
       show.hallMap?.price,
@@ -261,6 +276,35 @@ export class ShowsService {
       );
     }
     return of(undefined);
+  }
+
+  /** Admin cleanup helper: fetch a broad first page so login can detect old ended shows. */
+  getShowsForAdminCleanup(limit: number = 5000): Observable<Show[]> {
+    const params = new HttpParams()
+      .set('skip', limit.toString())
+      .set('position', '1')
+      .set('sortField', 'Date')
+      .set('sortOrder', '1');
+    return this.http.get<any[]>('/api/Shows', { params }).pipe(
+      map((data) => data.map((item) => this.mapShowFromApi(item)))
+    );
+  }
+
+  /** Admin cleanup helper: delete selected show ids without per-show confirm prompts. */
+  deleteShowsByIds(ids: number[]): Observable<void[]> {
+    const userId = localStorage.getItem('user');
+    const validIds = [...new Set(ids)].filter((id) => Number.isFinite(id) && id > 0);
+    if (!userId || validIds.length === 0) {
+      return of([] as void[]);
+    }
+    const requests = validIds.map((id) => this.http.delete<void>(`/api/Shows/${id}?userId=${userId}`));
+    return forkJoin(requests).pipe(
+      tap(() => this.loadShows({})),
+      catchError((err) => {
+        console.error('deleteShowsByIds failed', err);
+        throw err;
+      }),
+    );
   }
 
 

@@ -103,6 +103,64 @@
   color: var(--text-primary);
 }
 
+.field-error {
+  display: block;
+  color: #b91c1c;
+  margin-top: 0.35rem;
+}
+
+.cleanup-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.cleanup-intro {
+  margin: 0;
+}
+
+.cleanup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.cleanup-show-list {
+  max-height: 14rem;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-md);
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.cleanup-show-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.5rem;
+  row-gap: 0.1rem;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 0.45rem;
+}
+
+.cleanup-show-row:hover {
+  background: #f8fafc;
+}
+
+.cleanup-show-title {
+  font-weight: 600;
+}
+
+.cleanup-show-date {
+  color: var(--text-secondary);
+}
+
 @media (max-width: 900px) {
   .auth-page {
     grid-template-columns: 1fr;

@@ -11,6 +11,8 @@ import { FloatLabel } from 'primeng/floatlabel';
 import { DialogModule } from 'primeng/dialog';
 import { PasswordModule } from 'primeng/password';
 import { AuthService } from '../../../services/auth-service';
+import { ShowsService } from '../../../services/shows-service';
+import { Show } from '../../../models/show-model';
 
 @Component({
   selector: 'app-login',
@@ -36,6 +38,7 @@ export class Login {
   email: string = null as unknown as string;
   pass: string = '';
   private authService = inject(AuthService);
+  private showsService = inject(ShowsService);
 
   forgotPasswordVisible = false;
   forgotPasswordStep: 1 | 2 | 3 = 1;
@@ -47,6 +50,12 @@ export class Login {
   resettingPassword = false;
   /** Shown when login fails (wrong password or user not found). */
   loginError = signal<string>('');
+  cleanupDialogVisible = false;
+  cleanupSelectionMode = false;
+  cleanupActionInProgress = false;
+  cleanupError = '';
+  cleanupCandidateShows: Show[] = [];
+  selectedCleanupShowIds: number[] = [];
 
   openForgotPasswordDialog() {
     this.forgotPasswordVisible = true;
@@ -136,7 +145,7 @@ export class Login {
         const response = res.body;
         this.authService.login(response.id, response.firstName);
         this.authMessage.showSuccess('התחברת בהצלחה!');
-        this.router.navigate(['/shows']);
+        this.handlePostLoginFlow(Number(response.id));
       },
       error: (err) => {
         const status = err?.status;
@@ -151,5 +160,127 @@ export class Login {
         }
       },
     });
+  }
+
+  private handlePostLoginFlow(userId: number) {
+    this.authService.checkIsManager(userId).subscribe({
+      next: (isManager) => {
+        if (!isManager) {
+          this.continueToShowsPage();
+          return;
+        }
+        this.openAdminCleanupIfNeeded();
+      },
+      error: () => {
+        this.continueToShowsPage();
+      },
+    });
+  }
+
+  private openAdminCleanupIfNeeded() {
+    this.cleanupActionInProgress = true;
+    this.showsService.getShowsForAdminCleanup().subscribe({
+      next: (shows) => {
+        this.cleanupActionInProgress = false;
+        const oldShows = shows
+          .filter((show) => this.isShowEndedMoreThanTwoWeeksAgo(show))
+          .sort((a, b) => this.getShowEndDate(a).getTime() - this.getShowEndDate(b).getTime());
+
+        if (oldShows.length === 0) {
+          this.continueToShowsPage();
+          return;
+        }
+
+        this.cleanupCandidateShows = oldShows;
+        this.selectedCleanupShowIds = [];
+        this.cleanupSelectionMode = false;
+        this.cleanupError = '';
+        this.cleanupDialogVisible = true;
+      },
+      error: () => {
+        this.cleanupActionInProgress = false;
+        this.continueToShowsPage();
+      },
+    });
+  }
+
+  private getShowEndDate(show: Show): Date {
+    const end = new Date(show.date);
+    const endTime = show.endTime;
+
+    if (typeof endTime === 'string' && endTime.includes(':')) {
+      const [h, m] = endTime.split(':').map((val) => Number(val));
+      end.setHours(Number.isFinite(h) ? h : 23, Number.isFinite(m) ? m : 59, 0, 0);
+      return end;
+    }
+
+    if (endTime instanceof Date) {
+      end.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
+      return end;
+    }
+
+    end.setHours(23, 59, 59, 999);
+    return end;
+  }
+
+  private isShowEndedMoreThanTwoWeeksAgo(show: Show): boolean {
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() - 14);
+    return this.getShowEndDate(show).getTime() < threshold.getTime();
+  }
+
+  deleteAllOldShows() {
+    const showIds = this.cleanupCandidateShows.map((show) => show.id);
+    this.deleteOldShows(showIds);
+  }
+
+  openCleanupSelectionMode() {
+    this.cleanupSelectionMode = true;
+    this.cleanupError = '';
+  }
+
+  backToCleanupQuestion() {
+    this.cleanupSelectionMode = false;
+    this.cleanupError = '';
+  }
+
+  deleteSelectedOldShows() {
+    const validIds = (this.selectedCleanupShowIds ?? []).filter((id) =>
+      this.cleanupCandidateShows.some((show) => show.id === id),
+    );
+    if (validIds.length === 0) {
+      this.cleanupError = 'יש לבחור לפחות מופע אחד למחיקה.';
+      return;
+    }
+    this.deleteOldShows(validIds);
+  }
+
+  skipCleanupAndContinue() {
+    this.cleanupDialogVisible = false;
+    this.cleanupSelectionMode = false;
+    this.cleanupError = '';
+    this.continueToShowsPage();
+  }
+
+  private deleteOldShows(ids: number[]) {
+    this.cleanupError = '';
+    this.cleanupActionInProgress = true;
+    this.showsService.deleteShowsByIds(ids).subscribe({
+      next: () => {
+        this.cleanupActionInProgress = false;
+        this.cleanupDialogVisible = false;
+        this.cleanupSelectionMode = false;
+        this.authMessage.showSuccess(`נמחקו ${ids.length} מופעים שהסתיימו לפני יותר משבועיים.`);
+        this.continueToShowsPage();
+      },
+      error: () => {
+        this.cleanupActionInProgress = false;
+        this.cleanupError = 'מחיקת המופעים נכשלה. נסה שוב או המשך ללא מחיקה.';
+      },
+    });
+  }
+
+  private continueToShowsPage() {
+    this.router.navigate(['/shows']);
   }
 }
