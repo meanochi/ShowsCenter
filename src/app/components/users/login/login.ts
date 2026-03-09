@@ -13,6 +13,7 @@ import { PasswordModule } from 'primeng/password';
 import { AuthService } from '../../../services/auth-service';
 import { ShowsService } from '../../../services/shows-service';
 import { Show } from '../../../models/show-model';
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-login',
@@ -39,6 +40,7 @@ export class Login {
   pass: string = '';
   private authService = inject(AuthService);
   private showsService = inject(ShowsService);
+  private confirmationService = inject(ConfirmationService);
 
   forgotPasswordVisible = false;
   forgotPasswordStep: 1 | 2 | 3 = 1;
@@ -85,13 +87,18 @@ export class Login {
         this.sendingCode = false;
         if (res.sent) {
           this.forgotPasswordStep = 2;
+          this.authMessage.showSuccess('קוד אימות נשלח לדוא"ל שלך.');
         } else {
-          this.forgotPasswordError = res.message || 'לא ניתן לשלוח קוד. נסה שוב.';
+          const msg = res.message || 'לא ניתן לשלוח קוד. נסה שוב.';
+          this.forgotPasswordError = msg;
+          this.authMessage.showError(msg);
         }
       },
       error: (err) => {
         this.sendingCode = false;
-        this.forgotPasswordError = err?.error?.message || err?.message || 'שגיאה בשליחת הקוד. ייתכן שהדוא"ל לא רשום.';
+        const msg = err?.error?.message || err?.message || 'שגיאה בשליחת הקוד. ייתכן שהדוא"ל לא רשום.';
+        this.forgotPasswordError = msg;
+        this.authMessage.showError(msg);
       },
     });
   }
@@ -115,13 +122,18 @@ export class Login {
         this.resettingPassword = false;
         if (res.success) {
           this.forgotPasswordStep = 3;
+          this.authMessage.showSuccess('הסיסמה עודכנה בהצלחה.');
         } else {
-          this.forgotPasswordError = res.message || 'איפוס הסיסמה נכשל. נסה שוב.';
+          const msg = res.message || 'איפוס הסיסמה נכשל. נסה שוב.';
+          this.forgotPasswordError = msg;
+          this.authMessage.showError(msg);
         }
       },
       error: (err) => {
         this.resettingPassword = false;
-        this.forgotPasswordError = err?.error?.message || err?.message || 'שגיאה בעדכון הסיסמה. ייתכן שהקוד לא תקף או שפג תוקפו.';
+        const msg = err?.error?.message || err?.message || 'שגיאה בעדכון הסיסמה. ייתכן שהקוד לא תקף או שפג תוקפו.';
+        this.forgotPasswordError = msg;
+        this.authMessage.showError(msg);
       },
     });
   }
@@ -139,7 +151,9 @@ export class Login {
     this.userSrv.login(this.email, this.pass).subscribe({
       next: (res: { status: number; body: any }) => {
         if (res.status === 204) {
-          this.loginError.set('כתובת הדוא"ל או הסיסמה שגויים. נסה שוב.');
+          const msg = 'כתובת הדוא"ל או הסיסמה שגויים. נסה שוב.';
+          this.loginError.set(msg);
+          this.authMessage.showError(msg);
           return;
         }
         const response = res.body;
@@ -152,11 +166,16 @@ export class Login {
         const body = err?.error;
         const msg = typeof body === 'string' ? body : (body?.message ?? body?.error ?? err?.message);
         if (status === 401 || status === 404) {
-          this.loginError.set('כתובת הדוא"ל או הסיסמה שגויים. נסה שוב.');
+          const loginMsg = 'כתובת הדוא"ל או הסיסמה שגויים. נסה שוב.';
+          this.loginError.set(loginMsg);
+          this.authMessage.showError(loginMsg);
         } else if (msg) {
           this.loginError.set(msg);
+          this.authMessage.showError(msg);
         } else {
-          this.loginError.set('ההתחברות נכשלה. נסה שוב.');
+          const loginMsg = 'ההתחברות נכשלה. נסה שוב.';
+          this.loginError.set(loginMsg);
+          this.authMessage.showError(loginMsg);
         }
       },
     });
@@ -231,7 +250,16 @@ export class Login {
 
   deleteAllOldShows() {
     const showIds = this.cleanupCandidateShows.map((show) => show.id);
-    this.deleteOldShows(showIds);
+    this.confirmationService.confirm({
+      header: 'מחיקת מופעים ישנים',
+      message: `למחוק את כל ${showIds.length} המופעים הישנים שנמצאו?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'כן, מחיקה',
+      rejectLabel: 'ביטול',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => this.deleteOldShows(showIds),
+    });
   }
 
   openCleanupSelectionMode() {
@@ -249,10 +277,21 @@ export class Login {
       this.cleanupCandidateShows.some((show) => show.id === id),
     );
     if (validIds.length === 0) {
-      this.cleanupError = 'יש לבחור לפחות מופע אחד למחיקה.';
+      const msg = 'יש לבחור לפחות מופע אחד למחיקה.';
+      this.cleanupError = msg;
+      this.authMessage.showError(msg);
       return;
     }
-    this.deleteOldShows(validIds);
+    this.confirmationService.confirm({
+      header: 'מחיקת מופעים נבחרים',
+      message: `למחוק ${validIds.length} מופעים שנבחרו?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'כן, מחיקה',
+      rejectLabel: 'ביטול',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => this.deleteOldShows(validIds),
+    });
   }
 
   skipCleanupAndContinue() {
@@ -275,7 +314,9 @@ export class Login {
       },
       error: () => {
         this.cleanupActionInProgress = false;
-        this.cleanupError = 'מחיקת המופעים נכשלה. נסה שוב או המשך ללא מחיקה.';
+        const msg = 'מחיקת המופעים נכשלה. נסה שוב או המשך ללא מחיקה.';
+        this.cleanupError = msg;
+        this.authMessage.showError(msg);
       },
     });
   }

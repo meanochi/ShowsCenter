@@ -39,6 +39,8 @@ import { AddProvider } from '../../providers/add-provider/add-provider';
 import { ImageService } from '../../../services/image-service';
 import { ChangeDetectorRef } from '@angular/core';
 import { AddCategory } from '../../categories/add-category/add-category';
+import { ConfirmationService } from 'primeng/api';
+import { ToastService } from '../../../services/toast-service';
 
 @Component({
   selector: 'app-add-show',
@@ -106,6 +108,8 @@ export class AddShow {
   imageSrv: ImageService = inject(ImageService);
   imagePreviewSignal = signal<string | ArrayBuffer | null>(null);
   private cd = inject(ChangeDetectorRef);
+  private confirmationService = inject(ConfirmationService);
+  private toast = inject(ToastService);
 
   showDialog() {
     this.loadCategories();
@@ -180,7 +184,9 @@ export class AddShow {
         error: (err) => {
           console.error('שגיאה בהעלאה', err);
           this.submitLoading = false;
-          this.submitError = err?.error?.message ?? err?.message ?? 'העלאת התמונה נכשלה';
+          const msg = err?.error?.message ?? err?.message ?? 'העלאת התמונה נכשלה';
+          this.submitError = msg;
+          this.toast.error(msg);
         },
       });
     } else {
@@ -225,13 +231,17 @@ export class AddShow {
           error: (err) => {
             console.error('Error saving sections', err);
             this.submitLoading = false;
-            this.submitError = 'המופע נוצר, אך חלה שגיאה בשמירת האזורים.';
+            const msg = 'המופע נוצר, אך חלה שגיאה בשמירת האזורים.';
+            this.submitError = msg;
+            this.toast.error(msg);
           }
         });
       },
       error: (err) => {
         this.submitLoading = false;
-        this.submitError = err?.error?.message ?? err?.message ?? 'שמירת המופע נכשלה';
+        const msg = err?.error?.message ?? err?.message ?? 'שמירת המופע נכשלה';
+        this.submitError = msg;
+        this.toast.error(msg);
       },
     });
   }
@@ -242,6 +252,42 @@ export class AddShow {
     this.reset();
     this.visible = false;
     this.submitLoading = false;
+    this.toast.success('המופע נוסף בהצלחה.');
+  }
+
+  cancelDialog(): void {
+    if (this.submitLoading) return;
+    if (!this.hasUnsavedChanges()) {
+      this.visible = false;
+      return;
+    }
+    this.confirmationService.confirm({
+      header: 'ביטול הוספת מופע',
+      message: 'לסגור את החלון בלי לשמור את השינויים?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'כן, סגור',
+      rejectLabel: 'המשך עריכה',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        this.visible = false;
+      },
+    });
+  }
+
+  private hasUnsavedChanges(): boolean {
+    return Boolean(
+      this.title?.trim() ||
+      this.description?.trim() ||
+      this.selectedFile ||
+      this.providerId > 0 ||
+      this.categoryId !== 301 ||
+      (this.hallMap.price ?? 0) > 0 ||
+      (this.leftBalMap.price ?? 0) > 0 ||
+      (this.rightBalMap.price ?? 0) > 0 ||
+      (this.centerBalMap.price ?? 0) > 0 ||
+      this.checked.some((checked, index) => index > 0 && checked),
+    );
   }
   reset() {
     this.title = '';
@@ -320,6 +366,7 @@ export class AddShow {
       },
       error: (err) => {
         console.error('Error loading providers', err);
+        this.toast.error('טעינת המפיקים נכשלה.');
       },
     });
   }
@@ -336,6 +383,7 @@ export class AddShow {
       },
       error: (err) => {
         console.error('Error loading categories', err);
+        this.toast.error('טעינת הקטגוריות נכשלה.');
       },
     });
   }

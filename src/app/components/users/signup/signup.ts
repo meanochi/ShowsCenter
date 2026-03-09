@@ -41,6 +41,8 @@ export class Signup {
       },
       error: (err) => {
         console.error('קרתה שגיאה:', err);
+        const msg = err?.error?.message ?? err?.message ?? 'הרשמה נכשלה. נסה שוב.';
+        this.authMessage.showError(msg);
       },
     });
   }

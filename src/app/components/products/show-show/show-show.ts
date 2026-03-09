@@ -1,6 +1,17 @@
-import { Component, Output, EventEmitter, Input, inject, OnChanges, SimpleChanges, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Output,
+  EventEmitter,
+  Input,
+  inject,
+  OnChanges,
+  SimpleChanges,
+  OnDestroy,
+  ChangeDetectorRef,
+  OnInit,
+} from '@angular/core';
 import { ShowsService } from '../../../services/shows-service';
-import { Sector, Show, TargetAudience } from '../../../models/show-model';
+import { Sector, Show, TargetAudience, Section, SECTION_TO_ID } from '../../../models/show-model';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { DatePipe } from '@angular/common';
@@ -10,9 +21,26 @@ import { CategorySrvice } from '../../../services/category-srvice';
 import { ProgressSpinnerModule } from 'primeng/progressspinner'; //
 import { TooltipModule } from 'primeng/tooltip';
 import { Provider } from '../../../models/provider-model';
-import { Observable } from 'rxjs';
+import { Observable, Subscription, interval, of } from 'rxjs';
+import { catchError, startWith, switchMap } from 'rxjs/operators';
 import { ImageService } from '../../../services/image-service';
 import { Category } from '../../../models/category-model';
+import { SeatsService } from '../../../services/seats-service';
+import { Seat } from '../../../models/seat-model';
+
+interface SectionAvailability {
+  sectionId: number;
+  sectionLabel: string;
+  totalSeats: number;
+  availableSeats: number;
+  price: number;
+}
+
+interface SectionDefinition {
+  sectionId: number;
+  sectionLabel: string;
+  getMap: (show: Show) => Seat[][];
+}
 @Component({
   selector: 'app-show-show',
   imports: [
@@ -27,18 +55,43 @@ import { Category } from '../../../models/category-model';
   templateUrl: './show-show.html',
   styleUrl: './show-show.scss',
 })
-export class ShowShow implements OnChanges, OnDestroy {
+export class ShowShow implements OnInit, OnChanges, OnDestroy {
   showSrv: ShowsService = inject(ShowsService);
   private cd = inject(ChangeDetectorRef);
   categoreySrv: CategorySrvice = inject(CategorySrvice);
   providerSrv: ProviderService = inject(ProviderService);
+  private seatsSrv: SeatsService = inject(SeatsService);
   providers: Provider[] = [];
   providers$: Observable<Provider[]> | undefined;
-  categories :Category[]=[];
+  categories: Category[] = [];
   readonly Audience = TargetAudience;
   readonly Sector = Sector;
   currProvider: Provider | undefined;
   imageSrv: ImageService = inject(ImageService);
+
+  private sectionDefinitions: SectionDefinition[] = [
+    {
+      sectionId: 1,
+      sectionLabel: Section.HALL,
+      getMap: (show) => show.hallMap?.map ?? [],
+    },
+    {
+      sectionId: 2,
+      sectionLabel: Section.RIGHT_BALCONY,
+      getMap: (show) => show.rightBalMap?.map ?? [],
+    },
+    {
+      sectionId: 3,
+      sectionLabel: Section.LEFT_BALCONY,
+      getMap: (show) => show.leftBalMap?.map ?? [],
+    },
+    {
+      sectionId: 4,
+      sectionLabel: Section.CENTER_BALCONY,
+      getMap: (show) => show.centerBalMap?.map ?? [],
+    },
+  ];
+
   @Input()
   showId: number = 0;
 
@@ -52,9 +105,12 @@ export class ShowShow implements OnChanges, OnDestroy {
   userName: string = 'Michal';
   responsiveOptions: any[] | undefined;
   relatedEvents: Show[] = [];
+  sectionAvailability: SectionAvailability[] = [];
   /** Live countdown until show start (e.g. "05:12:06:30" = 5 days 12h 6m 30s). */
   countdownLabel: string = '';
   private countdownTimer: ReturnType<typeof setInterval> | null = null;
+  private seatAvailabilitySubscription: Subscription | null = null;
+
   ngOnInit() {
     this.loadProviders();
     this.responsiveOptions = [
@@ -74,25 +130,20 @@ export class ShowShow implements OnChanges, OnDestroy {
         numScroll: 1,
       },
     ];
-    this.categoreySrv.categories$.subscribe(data => {
+    this.categoreySrv.categories$.subscribe((data) => {
       this.categories = data;
     });
   }
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes['showId']) {
-      this.showProd = this.showSrv.findShow(this.showId)
-        ? this.showSrv.findShow(this.showId)!
-        : new Show();
-      this.relatedEvents = this.showSrv.shows.filter(
-        (element) =>
-          element.categoryId === this.showProd.categoryId && element.id !== this.showProd.id,
-      );
-      this.startCountdown();
+      this.loadShowDetails();
     }
   }
 
   ngOnDestroy(): void {
     this.stopCountdown();
+    this.stopSeatAvailabilityRefresh();
   }
 
   /** Build show start Date from date + beginTime (string "HH:mm" or Date). */
@@ -122,6 +173,140 @@ export class ShowShow implements OnChanges, OnDestroy {
     this.stopCountdown();
     this.updateCountdown();
     this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
+  }
+
+  private stopSeatAvailabilityRefresh(): void {
+    if (this.seatAvailabilitySubscription) {
+      this.seatAvailabilitySubscription.unsubscribe();
+      this.seatAvailabilitySubscription = null;
+    }
+  }
+
+  private startSeatAvailabilityRefresh(showId: number): void {
+    this.stopSeatAvailabilityRefresh();
+    this.seatAvailabilitySubscription = interval(4000)
+      .pipe(
+        startWith(0),
+        switchMap(() =>
+          this.seatsSrv.getOrderedSeats(showId).pipe(
+            catchError((err) => {
+              console.error('Error loading ordered seats for availability', err);
+              return of([] as Seat[]);
+            }),
+          ),
+        ),
+      )
+      .subscribe((orderedSeats) => {
+        if (this.showProd.id !== showId) return;
+        this.updateSectionAvailability(orderedSeats);
+      });
+  }
+
+  private loadShowDetails(): void {
+    if (!this.showId) {
+      this.showProd = new Show();
+      this.relatedEvents = [];
+      this.sectionAvailability = [];
+      this.stopSeatAvailabilityRefresh();
+      this.stopCountdown();
+      this.cd.detectChanges();
+      return;
+    }
+
+    this.showSrv.getShowById(this.showId).subscribe({
+      next: (show) => {
+        this.showProd = show;
+        this.updateRelatedEvents();
+        this.startCountdown();
+        this.updateSectionAvailability([]);
+        this.startSeatAvailabilityRefresh(show.id);
+        this.cd.detectChanges();
+      },
+      error: () => {
+        this.showProd = this.showSrv.findShow(this.showId) ?? new Show();
+        this.updateRelatedEvents();
+        this.startCountdown();
+        this.updateSectionAvailability([]);
+        this.startSeatAvailabilityRefresh(this.showId);
+        this.cd.detectChanges();
+      },
+    });
+  }
+
+  private updateRelatedEvents(): void {
+    this.relatedEvents = this.showSrv.shows.filter(
+      (element) =>
+        element.categoryId === this.showProd.categoryId && element.id !== this.showProd.id,
+    );
+  }
+
+  private resolveSectionTypeForSeat(seat: Seat): number {
+    if (seat.sectionSectionType != null && seat.sectionSectionType >= 1 && seat.sectionSectionType <= 4) {
+      return seat.sectionSectionType;
+    }
+    return SECTION_TO_ID[seat.section] ?? 0;
+  }
+
+  private updateSectionAvailability(orderedSeats: Seat[]): void {
+    const sectionIds =
+      this.showProd.sectionIdsFromApi?.length > 0
+        ? this.showProd.sectionIdsFromApi
+        : this.sectionDefinitions.map((section) => section.sectionId);
+
+    this.sectionAvailability = this.sectionDefinitions
+      .filter((section) => sectionIds.includes(section.sectionId))
+      .map((section) => {
+        const totalSeats = section.getMap(this.showProd).flat().length;
+        const takenSeats = orderedSeats.filter((seat) => {
+          const status = seat.orderStatus ?? (seat.status ? 1 : 0);
+          return (
+            (status === 1 || status === 2) &&
+            this.resolveSectionTypeForSeat(seat) === section.sectionId
+          );
+        }).length;
+        return {
+          sectionId: section.sectionId,
+          sectionLabel: section.sectionLabel,
+          totalSeats,
+          availableSeats: Math.max(0, totalSeats - takenSeats),
+          price: this.getSectionPrice(section.sectionId),
+        };
+      })
+      .filter((section) => section.totalSeats > 0);
+    this.cd.detectChanges();
+  }
+
+  private getSectionPrice(sectionId: number): number {
+    switch (sectionId) {
+      case 1:
+        return this.showProd.hallMap?.price ?? 0;
+      case 2:
+        return this.showProd.rightBalMap?.price ?? 0;
+      case 3:
+        return this.showProd.leftBalMap?.price ?? 0;
+      case 4:
+        return this.showProd.centerBalMap?.price ?? 0;
+      default:
+        return 0;
+    }
+  }
+
+  get totalAvailableSeats(): number {
+    return this.sectionAvailability.reduce((sum, section) => sum + section.availableSeats, 0);
+  }
+
+  get isSoldOut(): boolean {
+    if (this.sectionAvailability.length > 0) {
+      return this.totalAvailableSeats <= 0;
+    }
+    return this.showProd.isFull;
+  }
+
+  getAvailabilitySeverity(availableSeats: number): 'soldout' | 'critical' | 'warning' | 'normal' {
+    if (availableSeats <= 0) return 'soldout';
+    if (availableSeats <= 5) return 'critical';
+    if (availableSeats <= 10) return 'warning';
+    return 'normal';
   }
 
   /** Set countdownLabel to "DD:HH:MM:SS" (days : hours : minutes : seconds) until show start. */

@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { CartService } from './cart-service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,7 @@ export class OrderService {
   // 2. חשיפת הנתונים כ-Observable לקומפוננטות
   orders$ = this.ordersSubject.asObservable();
 
-  constructor(private http: HttpClient) { 
+  constructor(private http: HttpClient, private cartSrv: CartService) { 
     // כדאי לטעון את הנתונים הראשוניים מיד עם יצירת ה-Service
     this.refreshOrders();
   }
@@ -50,7 +51,10 @@ export class OrderService {
   unLockSeat(id: number, userId: number): Observable<any> {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http.delete<any>(`${this.URL}/${id}`, { params }).pipe(
-      tap(() => this.refreshOrders())
+      tap(() => {
+        this.refreshOrders();
+        this.cartSrv.refreshCart();
+      })
     );
   }
 
@@ -59,7 +63,10 @@ export class OrderService {
    */
   checkout(id: number, checkoutDto: any): Observable<any> {
     return this.http.put<any>(`${this.URL}/${id}`, checkoutDto).pipe(
-      tap(() => this.refreshOrders())
+      tap(() => {
+        this.refreshOrders();
+        this.cartSrv.refreshCart();
+      })
     );
   }
 
@@ -75,7 +82,10 @@ export class OrderService {
    */
   lockSeat(lockSeatDto: any): Observable<any> {
     return this.http.post<any>(`${this.URL}/lock`, lockSeatDto).pipe(
-      tap(() => this.refreshOrders())
+      tap(() => {
+        this.refreshOrders();
+        this.cartSrv.refreshCart();
+      })
     );
   }
 }

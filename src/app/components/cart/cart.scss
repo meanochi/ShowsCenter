@@ -214,18 +214,11 @@
   color: #7c3aed;
 }
 
-.cart-item-status.status-available .status-dot {
-  background: #22c55e;
+.cart-item-status.status-paid .status-dot {
+  background: #3b82f6;
 }
-.cart-item-status.status-available .status-text {
-  color: #16a34a;
-}
-
-.cart-item-status.status-unavailable .status-dot {
-  background: #ef4444;
-}
-.cart-item-status.status-unavailable .status-text {
-  color: #dc2626;
+.cart-item-status.status-paid .status-text {
+  color: #2563eb;
 }
 
 @media (max-width: 768px) {

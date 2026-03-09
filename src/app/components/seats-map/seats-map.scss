@@ -17,11 +17,39 @@
   box-shadow: var(--shadow-sm);
 }
 
-.seats-full-message {
-  border-color: #f0d9be !important;
+.seats-status-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  border: 1px solid;
+  border-radius: var(--radius-md);
+}
+
+.seats-status-icon {
+  margin-top: 0.12rem;
+  font-size: 1rem;
+}
+
+.seats-status-title {
+  font-weight: 700;
+  font-size: 0.96rem;
+}
+
+.seats-status-note {
+  margin-top: 0.12rem;
+  font-size: 0.86rem;
+}
+
+.seats-status-ended {
+  border-color: #f0d9be;
   background: #fff5e8;
   color: #9a5a1d;
-  border-radius: var(--radius-md);
+}
+
+.seats-status-soldout {
+  border-color: #f8cbd3;
+  background: #fff1f2;
+  color: #9f1239;
 }
 
 .seats-map-toolbar {
@@ -103,6 +131,10 @@
   gap: 0.4rem;
 }
 
+.seats-layout-closed {
+  opacity: 0.86;
+}
+
 .left-bal {
   grid-area: right-bal;
 }
@@ -123,8 +155,18 @@
   opacity: 0.5;
 }
 
+.section.section-closed {
+  opacity: 0.78;
+}
+
 .section.section-unavailable .seat-button {
   cursor: not-allowed;
+}
+
+.section.section-closed .seat-button {
+  cursor: not-allowed;
+  transform: none !important;
+  filter: none !important;
 }
 
 .section-title {
@@ -177,6 +219,7 @@
 .seat-button.seat-available {
   background: #22c55e;
   border-color: #16a34a;
+  cursor: pointer;
 }
 
 .seat-button.seat-available:hover {

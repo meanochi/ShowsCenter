@@ -14,9 +14,6 @@
       <p><strong>שורה:</strong> {{ selectedSeat.row + 1 }}</p>
       <p><strong>כיסא:</strong> {{ selectedSeat.col + 1 }}</p>
       <p><strong>מחיר:</strong> {{ selectedSeatPrice != null ? selectedSeatPrice + ' ₪' : '—' }}</p>
-      @if (seatConflictMessage) {
-        <p class="text-red-600 font-medium">{{ seatConflictMessage }}</p>
-      }
     </div>
   }
   <ng-template pTemplate="footer">
@@ -28,10 +25,25 @@
 <div class="seats-map-wrapper" dir="rtl">
   @if (show) {
     <div class="seats-card">
-      @if (show.isFull) {
-        <div class="seats-full-message p-3 mb-3 surface-ground border-1 border-200 border-round text-center">
-          <i class="pi pi-info-circle mr-2"></i>
-          <strong>המופע מלא</strong> – אין כרטיסים זמינים כרגע.
+      @if (showIsPast || showIsSoldOut) {
+        <div
+          class="seats-status-message p-3 mb-3"
+          [class.seats-status-ended]="showIsPast"
+          [class.seats-status-soldout]="!showIsPast && showIsSoldOut"
+        >
+          @if (showIsPast) {
+            <i class="pi pi-calendar-times seats-status-icon"></i>
+          } @else {
+            <i class="pi pi-ticket seats-status-icon"></i>
+          }
+          <div>
+            <div class="seats-status-title">
+              {{ showIsPast ? 'המופע הסתיים' : 'כל הכרטיסים אזלו' }}
+            </div>
+            <div class="seats-status-note">
+              {{ showIsPast ? 'הזמנת מושבים נסגרה עבור מופע זה.' : 'כרגע אין מקומות פנויים במופע זה.' }}
+            </div>
+          </div>
         </div>
       }
       <div class="seats-map-toolbar flex gap-2 align-items-center flex-wrap">
@@ -56,8 +68,12 @@
           <span class="legend-item"><i class="seat-dot seat-dot-unavailable"></i> לא זמין</span>
         </div>
       </div>
-      <div class="seats-layout">
-        <section class="section left-bal" [class.section-unavailable]="!hasSectionForShow(3)">
+      <div class="seats-layout" [class.seats-layout-closed]="showIsPast || showIsSoldOut">
+        <section
+          class="section left-bal"
+          [class.section-unavailable]="!hasSectionForShow(3)"
+          [class.section-closed]="showIsPast || showIsSoldOut"
+        >
           <h4 class="section-title">יציע שמאל</h4>
           <div class="section-grid section-grid-skew-left">
             @for (row of show.leftBalMap.map; track $index) {
@@ -65,13 +81,15 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-available]="hasSectionForShow(3) && getSeatState(seat) === 'available'"
+                    [class.seat-available]="
+                      !showIsPast && !showIsSoldOut && hasSectionForShow(3) && getSeatState(seat) === 'available'
+                    "
                     [class.seat-mine-unpaid]="getSeatState(seat) === 'mine-unpaid'"
                     [class.seat-mine-paid]="getSeatState(seat) === 'mine-paid'"
-                    [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(3)"
+                    [class.seat-disabled]="isSeatDisabled(seat)"
                     [class.seat-pending]="isPending(seat)"
-                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(3)"
-                    [title]="!hasSectionForShow(3) ? getSectionUnavailableMessage(3) : getSeatTitle(seat, show.leftBalMap.price)"
+                    [disabled]="isSeatDisabled(seat)"
+                    [title]="getSeatTooltip(seat, 3, show.leftBalMap.price)"
                     type="button"
                     (click)="onSeatClick(seat)"
                   ></button>
@@ -81,7 +99,11 @@
           </div>
         </section>
 
-        <section class="section center-bal" [class.section-unavailable]="!hasSectionForShow(4)">
+        <section
+          class="section center-bal"
+          [class.section-unavailable]="!hasSectionForShow(4)"
+          [class.section-closed]="showIsPast || showIsSoldOut"
+        >
           <h4 class="section-title">יציע מרכז</h4>
           <div class="section-grid section-grid-curve-top">
             @for (row of show.centerBalMap.map; track $index) {
@@ -89,13 +111,15 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-available]="hasSectionForShow(4) && getSeatState(seat) === 'available'"
+                    [class.seat-available]="
+                      !showIsPast && !showIsSoldOut && hasSectionForShow(4) && getSeatState(seat) === 'available'
+                    "
                     [class.seat-mine-unpaid]="getSeatState(seat) === 'mine-unpaid'"
                     [class.seat-mine-paid]="getSeatState(seat) === 'mine-paid'"
-                    [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(4)"
+                    [class.seat-disabled]="isSeatDisabled(seat)"
                     [class.seat-pending]="isPending(seat)"
-                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(4)"
-                    [title]="!hasSectionForShow(4) ? getSectionUnavailableMessage(4) : getSeatTitle(seat, show.centerBalMap.price)"
+                    [disabled]="isSeatDisabled(seat)"
+                    [title]="getSeatTooltip(seat, 4, show.centerBalMap.price)"
                     type="button"
                     (click)="onSeatClick(seat)"
                   ></button>
@@ -105,7 +129,11 @@
           </div>
         </section>
 
-        <section class="section right-bal" [class.section-unavailable]="!hasSectionForShow(2)">
+        <section
+          class="section right-bal"
+          [class.section-unavailable]="!hasSectionForShow(2)"
+          [class.section-closed]="showIsPast || showIsSoldOut"
+        >
           <h4 class="section-title">יציע ימין</h4>
           <div class="section-grid section-grid-skew-right">
             @for (row of show.rightBalMap.map; track $index) {
@@ -113,13 +141,15 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-available]="hasSectionForShow(2) && getSeatState(seat) === 'available'"
+                    [class.seat-available]="
+                      !showIsPast && !showIsSoldOut && hasSectionForShow(2) && getSeatState(seat) === 'available'
+                    "
                     [class.seat-mine-unpaid]="getSeatState(seat) === 'mine-unpaid'"
                     [class.seat-mine-paid]="getSeatState(seat) === 'mine-paid'"
-                    [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(2)"
+                    [class.seat-disabled]="isSeatDisabled(seat)"
                     [class.seat-pending]="isPending(seat)"
-                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(2)"
-                    [title]="!hasSectionForShow(2) ? getSectionUnavailableMessage(2) : getSeatTitle(seat, show.rightBalMap.price)"
+                    [disabled]="isSeatDisabled(seat)"
+                    [title]="getSeatTooltip(seat, 2, show.rightBalMap.price)"
                     type="button"
                     (click)="onSeatClick(seat)"
                   ></button>
@@ -129,7 +159,11 @@
           </div>
         </section>
 
-        <section class="section hall" [class.section-unavailable]="!hasSectionForShow(1)">
+        <section
+          class="section hall"
+          [class.section-unavailable]="!hasSectionForShow(1)"
+          [class.section-closed]="showIsPast || showIsSoldOut"
+        >
           <h4 class="section-title">אולם</h4>
           <div class="section-grid section-grid-curve-bottom">
             @for (row of show.hallMap.map; track $index; let i = $index) {
@@ -137,13 +171,15 @@
                 @for (seat of row; track $index) {
                   <button
                     class="seat-button"
-                    [class.seat-available]="hasSectionForShow(1) && getSeatState(seat) === 'available'"
+                    [class.seat-available]="
+                      !showIsPast && !showIsSoldOut && hasSectionForShow(1) && getSeatState(seat) === 'available'
+                    "
                     [class.seat-mine-unpaid]="getSeatState(seat) === 'mine-unpaid'"
                     [class.seat-mine-paid]="getSeatState(seat) === 'mine-paid'"
-                    [class.seat-disabled]="getSeatState(seat) === 'unavailable' || !hasSectionForShow(1)"
+                    [class.seat-disabled]="isSeatDisabled(seat)"
                     [class.seat-pending]="isPending(seat)"
-                    [disabled]="getSeatState(seat) !== 'available' || isPending(seat) || !hasSectionForShow(1)"
-                    [title]="!hasSectionForShow(1) ? getSectionUnavailableMessage(1) : getSeatTitle(seat, show.hallMap.price)"
+                    [disabled]="isSeatDisabled(seat)"
+                    [title]="getSeatTooltip(seat, 1, show.hallMap.price)"
                     type="button"
                     (click)="onSeatClick(seat)"
                   ></button>

@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { ToastService } from './toast-service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthMessageService {
-  private messageSubject = new Subject<string>();
-  message$ = this.messageSubject.asObservable();
+  constructor(private toast: ToastService) {}
 
   showSuccess(message: string): void {
-    this.messageSubject.next(message);
+    this.toast.success(message);
+  }
+
+  showError(message: string): void {
+    this.toast.error(message);
   }
 }

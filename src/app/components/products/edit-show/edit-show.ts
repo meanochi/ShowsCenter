@@ -34,6 +34,8 @@ import { AddProvider } from '../../providers/add-provider/add-provider';
 import { ImageService } from '../../../services/image-service';
 import { ChangeDetectorRef } from '@angular/core';
 import { AddCategory } from '../../categories/add-category/add-category';
+import { ConfirmationService } from 'primeng/api';
+import { ToastService } from '../../../services/toast-service';
 
 @Component({
   selector: 'app-edit-show',
@@ -96,6 +98,8 @@ export class EditShow implements OnChanges {
   imagePreviewSignal = signal<string | ArrayBuffer | null>(null);
   private cd = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
+  private confirmationService = inject(ConfirmationService);
+  private toast = inject(ToastService);
 
   sectorOptions = Object.keys(Sector)
     .filter((key) => isNaN(Number(key)))
@@ -168,6 +172,10 @@ export class EditShow implements OnChanges {
     } else {
       this.imagePreviewSignal.set(null);
     }
+    this.selectedFile = null;
+    this.submitError = null;
+    this.editForm.markAsPristine();
+    this.editForm.markAsUntouched();
     this.cd.markForCheck();
   }
 
@@ -237,7 +245,9 @@ export class EditShow implements OnChanges {
         error: (err) => {
           console.error('שגיאה בהעלאה', err);
           this.submitLoading = false;
-          this.submitError = err?.error?.message ?? err?.message ?? 'העלאת התמונה נכשלה';
+          const msg = err?.error?.message ?? err?.message ?? 'העלאת התמונה נכשלה';
+          this.submitError = msg;
+          this.toast.error(msg);
         },
       });
     } else {
@@ -254,12 +264,39 @@ export class EditShow implements OnChanges {
         this.showUpdated.emit(show);
         this.visible = false;
         this.submitLoading = false;
+        this.toast.success('המופע עודכן בהצלחה.');
       },
       error: (err) => {
         this.submitLoading = false;
-        this.submitError = err?.error?.message ?? err?.message ?? 'עדכון המופע נכשל';
+        const msg = err?.error?.message ?? err?.message ?? 'עדכון המופע נכשל';
+        this.submitError = msg;
+        this.toast.error(msg);
       },
     });
+  }
+
+  cancelDialog(): void {
+    if (this.submitLoading) return;
+    if (!this.hasUnsavedChanges()) {
+      this.visible = false;
+      return;
+    }
+    this.confirmationService.confirm({
+      header: 'ביטול עריכת מופע',
+      message: 'לסגור את החלון בלי לשמור את השינויים?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'כן, סגור',
+      rejectLabel: 'המשך עריכה',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        this.visible = false;
+      },
+    });
+  }
+
+  private hasUnsavedChanges(): boolean {
+    return this.editForm.dirty || !!this.selectedFile;
   }
 
   onFileSelected(event: any): void {
@@ -308,7 +345,10 @@ export class EditShow implements OnChanges {
         }
         this.cd.detectChanges();
       },
-      error: (err) => console.error('Error loading providers', err),
+      error: (err) => {
+        console.error('Error loading providers', err);
+        this.toast.error('טעינת המפיקים נכשלה.');
+      },
     });
   }
 
@@ -321,7 +361,10 @@ export class EditShow implements OnChanges {
         }
         this.cd.detectChanges();
       },
-      error: (err) => console.error('Error loading categories', err),
+      error: (err) => {
+        console.error('Error loading categories', err);
+        this.toast.error('טעינת הקטגוריות נכשלה.');
+      },
     });
   }
 }

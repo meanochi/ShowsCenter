@@ -266,16 +266,13 @@ export class ShowsService {
 
   deleteShow(id: number): Observable<void> {
     const userId = localStorage.getItem('user');
-    if (confirm('האם אתה בטוח שברצונך למחוק את המופע?')) {  
-      return this.http.delete<void>(`/api/Shows/${id}?userId=${userId}`).pipe(
-        tap(() => this.loadShows({})),
-        catchError((err) => {
-          console.error('deleteShow failed', err);
-          throw err;
-        }),
-      );
-    }
-    return of(undefined);
+    return this.http.delete<void>(`/api/Shows/${id}?userId=${userId}`).pipe(
+      tap(() => this.loadShows({})),
+      catchError((err) => {
+        console.error('deleteShow failed', err);
+        throw err;
+      }),
+    );
   }
 
   /** Admin cleanup helper: fetch a broad first page so login can detect old ended shows. */

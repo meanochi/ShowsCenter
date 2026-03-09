@@ -117,7 +117,10 @@ export class Show {
     /** True if all seats are taken (ordered/sold). */
     get isFull(): boolean {
         const total = this.totalSeats;
-        const taken = (this.orderedSeats ?? []).length;
+        const taken = (this.orderedSeats ?? []).filter((seat) => {
+            const status = Number((seat as OrderedSeatDto)?.status);
+            return status === 1 || status === 2;
+        }).length;
         return total > 0 && taken >= total;
     }
 }

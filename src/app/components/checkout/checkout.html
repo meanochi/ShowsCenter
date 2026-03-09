@@ -79,68 +79,166 @@
 
     <!-- Step 3: Payment -->
     @if (currentStepValue === STEPS.PAYMENT) {
-      <div class="step-panel">
+      <div class="step-panel payment-panel">
         <h2>פרטי תשלום</h2>
-        <form [formGroup]="paymentForm" class="payment-form">
-          <div class="p-inputgroup">
-            <input
-              pInputText
-              formControlName="cardNumber"
-              placeholder="מספר כרטיס"
-              (input)="onCardNumberInput($event)"
-              maxlength="19"
-              autocomplete="cc-number"
-            />
+        <p class="payment-subtitle">בחרו את שיטת התשלום המועדפת והשלימו את הפרטים הנדרשים.</p>
+        <form [formGroup]="paymentForm" class="payment-form" novalidate>
+          <div class="payment-methods" role="radiogroup" aria-label="שיטת תשלום">
+            <label class="method-card" [class.selected]="selectedPaymentMethod === 'card'">
+              <input class="method-input" type="radio" value="card" formControlName="paymentMethod" />
+              <span class="method-icon pi pi-credit-card" aria-hidden="true"></span>
+              <span class="method-content">
+                <strong>כרטיס אשראי</strong>
+                <small>ויזה, מאסטרקארד ואמריקן אקספרס</small>
+              </span>
+            </label>
+            <label class="method-card paypal" [class.selected]="selectedPaymentMethod === 'paypal'">
+              <input class="method-input" type="radio" value="paypal" formControlName="paymentMethod" />
+              <span class="method-icon pi pi-wallet" aria-hidden="true"></span>
+              <span class="method-content">
+                <strong>PayPal</strong>
+                <small>תשלום מהיר ומאובטח דרך החשבון שלכם</small>
+              </span>
+            </label>
           </div>
-          @if (paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched) {
-            <small class="field-error">
-              @if (paymentForm.get('cardNumber')?.errors?.['required']) {
-                שדה חובה
-              } @else if (paymentForm.get('cardNumber')?.errors?.['pattern']) {
-                מספר כרטיס לא תקין (13–19 ספרות)
-              <!-- } @else if (paymentForm.get('cardNumber')?.errors?.['luhn']) {
-                מספר כרטיס לא תקין -->
-              }
-            </small>
-          }
-          <div class="p-inputgroup">
-            <input
-              pInputText
-              formControlName="expiry"
-              placeholder="תוקף (MM/YY)"
-              maxlength="7"
-              autocomplete="cc-exp"
-            />
-          </div>
-          @if (paymentForm.get('expiry')?.invalid && paymentForm.get('expiry')?.touched) {
-            <small class="field-error">
-              @if (paymentForm.get('expiry')?.errors?.['required']) {
-                שדה חובה
-              } @else if (paymentForm.get('expiry')?.errors?.['expired']) {
-                כרטיס שפג תוקף
-              } @else {
-                פורמט: MM/YY
-              }
-            </small>
-          }
-          <div class="p-inputgroup">
-            <input
-              pInputText
-              formControlName="cvv"
-              type="password"
-              placeholder="CVV (3–4 ספרות)"
-              maxlength="4"
-              autocomplete="cc-csc"
-            />
-          </div>
-          @if (paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched) {
-            <small class="field-error">CVV: 3 או 4 ספרות</small>
+
+          @if (selectedPaymentMethod === 'card') {
+            <div class="payment-grid">
+              <div class="payment-field full-width">
+                <label for="cardHolder">שם מלא על הכרטיס</label>
+                <input
+                  id="cardHolder"
+                  pInputText
+                  formControlName="cardHolder"
+                  autocomplete="cc-name"
+                  placeholder="למשל: ישראל ישראלי"
+                />
+                @if (paymentForm.get('cardHolder')?.invalid && paymentForm.get('cardHolder')?.touched) {
+                  <small class="field-error">יש להזין שם מלא כפי שמופיע על הכרטיס</small>
+                }
+              </div>
+
+              <div class="payment-field">
+                <label for="idNumber">תעודת זהות בעל הכרטיס</label>
+                <input
+                  id="idNumber"
+                  pInputText
+                  formControlName="idNumber"
+                  class="ltr-input"
+                  inputmode="numeric"
+                  maxlength="9"
+                  autocomplete="off"
+                  placeholder="9 ספרות"
+                  (input)="onIdNumberInput($event)"
+                />
+                @if (paymentForm.get('idNumber')?.invalid && paymentForm.get('idNumber')?.touched) {
+                  <small class="field-error">מספר תעודת זהות חייב להכיל 9 ספרות</small>
+                }
+              </div>
+
+              <div class="payment-field">
+                <label for="cardNumber">מספר כרטיס</label>
+                <input
+                  id="cardNumber"
+                  pInputText
+                  formControlName="cardNumber"
+                  class="ltr-input"
+                  inputmode="numeric"
+                  placeholder="1234 5678 9012 3456"
+                  maxlength="23"
+                  autocomplete="cc-number"
+                  (input)="onCardNumberInput($event)"
+                />
+                @if (paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched) {
+                  <small class="field-error">
+                    @if (paymentForm.get('cardNumber')?.errors?.['required']) {
+                      שדה חובה
+                    } @else if (paymentForm.get('cardNumber')?.errors?.['pattern']) {
+                      מספר כרטיס לא תקין (13 עד 19 ספרות)
+                    } @else if (paymentForm.get('cardNumber')?.errors?.['luhn']) {
+                      מספר כרטיס לא תקין
+                    }
+                  </small>
+                }
+              </div>
+
+              <div class="payment-field">
+                <label for="expiry">תוקף</label>
+                <input
+                  id="expiry"
+                  pInputText
+                  formControlName="expiry"
+                  class="ltr-input"
+                  placeholder="MM/YY"
+                  maxlength="5"
+                  inputmode="numeric"
+                  autocomplete="cc-exp"
+                  (input)="onExpiryInput($event)"
+                />
+                @if (paymentForm.get('expiry')?.invalid && paymentForm.get('expiry')?.touched) {
+                  <small class="field-error">
+                    @if (paymentForm.get('expiry')?.errors?.['required']) {
+                      שדה חובה
+                    } @else if (paymentForm.get('expiry')?.errors?.['expired']) {
+                      כרטיס שפג תוקף
+                    } @else {
+                      פורמט תקין: MM/YY
+                    }
+                  </small>
+                }
+              </div>
+
+              <div class="payment-field">
+                <label for="cvv">קוד אבטחה (CVV)</label>
+                <input
+                  id="cvv"
+                  pInputText
+                  formControlName="cvv"
+                  type="password"
+                  class="ltr-input"
+                  inputmode="numeric"
+                  placeholder="3 או 4 ספרות"
+                  maxlength="4"
+                  autocomplete="cc-csc"
+                  (input)="onCvvInput($event)"
+                />
+                @if (paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched) {
+                  <small class="field-error">CVV חייב להכיל 3 או 4 ספרות</small>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="paypal-panel">
+              <p class="paypal-note">בסיום האישור תועברו להמשך תשלום מאובטח ב-PayPal.</p>
+              <div class="payment-field full-width">
+                <label for="paypalEmail">אימייל לחשבון PayPal</label>
+                <input
+                  id="paypalEmail"
+                  pInputText
+                  formControlName="paypalEmail"
+                  type="email"
+                  dir="ltr"
+                  inputmode="email"
+                  autocomplete="email"
+                  placeholder="name@example.com"
+                />
+                @if (paymentForm.get('paypalEmail')?.invalid && paymentForm.get('paypalEmail')?.touched) {
+                  <small class="field-error">
+                    @if (paymentForm.get('paypalEmail')?.errors?.['required']) {
+                      שדה חובה
+                    } @else {
+                      יש להזין כתובת אימייל תקינה
+                    }
+                  </small>
+                }
+              </div>
+            </div>
           }
         </form>
         <div class="step-actions">
           <p-button label="הקודם" icon="pi pi-arrow-right" severity="secondary" (onClick)="goPrev()"></p-button>
           <p-button
-            label="אישור ותשלום"
+            [label]="selectedPaymentMethod === 'paypal' ? 'המשך ל-PayPal' : 'אישור ותשלום'"
             icon="pi pi-check"
             [loading]="placingOrder()"
             [disabled]="placingOrder()"

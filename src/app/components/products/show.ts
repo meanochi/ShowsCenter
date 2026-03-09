@@ -27,6 +27,8 @@ import { ChangeDetectorRef } from '@angular/core';
 import { ImageService } from '../../services/image-service';
 import { EditShow } from './edit-show/edit-show';
 import { AuthService } from '../../services/auth-service';
+import { ConfirmationService } from 'primeng/api';
+import { ToastService } from '../../services/toast-service';
 @Component({
   selector: 'app-shows',
   imports: [
@@ -95,6 +97,8 @@ export class ShowsComponent {
   showsLoadError: string | null = null;
   private cd = inject(ChangeDetectorRef);
   private router = inject(Router);
+  private confirmationService = inject(ConfirmationService);
+  private toast = inject(ToastService);
   imageSrv: ImageService = inject(ImageService);
   showToEdit: Show | null = null;
   @ViewChild('editShowRef') editShowRef!: EditShow;
@@ -264,10 +268,27 @@ export class ShowsComponent {
   }
 
   deleteShow(id: number) {
-    this.showSrv.deleteShow(id).subscribe(() => {
-      this.shows = this.shows.filter((s) => s.id !== id);
+    this.confirmationService.confirm({
+      header: 'מחיקת מופע',
+      message: 'האם אתה בטוח שברצונך למחוק את המופע?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'מחיקה',
+      rejectLabel: 'ביטול',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        this.showSrv.deleteShow(id).subscribe({
+          next: () => {
+            this.shows = this.shows.filter((s) => s.id !== id);
+            this.toast.success('המופע נמחק בהצלחה.');
+            this.cd.detectChanges();
+          },
+          error: () => {
+            this.toast.error('מחיקת המופע נכשלה.');
+          },
+        });
+      },
     });
-    this.cd.detectChanges();
   }
 
   editShow(id: number) {

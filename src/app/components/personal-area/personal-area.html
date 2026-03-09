@@ -91,12 +91,6 @@
             <label>סיסמה חדשה (אופציונלי)</label>
           </p-floatLabel>
 
-          @if (saveMessage(); as msg) {
-            <p class="save-msg" [class.success]="msg === 'success'" [class.error]="msg === 'error'">
-              {{ msg === 'success' ? 'הפרטים נשמרו בהצלחה' : 'שגיאה בשמירת הפרטים' }}
-            </p>
-          }
-
           <button
             pButton
             pRipple
@@ -272,12 +266,6 @@
               }
             </article>
           </div>
-
-          @if (managementMessage(); as msg) {
-            <p class="save-msg" [class.success]="msg.type === 'success'" [class.error]="msg.type === 'error'">
-              {{ msg.text }}
-            </p>
-          }
         }
 
         <app-add-category #addCategoryRef (categoryAdded)="onCategoryAdded($event)" />

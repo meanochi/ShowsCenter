@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -7,9 +7,9 @@ import { SECTION_TO_ID, SECTION_ID_MAP, Section } from '../models/show-model';
 import { UsersService } from './users-service';
 import { Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { OrderService } from './order-service';
 import { Order } from '../models/order-model';
-import { ShowsService } from './shows-service';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { ToastService } from './toast-service';
 
 const LOCK_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -48,8 +48,6 @@ interface NormalizedOrderItem {
 export class CartService {
   private loadedCartUserId = 0;
 
-  private showsSrv = inject(ShowsService)
-
   private get currentUserId(): number {
     if (isPlatformBrowser(this.platformId)) {
     const raw = localStorage.getItem('user');
@@ -73,8 +71,13 @@ export class CartService {
     return this.currentUserId > 0;
   }
 
-  private readonly cartSubject = new BehaviorSubject<Seat[]>([]);
-  cart$ = this.cartSubject.asObservable();
+  private readonly cartSignal = signal<Seat[]>([]);
+  readonly cart = this.cartSignal.asReadonly();
+  cart$ = toObservable(this.cart);
+  /** Paid seats from user orders (status 2). Cart page decides whether to show by show date. */
+  private readonly paidUpcomingSignal = signal<Seat[]>([]);
+  readonly paidUpcoming = this.paidUpcomingSignal.asReadonly();
+  paidUpcoming$ = toObservable(this.paidUpcoming);
 
   private seatTimers = new Map<number, ReturnType<typeof setTimeout>>();
   private seatExpiresAt = new Map<number, number>();
@@ -82,7 +85,14 @@ export class CartService {
   /** Timestamp (ms) when the seat that expires first will expire. Null if cart is empty. */
   soonestExpiresAt$ = this.soonestExpiresAtSubject.asObservable();
 
-  constructor(private http: HttpClient, private usersSrv: UsersService,@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(
+    private http: HttpClient,
+    private usersSrv: UsersService,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private toast: ToastService,
+  ) {
+    this.loadCartFromUser(true);
+  }
 
   addSeat(seat: Seat, showId: number, price?: number): Observable<Seat> {
     const uid = this.currentUserId;
@@ -115,8 +125,8 @@ export class CartService {
           userId: uid,
           section: created.section != null ? (SECTION_ID_MAP[created.section as number] ?? seat.section) : seat.section,
         };
-        const cart = [...this.cartSubject.value, cartSeat];
-        this.cartSubject.next(cart);
+        const cart = [...this.cartSignal(), cartSeat];
+        this.cartSignal.set(cart);
         this.startTimer(cartSeat);
         // const currentSaved = JSON.parse(localStorage.getItem('my_persistent_cart') || '[]');
         // currentSaved.push(cartSeat);
@@ -129,20 +139,22 @@ export class CartService {
     );
   }
 
-  removeSeat(seat: Seat): void {
+  removeSeat(seat: Seat, options?: { silentSuccess?: boolean }): void {
     const id = seat.id;
     if (id == null) return;
     const uid = this.currentUserId;
-    this.clearTimer(id);
     this.http
       .delete(`/api/Order/${id}?userId=${uid}`)
       .subscribe({
         next: () => {
-          const cart = this.cartSubject.value.filter((s) => s.id !== id);
-          this.cartSubject.next(cart);
+          if (!options?.silentSuccess) {
+            this.toast.success('המושב הוסר מהסל.');
+          }
+          this.loadCartFromUser(true);
         },
         error: (err) => {
           console.error('CartService removeSeat failed', err);
+          this.toast.error('הסרת המושב מהסל נכשלה.');
         },
       });
   }
@@ -161,9 +173,7 @@ export class CartService {
       return throwError(() => ({ status: 400, message: 'No items to confirm' }));
     }
     //לתקן שיהיה price אמיתי
-    this.cart$.subscribe((items) => {
-      this.cartItems = items;
-    });
+    this.cartItems = this.cart();
     const orderId=this.cartItems[0].orderId ?? 0;
     const total=0;
     return this.http.put<ConfirmOrderResponse>(`/api/Order/${orderId}`, {
@@ -192,7 +202,8 @@ export class CartService {
   this.seatExpiresAt.clear();
 
   // 2. איפוס הנתונים היסודי
-  this.cartSubject.next([]);
+  this.cartSignal.set([]);
+  this.paidUpcomingSignal.set([]);
   this.loadedCartUserId = 0;
 
   // 3. איפוס ה-Observable שמציג את זמן התפוגה הקרוב
@@ -258,31 +269,55 @@ export class CartService {
 
   this.usersSrv.getUserById(uid).subscribe({
     next: (user: any) => {
+      this.seatTimers.forEach((timer) => clearTimeout(timer));
+      this.seatTimers.clear();
+      this.seatExpiresAt.clear();
+      this.soonestExpiresAtSubject.next(null);
+
       // חילוץ בטוח של המידע
-      const orders = user?.orders || user?.Orders || [];
+      const ordersRaw = user?.orders ?? user?.Orders ?? [];
+      const orders = Array.isArray(ordersRaw) ? ordersRaw : [];
       if (orders.length === 0) {
-        this.cartSubject.next([]);
+        this.cartSignal.set([]);
+        this.paidUpcomingSignal.set([]);
+        this.loadedCartUserId = uid;
         return;
       }
 
-      // איסוף כל המושבים מכל ההזמנות הפעילות (סטטוס 1)
-      const allSeats: Seat[] = [];
+      const unpaidSeats: Seat[] = [];
+      const paidSeats: Seat[] = [];
       orders.forEach((order: any) => {
-        if (order.orderedSeats) {
-          const normalized = order.orderedSeats
-            .map((o: any) => this.normalizeOrderItem(o, uid))
-            .filter((o: any) => o != null && o.status === 1)
-            .map((o: any) => this.mapToSeat(o, uid));
-          allSeats.push(...normalized);
+        const rawSeats = order?.orderedSeats ?? order?.OrderedSeats ?? [];
+        const orderSeats = Array.isArray(rawSeats) ? rawSeats : [];
+        const normalized = orderSeats
+          .map((o: any) => this.normalizeOrderItem(o, uid))
+          .filter((o: NormalizedOrderItem | null): o is NormalizedOrderItem => o != null);
+        for (const item of normalized) {
+          const mapped = this.mapToSeat(item, uid);
+          if (item.status === 1) {
+            unpaidSeats.push(mapped);
+            continue;
+          }
+          if (item.status === 2) {
+            paidSeats.push(mapped);
+          }
         }
       });
 
-      this.cartSubject.next(allSeats);
+      this.cartSignal.set(unpaidSeats);
+      this.paidUpcomingSignal.set(paidSeats);
+      for (const seat of unpaidSeats) {
+        this.startTimer(seat);
+      }
       this.loadedCartUserId = uid;
     },
     error: (err) => console.error('Load cart failed', err)
   });
 }
+
+  refreshCart(): void {
+    this.loadCartFromUser(true);
+  }
 
 // פונקציית עזר למיפוי (להוציא מחוץ ל-subscribe לניקיון הקוד)
 private mapToSeat(o: any, uid: number): Seat {
@@ -296,7 +331,8 @@ private mapToSeat(o: any, uid: number): Seat {
     sectionSectionType: o.sectionSectionType,
     price: o.price,
     userId: o.userId ?? uid,
-    status: true,
+    status: o.status !== 0,
+    orderStatus: o.status,
     orderId:o.orderId
   };
 }
@@ -335,8 +371,8 @@ private mapToSeat(o: any, uid: number): Seat {
       this.seatTimers.delete(id);
       this.seatExpiresAt.delete(id);
       this.soonestExpiresAtSubject.next(this.getSoonestExpiresAt());
-      this.removeSeat(seat);
-      alert('The seat reservation has expired.');
+      this.removeSeat(seat, { silentSuccess: true });
+      this.toast.warn('שמירת המושב פגה והתפנתה.');
     }, LOCK_TIMEOUT_MS);
     this.seatTimers.set(id, timerId);
   }

@@ -6,6 +6,11 @@
         alt="תמונת מופע"
         class="show-image w-full h-full object-cover"
       />
+      @if (showProd.isPast || isSoldOut) {
+        <div class="show-visual-mask">
+          {{ showProd.isPast ? 'המופע הסתיים' : 'לא נותרו מקומות זמינים' }}
+        </div>
+      }
     </div>
 
     <div class="col-12 md:col-6 p-4 flex flex-column justify-content-between">
@@ -32,6 +37,56 @@
           }}</span>
           <span class="tag">{{ showProd.sector }}</span>
         </div>
+
+        @if (showProd.isPast || isSoldOut) {
+          <div
+            class="show-status-banner mt-4"
+            [class.show-status-ended]="showProd.isPast"
+            [class.show-status-soldout]="!showProd.isPast && isSoldOut"
+          >
+            @if (showProd.isPast) {
+              <i class="pi pi-calendar-times show-status-icon"></i>
+            } @else {
+              <i class="pi pi-ticket show-status-icon"></i>
+            }
+            <div>
+              <div class="show-status-title">
+                {{ showProd.isPast ? 'המופע הסתיים' : 'לא נותרו מקומות זמינים' }}
+              </div>
+              <div class="show-status-note">
+                {{ showProd.isPast ? 'ההזמנה למופע זה נסגרה.' : 'כל הכרטיסים נתפסו כרגע.' }}
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (sectionAvailability.length > 0) {
+          <div class="availability-wrap mt-4">
+            <div class="availability-title mb-2 font-bold">מקומות פנויים לפי אזור</div>
+            <div class="availability-list">
+              @for (section of sectionAvailability; track section.sectionId) {
+                <div
+                  class="availability-card"
+                  [class.availability-card-soldout]="getAvailabilitySeverity(section.availableSeats) === 'soldout'"
+                  [class.availability-card-warning]="getAvailabilitySeverity(section.availableSeats) === 'warning'"
+                  [class.availability-card-critical]="getAvailabilitySeverity(section.availableSeats) === 'critical'"
+                >
+                  <div class="availability-name">{{ section.sectionLabel }}:</div>
+                  <div class="availability-price">{{ section.price }}₪</div>
+                  <div class="availability-count-text">
+                    @if (section.availableSeats <= 0) {
+                      אזל מהמלאי
+                    } @else {
+                      נותרו עוד
+                      <span class="availability-count">{{ section.availableSeats }}</span>
+                      מקומות
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
 
       <div class="provider-row flex align-items-center justify-content-center md:justify-content-start mb-4">
@@ -49,14 +104,17 @@
         class="show-cta-row flex flex-column md:flex-row-reverse align-items-center justify-content-between gap-3 pt-4"
       >
         <div class="flex flex-column align-items-center text-center w-full md:w-auto">
-          @if (showProd.isPast) {
+          @if (showProd.isPast || isSoldOut) {
             <button
               pButton
-              label="המופע כבר התקיים"
+              [label]="showProd.isPast ? 'המופע כבר התקיים' : 'כל הכרטיסים אזלו'"
               icon="pi pi-arrow-left"
               class="p-button-outlined p-button-lg w-full p-button-disabled"
               [disabled]="true"
             ></button>
+            <span class="show-cta-note mt-2 text-sm text-500">
+              {{ showProd.isPast ? 'לא ניתן להזמין כרטיסים למופע שהסתיים.' : 'כרגע אין מקומות פנויים למופע זה.' }}
+            </span>
           } @else {
             <div class="show-countdown text-2xl font-bold mb-2 font-mono">{{ countdownLabel }}</div>
             <span class="text-sm text-500 mb-3">עד המופע נשארו עוד</span>
@@ -119,6 +177,13 @@
                 class="p-button-outlined p-button-sm flex-grow-1"
                 [disabled]="true"
               ></button>
+            } @else if (item.isFull) {
+              <button
+                pButton
+                label="כל הכרטיסים אזלו"
+                class="p-button-outlined p-button-sm flex-grow-1"
+                [disabled]="true"
+              ></button>
             } @else {
               <button
                 pButton
@@ -128,6 +193,11 @@
               ></button>
             }
           </div>
+          @if (item.isPast || item.isFull) {
+            <div class="related-card-mask">
+              {{ item.isPast ? 'המופע הסתיים' : 'כל הכרטיסים אזלו' }}
+            </div>
+          }
         </div>
       </ng-template>
     </p-carousel>

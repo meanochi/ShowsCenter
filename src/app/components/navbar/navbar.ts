@@ -8,6 +8,8 @@ import { AuthService } from '../../services/auth-service';
 import { UsersService } from '../../services/users-service';
 import { Inject, PLATFORM_ID } from '@angular/core';
 import { CartService } from '../../services/cart-service';
+import { ConfirmationService } from 'primeng/api';
+import { ToastService } from '../../services/toast-service';
 
 @Component({
   selector: 'app-navbar',
@@ -19,6 +21,8 @@ import { CartService } from '../../services/cart-service';
 export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private cartSrv = inject(CartService);
+  private confirmationService = inject(ConfirmationService);
+  private toast = inject(ToastService);
   private navSubscription?: Subscription;
   public authService = inject(AuthService);
   userSrv: UsersService = inject(UsersService);
@@ -59,14 +63,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   // פונקציית התנתקות
   logout() {
-    if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-      this.authService.logout();
-      // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
-      this.checkLoginStatus();
-      this.cartSrv.clearCart();
-
-      // ניתוב חזרה לדף הבית
-      this.router.navigate(['/']);
-    }
+    this.confirmationService.confirm({
+      header: 'התנתקות',
+      message: 'האם אתה בטוח שברצונך להתנתק?',
+      icon: 'pi pi-sign-out',
+      acceptLabel: 'כן, התנתק',
+      rejectLabel: 'ביטול',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        this.authService.logout();
+        // עדכון הסטטוס כדי שהתצוגה תשתנה מיד
+        this.checkLoginStatus();
+        this.cartSrv.clearCart();
+        this.toast.success('התנתקת בהצלחה.');
+        // ניתוב חזרה לדף הבית
+        this.router.navigate(['/']);
+      },
+    });
   }
 }

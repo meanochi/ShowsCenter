@@ -95,7 +95,6 @@
   font-size: 1.2rem;
 }
 
-<<<<<<< HEAD
 .admin-management-section {
   margin-top: 2rem;
 }
@@ -127,11 +126,10 @@
   color: var(--error-color);
   font-weight: 600;
   text-align: center;
-=======
+}
 .edit-form {
   display: grid;
   gap: 1rem;
->>>>>>> 9982e4d947f5363a2a869017fd8ca643dcb3e2a1
 }
 
 .save-msg {
@@ -147,7 +145,6 @@
   color: #c42424;
 }
 
-<<<<<<< HEAD
 .management-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -213,14 +210,13 @@
 .loading-msg {
   text-align: center;
   color: var(--text-secondary);
-=======
+}
 .orders-headline {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 0.9rem;
->>>>>>> 9982e4d947f5363a2a869017fd8ca643dcb3e2a1
 }
 
 .orders-count {

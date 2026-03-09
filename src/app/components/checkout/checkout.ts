@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { CartService } from '../../services/cart-service';
 import { ShowsService } from '../../services/shows-service';
 import { UsersService } from '../../services/users-service';
@@ -13,6 +14,8 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { FloatLabelModule } from 'primeng/floatlabel';
+import { ToastService } from '../../services/toast-service';
+import { startWith } from 'rxjs';
 
 const STEPS = {
   ORDER_SUMMARY: 1,
@@ -50,10 +53,17 @@ function luhnCheck(value: string): boolean {
   return sum % 10 === 0;
 }
 
-function expiryValidator(control: { value: string }) {
+function cardNumberValidator(control: AbstractControl): ValidationErrors | null {
+  const digits = String(control.value ?? '').replace(/\D/g, '');
+  if (!digits) return null;
+  if (digits.length < 13 || digits.length > 19) return { pattern: true };
+  return luhnCheck(digits) ? null : { luhn: true };
+}
+
+function expiryValidator(control: AbstractControl): ValidationErrors | null {
   const v = (control.value || '').trim();
   if (!v) return null;
-  const [mm, yy] = v.split(/[/-]/).map((s) => s.trim());
+  const [mm, yy] = v.split(/[/-]/).map((s: string) => s.trim());
   const month = parseInt(mm, 10);
   const year = parseInt(yy?.length === 2 ? '20' + yy : yy, 10);
   if (isNaN(month) || isNaN(year) || month < 1 || month > 12) {
@@ -63,6 +73,8 @@ function expiryValidator(control: { value: string }) {
   const exp = new Date(year, month, 0);
   return exp >= now ? null : { expired: true };
 }
+
+type PaymentMethod = 'card' | 'paypal';
 
 @Component({
   selector: 'app-checkout',
@@ -87,6 +99,8 @@ export class CheckoutComponent implements OnInit {
   private authSrv = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private toast = inject(ToastService);
+  private destroyRef = inject(DestroyRef);
 
   readonly STEPS = STEPS;
   currentStep = signal<number>(STEPS.ORDER_SUMMARY);
@@ -115,21 +129,24 @@ export class CheckoutComponent implements OnInit {
   }
 
   constructor() {
+    effect(() => {
+      this.cartItems = this.cartSrv.cart();
+    });
+
     this.paymentForm = this.fb.group({
+      paymentMethod: ['card', [Validators.required]],
+      cardHolder: [''],
       cardNumber: [
         '',
-        [
-          Validators.required,
-          // (control: AbstractControl) => {
-          //   const raw = (control.value || '').replace(/\s/g, '');
-          //   if (raw.length < 13 || raw.length > 19) return { pattern: true };
-          //   return luhnCheck(raw) ? null : { luhn: true };
-          // },
-        ],
+        [],
       ],
-      expiry: ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/([0-9]{2}|[0-9]{4})$/), expiryValidator]],
-      cvv: ['', [Validators.required, Validators.pattern(/^\d{3,4}$/)]],
+      expiry: [''],
+      cvv: [''],
+      idNumber: [''],
+      paypalEmail: [''],
     });
+
+    this.bindPaymentMethodValidation();
   }
 
   ngOnInit(): void {
@@ -138,14 +155,15 @@ export class CheckoutComponent implements OnInit {
       return;
     }
     this.cartSrv.loadCartFromUser(true);
-    this.cartSrv.cart$.subscribe((items) => {
-      this.cartItems = items;
-    });
     const userId = this.cartSrv.getCurrentUserId();
     if (userId > 0) {
       this.usersSrv.getUserById(userId).subscribe({
         next: (u) => this.user.set(u),
-        error: () => this.userLoadError.set('לא ניתן לטעון פרטי משתמש'),
+        error: () => {
+          const msg = 'לא ניתן לטעון פרטי משתמש';
+          this.userLoadError.set(msg);
+          this.toast.error(msg);
+        },
       });
     }
   }
@@ -192,7 +210,9 @@ export class CheckoutComponent implements OnInit {
     const items = this.cartItems;
     const orderItemIds = items.map((s) => s.id).filter((id): id is number => id != null);
     if (orderItemIds.length === 0) {
-      this.placeOrderError.set('אין פריטים לאישור');
+      const msg = 'אין פריטים לאישור';
+      this.placeOrderError.set(msg);
+      this.toast.warn(msg);
       return;
     }
     this.placingOrder.set(true);
@@ -210,11 +230,13 @@ export class CheckoutComponent implements OnInit {
         this.cartSrv.clearCart();
         this.cartItems = [];
         this.currentStep.set(STEPS.CONFIRMATION);
+        this.toast.success('ההזמנה בוצעה בהצלחה.');
       },
       error: (err) => {
         this.placingOrder.set(false);
         const msg = err?.error?.message ?? err?.message ?? 'אישור ההזמנה נכשל. נסה שוב.';
         this.placeOrderError.set(msg);
+        this.toast.error(msg);
       },
     });
   }
@@ -255,8 +277,8 @@ export class CheckoutComponent implements OnInit {
   }
 
   formatCardNumber(value: string): string {
-    const v = value.replace(/\D/g, '').slice(0, 16);
-    return v.replace(/(\d{4})/g, '$1 ').trim();
+    const digits = value.replace(/\D/g, '').slice(0, 19);
+    return digits.match(/.{1,4}/g)?.join(' ') ?? '';
   }
 
   onCardNumberInput(event: Event): void {
@@ -264,6 +286,78 @@ export class CheckoutComponent implements OnInit {
     const formatted = this.formatCardNumber(input.value);
     this.paymentForm.patchValue({ cardNumber: formatted.replace(/\s/g, '') }, { emitEvent: false });
     input.value = formatted;
+  }
+
+  formatExpiry(value: string): string {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    if (digits.length <= 2) return digits;
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+
+  onExpiryInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const formatted = this.formatExpiry(input.value);
+    this.paymentForm.patchValue({ expiry: formatted }, { emitEvent: false });
+    input.value = formatted;
+  }
+
+  onCvvInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 4);
+    this.paymentForm.patchValue({ cvv: digits }, { emitEvent: false });
+    input.value = digits;
+  }
+
+  onIdNumberInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 9);
+    this.paymentForm.patchValue({ idNumber: digits }, { emitEvent: false });
+    input.value = digits;
+  }
+
+  get selectedPaymentMethod(): PaymentMethod {
+    const method = this.paymentForm.get('paymentMethod')?.value;
+    return method === 'paypal' ? 'paypal' : 'card';
+  }
+
+  private bindPaymentMethodValidation(): void {
+    const methodControl = this.paymentForm.get('paymentMethod');
+    methodControl?.valueChanges
+      .pipe(
+        startWith(methodControl.value),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((method) => {
+        this.applyPaymentMethodValidation(method === 'paypal' ? 'paypal' : 'card');
+      });
+  }
+
+  private applyPaymentMethodValidation(method: PaymentMethod): void {
+    const cardValidators: Record<string, any[]> = {
+      cardHolder: [Validators.required, Validators.minLength(2)],
+      cardNumber: [Validators.required, cardNumberValidator],
+      expiry: [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/([0-9]{2})$/), expiryValidator],
+      cvv: [Validators.required, Validators.pattern(/^\d{3,4}$/)],
+      idNumber: [Validators.required, Validators.pattern(/^\d{9}$/)],
+    };
+
+    for (const field of ['cardHolder', 'cardNumber', 'expiry', 'cvv', 'idNumber']) {
+      const control = this.paymentForm.get(field);
+      if (!control) continue;
+      control.setValidators(method === 'card' ? cardValidators[field] : []);
+      if (method !== 'card') {
+        control.setErrors(null);
+      }
+      control.updateValueAndValidity({ emitEvent: false });
+    }
+
+    const paypalEmailControl = this.paymentForm.get('paypalEmail');
+    if (!paypalEmailControl) return;
+    paypalEmailControl.setValidators(method === 'paypal' ? [Validators.required, Validators.email] : [Validators.email]);
+    if (method !== 'paypal') {
+      paypalEmailControl.setErrors(null);
+    }
+    paypalEmailControl.updateValueAndValidity({ emitEvent: false });
   }
 
   seatKey(seat: Seat): string {

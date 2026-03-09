@@ -65,6 +65,32 @@ h3 {
   transition: transform 0.25s ease;
 }
 
+.show-card-wrap {
+  position: relative;
+  height: 100%;
+}
+
+.show-card-mask {
+  position: absolute;
+  inset: 0;
+  background: rgb(15 23 42 / 0.58);
+  backdrop-filter: blur(2px);
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: clamp(1.02rem, 1.3vw, 1.18rem);
+  font-weight: 800;
+  padding: 0.6rem 0.95rem;
+  line-height: 1.45;
+  letter-spacing: 0.03em;
+  text-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+  pointer-events: none;
+  z-index: 10;
+  border-radius: var(--radius-lg);
+}
+
 .show-card:hover .cardImg {
   transform: scale(1.03);
 }
@@ -76,6 +102,23 @@ h3 {
 
 .buttons .p-button {
   border-radius: var(--radius-sm);
+}
+
+:host ::ng-deep .show-action-past.p-button,
+:host ::ng-deep .show-action-soldout.p-button {
+  border-width: 1px;
+}
+
+:host ::ng-deep .show-action-past.p-button {
+  border-color: #d8e2f3;
+  background: #f3f7ff;
+  color: #3b4c68;
+}
+
+:host ::ng-deep .show-action-soldout.p-button {
+  border-color: #f7c6ce;
+  background: #fff1f2;
+  color: #9f1239;
 }
 
 .shows-filters {
@@ -123,5 +166,10 @@ h3 {
 
   :host ::ng-deep .show-card .p-card-body {
     padding: 0.85rem;
+  }
+
+  .show-card-mask {
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
   }
 }

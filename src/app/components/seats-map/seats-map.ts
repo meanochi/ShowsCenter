@@ -7,6 +7,7 @@ import {
   OnChanges,
   Output,
   SimpleChanges,
+  effect,
   inject,
 } from '@angular/core';
 import { interval } from 'rxjs';
@@ -19,6 +20,7 @@ import { SECTION_TO_ID } from '../../models/show-model';
 import { SeatsService } from '../../services/seats-service';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
+import { ToastService } from '../../services/toast-service';
 
 export type SeatState = 'available' | 'mine-unpaid' | 'mine-paid' | 'unavailable';
 
@@ -40,6 +42,7 @@ export class SeatsMap implements OnInit, OnChanges {
   private showSrv: ShowsService = inject(ShowsService);
   private cartSrv: CartService = inject(CartService);
   private seatsSrv: SeatsService = inject(SeatsService);
+  private toast = inject(ToastService);
   private cd: ChangeDetectorRef = inject(ChangeDetectorRef);
   orderedSeats: Seat[] = [];
 
@@ -50,6 +53,9 @@ export class SeatsMap implements OnInit, OnChanges {
 
   /** The show whose seating we render. */
   show: Show | null = null;
+  /** Booking closed states for this show. */
+  showIsPast = false;
+  showIsSoldOut = false;
   /** Current cart items (subscribed in ngOnInit). */
   cartItems: Seat[] = [];
   /** Seat keys for which a lock request is in progress. */
@@ -59,8 +65,6 @@ export class SeatsMap implements OnInit, OnChanges {
   seatDialogVisible = false;
   selectedSeat: Seat | null = null;
   selectedSeatPrice: number | null = null;
-  /** Shown when Save failed because seat was taken by another user. */
-  seatConflictMessage: string | null = null;
   savingSeat = false;
 
   /** Remaining seconds until the soonest-expiring seat; null when cart is empty. */
@@ -78,6 +82,12 @@ export class SeatsMap implements OnInit, OnChanges {
   cartSliderVisible = false;
   private initialized = false;
 
+  constructor() {
+    effect(() => {
+      this.cartItems = this.cartSrv.cart();
+    });
+  }
+
   ngOnInit(): void {
     this.initialized = true;
     if (this.cartSrv.isLoggedIn) {
@@ -94,16 +104,13 @@ export class SeatsMap implements OnInit, OnChanges {
           if (!this.show) {
             this.showSrv.getShowById(shows[0].id).subscribe((show) => {
               this.show = show;
+              this.refreshShowFlags();
               this.loadOrderedSeats();
               this.cd.detectChanges();
             });
           }
         });
     }
-    this.cartSrv.cart$.subscribe((items) => {
-      this.cartItems = items;
-      this.cd.detectChanges();
-    });
     this.remainingSeconds$.subscribe((sec) => {
       this.remainingSeconds = sec;
       this.cd.detectChanges();
@@ -124,6 +131,7 @@ export class SeatsMap implements OnInit, OnChanges {
     if (idToLoad && idToLoad > 0) {
       this.showSrv.getShowById(idToLoad).subscribe((show) => {
         this.show = show;
+        this.refreshShowFlags();
         // קריאה מסודרת לטעינת המושבים התפוסים מיד לאחר טעינת המופע
         if (this.show) {
           this.loadOrderedSeats();
@@ -143,6 +151,7 @@ export class SeatsMap implements OnInit, OnChanges {
         if (this.show) {
           this.applyOrderedSeatsToMap(this.show);
         }
+        this.refreshShowFlags();
         this.cd.detectChanges();
       },
       error: (err) => console.error('טעינת מושבים נכשלה', err),
@@ -201,6 +210,40 @@ export class SeatsMap implements OnInit, OnChanges {
     return 1;
   }
 
+  private refreshShowFlags(): void {
+    if (!this.show) {
+      this.showIsPast = false;
+      this.showIsSoldOut = false;
+      return;
+    }
+    this.showIsPast = this.show.isPast;
+    this.showIsSoldOut = this.isShowSoldOut(this.show);
+  }
+
+  private isShowSoldOut(show: Show): boolean {
+    const sectionIds =
+      show.sectionIdsFromApi?.length > 0 ? show.sectionIdsFromApi : [1, 2, 3, 4];
+    const seatCountBySection: Record<number, number> = {
+      1: show.hallMap?.map?.flat().length ?? 0,
+      2: show.rightBalMap?.map?.flat().length ?? 0,
+      3: show.leftBalMap?.map?.flat().length ?? 0,
+      4: show.centerBalMap?.map?.flat().length ?? 0,
+    };
+    const totalSeats = sectionIds.reduce((sum, sectionId) => sum + (seatCountBySection[sectionId] ?? 0), 0);
+    if (totalSeats <= 0) return false;
+
+    const takenKeys = new Set<string>();
+    for (const dto of this.getOrderedSeatsSource(show)) {
+      if (!this.isOrderedSeatTaken(dto)) continue;
+      const sectionType = this.resolveOrderedSeatSectionType(dto, show);
+      if (!sectionIds.includes(sectionType)) continue;
+      const rowIndex = this.toNumber(dto.row);
+      const colIndex = this.toNumber(dto.col);
+      takenKeys.add(`${sectionType}-${rowIndex}-${colIndex}`);
+    }
+    return takenKeys.size >= totalSeats;
+  }
+
   /** Apply DB seat statuses (0=available, 1=reserved, 2=sold) to the show's map: reset all to available, then mark ordered seats unavailable. */
   private applyOrderedSeatsToMap(show: Show): void {
     const showId = show.id;
@@ -238,6 +281,8 @@ export class SeatsMap implements OnInit, OnChanges {
   isSeatDisabled(seat: Seat) {
     const sectionType = SECTION_TO_ID[seat.section] ?? 1;
     return (
+      this.showIsPast ||
+      this.showIsSoldOut ||
       this.getSeatState(seat) !== 'available' ||
       this.isPending(seat) ||
       !this.hasSectionForShow(sectionType)
@@ -291,8 +336,9 @@ export class SeatsMap implements OnInit, OnChanges {
 
   /** Opens the seat confirmation dialog (details + price). Save sends lock to DB (status 1). */
   onSeatClick(seat: Seat): void {
+    if (this.showIsPast || this.showIsSoldOut) return;
     if (!this.cartSrv.isLoggedIn) {
-      alert('יש להתחבר כדי לשמור מושב.');
+      this.toast.warn('יש להתחבר כדי לשמור מושב.');
       return;
     }
     const state = this.getSeatState(seat);
@@ -301,7 +347,6 @@ export class SeatsMap implements OnInit, OnChanges {
     if (!showId) return;
     this.selectedSeat = seat;
     this.selectedSeatPrice = this.getPriceForSeat(seat);
-    this.seatConflictMessage = null;
     this.seatDialogVisible = true;
     this.cd.detectChanges();
   }
@@ -325,7 +370,6 @@ export class SeatsMap implements OnInit, OnChanges {
     this.seatDialogVisible = false;
     this.selectedSeat = null;
     this.selectedSeatPrice = null;
-    this.seatConflictMessage = null;
     this.savingSeat = false;
     this.cd.detectChanges();
   }
@@ -336,13 +380,12 @@ export class SeatsMap implements OnInit, OnChanges {
     const showId = this.showId ?? this.show?.id ?? 0;
     if (!showId) return;
     if (this.getSeatState(this.selectedSeat) !== 'available') {
-      this.seatConflictMessage = 'המושב נבחר בינתיים על ידי משתמש אחר.';
+      this.toast.warn('המושב נבחר בינתיים על ידי משתמש אחר.');
       this.loadOrderedSeats();
       this.cd.detectChanges();
       return;
     }
     this.savingSeat = true;
-    this.seatConflictMessage = null;
     const key = this.seatKey(this.selectedSeat);
     this.pendingKeys.add(key);
     this.cd.detectChanges();
@@ -359,6 +402,7 @@ export class SeatsMap implements OnInit, OnChanges {
         this.pendingKeys.delete(key);
         this.savingSeat = false;
         this.cartSliderVisible = true;
+        this.toast.success('המושב נשמר בסל בהצלחה.');
         this.closeSeatDialog();
         this.showSrv.getShowById(showId).subscribe((show) => {
           this.show = show;
@@ -370,7 +414,7 @@ export class SeatsMap implements OnInit, OnChanges {
         this.pendingKeys.delete(key);
         this.savingSeat = false;
         if (err?.status === 401) {
-          this.seatConflictMessage = 'יש להתחבר כדי לשמור מושב.';
+          this.toast.warn('יש להתחבר כדי לשמור מושב.');
           this.cd.detectChanges();
           return;
         }
@@ -381,14 +425,14 @@ export class SeatsMap implements OnInit, OnChanges {
           status === 400 ||
           /taken|נבחר|occupied|unavailable/i.test(String(msg))
         ) {
-          this.seatConflictMessage = 'המושב נבחר בינתיים על ידי משתמש אחר.';
+          this.toast.warn('המושב נבחר בינתיים על ידי משתמש אחר.');
           this.showSrv.getShowById(showId).subscribe((show) => {
             this.show = show;
             this.loadOrderedSeats();
             this.cd.detectChanges();
           });
         } else {
-          this.seatConflictMessage = 'שגיאה בשמירת המושב. נסה שוב.';
+          this.toast.error('שגיאה בשמירת המושב. נסה שוב.');
         }
         this.cd.detectChanges();
       },
@@ -448,5 +492,12 @@ export class SeatsMap implements OnInit, OnChanges {
   /** Message for hover when section is not offered in this show. */
   getSectionUnavailableMessage(sectionId: number): string {
     return 'יציע זה לא זמין במופע זה';
+  }
+
+  getSeatTooltip(seat: Seat, sectionId: number, price: number | null | undefined): string {
+    if (this.showIsPast) return 'המופע הסתיים ולא ניתן להזמין מושבים';
+    if (this.showIsSoldOut) return 'לא נותרו מושבים זמינים במופע זה';
+    if (!this.hasSectionForShow(sectionId)) return this.getSectionUnavailableMessage(sectionId);
+    return this.getSeatTitle(seat, price);
   }
 }

@@ -7,8 +7,9 @@ import { Seat } from '../../models/seat-model';
 import { Show } from '../../models/show-model';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
+import { ConfirmationService } from 'primeng/api';
 
-export type CartSeatStatus = 'saved' | 'available' | 'unavailable';
+export type CartSeatStatus = 'saved' | 'paid';
 
 @Component({
   selector: 'app-cart',
@@ -20,25 +21,30 @@ export type CartSeatStatus = 'saved' | 'available' | 'unavailable';
 export class CartComponent implements OnInit {
   private cartSrv = inject(CartService);
   private showSrv = inject(ShowsService);
+  private confirmationService = inject(ConfirmationService);
 
-  cartItems: Seat[] = [];
+  readonly unpaidCartItems = this.cartSrv.cart;
+  readonly paidCartItems = this.cartSrv.paidUpcoming;
   isLoggedIn = false;
 
   ngOnInit(): void {
     this.isLoggedIn = this.cartSrv.isLoggedIn;
-    if (this.isLoggedIn) {
-      this.cartSrv.loadCartFromUser(true);
-    }
-    this.cartSrv.cart$.subscribe((items) => {
-      this.cartItems = items;
-      if (items.some((s) => s.showId != null)) {
-        this.showSrv.getFilteredShows({});
-      }
-    });
+    this.cartSrv.loadCartFromUser(true);
+    this.showSrv.getFilteredShows({});
   }
 
   get totalToPay(): number {
-    return this.cartItems.reduce((sum, s) => sum + this.getSeatPrice(s), 0);
+    return this.unpaidCartItems().reduce((sum, s) => sum + this.getSeatPrice(s), 0);
+  }
+
+  get hasPayableItems(): boolean {
+    return this.unpaidCartItems().length > 0;
+  }
+
+  get displayCartItems(): Seat[] {
+    const unpaid = this.unpaidCartItems();
+    const paidUpcoming = this.paidCartItems().filter((seat) => this.isSeatShowUpcoming(seat));
+    return [...unpaid, ...paidUpcoming];
   }
 
   getShow(showId: number | undefined): Show | undefined {
@@ -54,34 +60,34 @@ export class CartComponent implements OnInit {
   }
 
   removeSeat(seat: Seat): void {
-    this.cartSrv.removeSeat(seat);
+    if (this.isPaidSeat(seat)) return;
+    this.confirmationService.confirm({
+      header: 'הסרת מושב',
+      message: 'להסיר את המושב מהסל?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'כן, הסר',
+      rejectLabel: 'ביטול',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        this.cartSrv.removeSeat(seat);
+      },
+    });
   }
 
-  /** Status for display: saved = שמור לך!, available = זמין, unavailable = לא זמין. */
-  getSeatStatus(_seat: Seat): CartSeatStatus {
-    
-    const isInCart = this.cartItems.find(s => s.id === _seat.id);
-      if (isInCart) return 'saved';
+  /** Status for display: saved = reserved and not paid, paid = already paid. */
+  getSeatStatus(seat: Seat): CartSeatStatus {
+    return this.isPaidSeat(seat) ? 'paid' : 'saved';
+  }
 
-    //בדיקה אם המושב תפוס על ידי מישהו אחר (דרך המידע מהמופע)
-    const show = this.showSrv.shows.find(s => s.id === (_seat.showId ?? 0));
-    if (show && show.orderedSeats) {
-      let occupied = false;
-      for (const order of show.orderedSeats) {
-        if (order.orderUserId !== this.cartSrv.getCurrentUserId()) {
-          const foundSeat = show.orderedSeats?.find((os: any) => 
-            os.col === _seat.col && os.row === _seat.row && os.sectionId === _seat.sectionId
-          );
-          if (foundSeat) {
-            occupied = true;
-            break;
-          }
-        }
-      }
-      if (occupied) return 'unavailable';
-    }
+  isPaidSeat(seat: Seat): boolean {
+    return seat.orderStatus === 2;
+  }
 
-    return 'available';
+  private isSeatShowUpcoming(seat: Seat): boolean {
+    const show = this.getShow(seat.showId);
+    if (!show) return true;
+    return !show.isPast;
   }
 
   goToPayment(): void {
