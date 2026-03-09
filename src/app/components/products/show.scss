@@ -92,7 +92,7 @@ h3 {
 }
 
 .show-card:hover .cardImg {
-  transform: scale(1.03);
+  transform: scale(1.015);
 }
 
 .buttons {
@@ -146,8 +146,8 @@ h3 {
 }
 
 :host ::ng-deep .p-drawer .p-drawer-header {
-  background: linear-gradient(130deg, #173870, #1f5fd6);
-  color: #fff;
+  background: var(--surface-50);
+  color: var(--text-primary);
 }
 
 :host ::ng-deep .p-drawer .p-drawer-header .p-drawer-title {

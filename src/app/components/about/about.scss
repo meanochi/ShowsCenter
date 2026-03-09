@@ -3,38 +3,35 @@
   padding: 0.5rem 0 1.5rem;
   border-radius: var(--radius-xl);
   overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
 }
 
 .about-hero {
-  background: linear-gradient(130deg, #0f254f 0%, #1b4ba2 56%, #1f5fd6 100%);
-  color: white;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+  color: var(--text-primary);
   text-align: center;
-  padding: 5.8rem 2rem 4.2rem;
+  padding: 4.8rem 2rem 3.6rem;
   position: relative;
   overflow: hidden;
 
   &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
-    opacity: 0.8;
+    display: none;
   }
 
   h1 {
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 0.7rem;
+    color: var(--text-primary);
     position: relative;
     z-index: 1;
   }
 
   .hero-subtitle {
     font-size: 1.15rem;
-    opacity: 0.92;
+    opacity: 1;
+    color: var(--text-secondary);
     max-width: 640px;
     margin: 0 auto;
     position: relative;
@@ -51,17 +48,18 @@
   .section-icon {
     width: 68px;
     height: 68px;
-    background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 2rem;
-    box-shadow: var(--shadow-lg);
+    box-shadow: none;
 
     i {
       font-size: 2rem;
-      color: white;
+      color: var(--primary-color);
     }
   }
 
@@ -95,12 +93,12 @@
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
   text-align: center;
-  transition: border-color 0.25s ease, transform 0.25s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid var(--border-color);
 
   &:hover {
-    transform: translateY(-4px);
     border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
   }
 
   i {
@@ -148,10 +146,11 @@
   padding: 2rem 1.5rem;
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
-  transition: transform 0.2s ease;
+  transition: border-color 0.2s ease;
+  border: 1px solid var(--border-color);
 
   &:hover {
-    transform: translateY(-4px);
+    border-color: #bfdbfe;
   }
 
   i {

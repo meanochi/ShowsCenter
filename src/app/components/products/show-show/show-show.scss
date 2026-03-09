@@ -118,11 +118,12 @@
   padding: 0.45rem 0.5rem 0.5rem;
   text-align: center;
   line-height: 1.2;
-  transition: box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .availability-card:hover {
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  border-color: #cddbf4;
+  box-shadow: var(--shadow-sm);
 }
 
 .availability-name {
@@ -147,7 +148,7 @@
 .availability-count {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #1b7a3d;
+  color: var(--primary-color);
   margin: 0 0.08rem;
 }
 
@@ -161,9 +162,8 @@
 
 .availability-card-warning {
   border-color: #f59e0b;
-  background: linear-gradient(180deg, #fff8e6 0%, #ffefcc 100%);
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.26);
-  animation: warningPulse 1.8s ease-in-out infinite;
+  background: #fff8e6;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.22);
 }
 
 .availability-card-warning .availability-name,
@@ -174,9 +174,8 @@
 
 .availability-card-critical {
   border-color: #dc2626;
-  background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
-  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.28);
-  animation: warningPulse 1.2s ease-in-out infinite;
+  background: #fff1f2;
+  box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.24);
 }
 
 .availability-card-critical .availability-name,
@@ -187,8 +186,8 @@
 
 .availability-card-soldout {
   border-color: #fbc9cf;
-  background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
-  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.2);
+  background: #fff1f2;
+  box-shadow: inset 0 0 0 1px rgba(244, 63, 94, 0.16);
 }
 
 .availability-card-soldout .availability-name,
@@ -196,18 +195,6 @@
 .availability-card-soldout .availability-count-text,
 .availability-card-soldout .availability-count {
   color: #9f1239;
-}
-
-@keyframes warningPulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.02);
-  }
-  100% {
-    transform: scale(1);
-  }
 }
 
 @media (min-width: 992px) {

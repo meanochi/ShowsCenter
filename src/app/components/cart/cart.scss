@@ -172,7 +172,7 @@
 
   &:hover {
     opacity: 0.9;
-    transform: translateY(-1px);
+    transform: none;
   }
 }
 
@@ -208,17 +208,17 @@
 }
 
 .cart-item-status.status-saved .status-dot {
-  background: #a855f7;
+  background: #93c5fd;
 }
 .cart-item-status.status-saved .status-text {
-  color: #7c3aed;
+  color: #1d4ed8;
 }
 
 .cart-item-status.status-paid .status-dot {
-  background: #3b82f6;
+  background: #2563eb;
 }
 .cart-item-status.status-paid .status-text {
-  color: #2563eb;
+  color: #1e40af;
 }
 
 @media (max-width: 768px) {

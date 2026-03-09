@@ -13,7 +13,7 @@
 
   <div class="user-section">
     @if (isLoggedIn()) {
-      <div class="flex items-center gap-3">
+      <div class="user-logged-row">
         <span class="welcome-text">שלום, {{ authService.userName() }}</span>
         <p-button 
           label="התנתק" 
