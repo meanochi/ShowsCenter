@@ -9,10 +9,14 @@ namespace TimeBank.Api.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IForgotPasswordService _forgotPassword;
+    private readonly IOrderConfirmationEmailService _orderConfirmationEmail;
 
-    public UsersController(IForgotPasswordService forgotPassword)
+    public UsersController(
+        IForgotPasswordService forgotPassword,
+        IOrderConfirmationEmailService orderConfirmationEmail)
     {
         _forgotPassword = forgotPassword;
+        _orderConfirmationEmail = orderConfirmationEmail;
     }
 
     /// <summary>
@@ -41,5 +45,22 @@ public class UsersController : ControllerBase
             request.NewPassword ?? "",
             ct);
         return Ok(new ResetPasswordResponse { Success = result.Success, Message = result.Message });
+    }
+
+    /// <summary>
+    /// Send order confirmation email after checkout.
+    /// POST /api/Users/send-order-confirmation
+    /// </summary>
+    [HttpPost("send-order-confirmation")]
+    public async Task<ActionResult<SendOrderConfirmationResponse>> SendOrderConfirmation(
+        [FromBody] SendOrderConfirmationRequest request,
+        CancellationToken ct)
+    {
+        var result = await _orderConfirmationEmail.SendAsync(request, ct);
+        return Ok(new SendOrderConfirmationResponse
+        {
+            Sent = result.Sent,
+            Message = result.Message
+        });
     }
 }

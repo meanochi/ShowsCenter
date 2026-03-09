@@ -368,6 +368,19 @@
   margin: 0 0 1rem 0;
 }
 
+.email-status-msg {
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.email-status-msg.success {
+  color: var(--success-color);
+}
+
+.email-status-msg.error {
+  color: var(--error-color);
+}
+
 .confirmation-summary {
   text-align: right;
   max-width: 400px;

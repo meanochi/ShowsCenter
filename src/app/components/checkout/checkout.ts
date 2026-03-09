@@ -5,7 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { CartService } from '../../services/cart-service';
 import { ShowsService } from '../../services/shows-service';
-import { UsersService } from '../../services/users-service';
+import { OrderConfirmationEmailRequest, UsersService } from '../../services/users-service';
 import { AuthService } from '../../services/auth-service';
 import { Seat } from '../../models/seat-model';
 import { Show } from '../../models/show-model';
@@ -113,6 +113,8 @@ export class CheckoutComponent implements OnInit {
   /** Snapshot of ordered items for confirmation (row, col, show date/time, etc.). */
   confirmationItems = signal<ConfirmationItem[]>([]);
   totalPaid = signal<number>(0);
+  emailStatus = signal<'success' | 'error' | null>(null);
+  emailStatusMessage = signal<string>('');
   placingOrder = signal<boolean>(false);
   placeOrderError = signal<string | null>(null);
   paymentForm: FormGroup;
@@ -223,10 +225,20 @@ export class CheckoutComponent implements OnInit {
       next: (res) => {
         this.placingOrder.set(false);
         const code = res.confirmationCode ?? 'TB-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const createdAt = res.date ? new Date(res.date) : new Date();
+        const confirmationItems = this.buildConfirmationItems(items);
         this.orderConfirmationCode.set(code);
-        this.orderCreatedAt.set(res.date ? new Date(res.date) : new Date());
+        this.orderCreatedAt.set(createdAt);
         this.totalPaid.set(total);
-        this.confirmationItems.set(this.buildConfirmationItems(items));
+        this.confirmationItems.set(confirmationItems);
+        this.emailStatus.set(null);
+        this.emailStatusMessage.set('');
+        this.sendOrderEmail({
+          orderCode: code,
+          createdAt,
+          totalPaid: total,
+          items: confirmationItems,
+        });
         this.cartSrv.clearCart();
         this.cartItems = [];
         this.currentStep.set(STEPS.CONFIRMATION);
@@ -262,6 +274,59 @@ export class CheckoutComponent implements OnInit {
         price,
       };
     });
+  }
+
+  private sendOrderEmail(data: {
+    orderCode: string;
+    createdAt: Date;
+    totalPaid: number;
+    items: ConfirmationItem[];
+  }): void {
+    const u = this.user();
+    const email = (u?.emailAddress ?? '').trim();
+    if (!email) return;
+
+    const payload: OrderConfirmationEmailRequest = {
+      email,
+      firstName: (u?.firstName ?? '').trim(),
+      orderCode: data.orderCode,
+      orderDate: data.createdAt.toISOString(),
+      totalPaid: data.totalPaid,
+      items: data.items.map((item) => ({
+        showTitle: item.showTitle,
+        section: item.section,
+        row: item.row,
+        col: item.col,
+        showDate: this.toIsoIfValidDate(item.showDate),
+        showTime: item.showTime,
+        price: item.price,
+      })),
+    };
+
+    this.usersSrv.sendOrderConfirmationEmail(payload).subscribe({
+      next: (r) => {
+        if (r?.sent) {
+          this.emailStatus.set('success');
+          this.emailStatusMessage.set('מייל עם פרטי ההזמנה נשלח אליך בהצלחה.');
+          return;
+        }
+        this.emailStatus.set('error');
+        this.emailStatusMessage.set(r?.message || 'ההזמנה בוצעה, אבל לא הצלחנו לשלוח את המייל.');
+        this.toast.warn(r?.message || 'לא הצלחנו לשלוח מייל אישור הזמנה.');
+      },
+      error: () => {
+        this.emailStatus.set('error');
+        this.emailStatusMessage.set('ההזמנה בוצעה, אבל שליחת המייל נכשלה.');
+        // Keep checkout success flow intact even if email sending fails.
+        this.toast.warn('ההזמנה בוצעה, אבל שליחת המייל נכשלה.');
+      },
+    });
+  }
+
+  private toIsoIfValidDate(value: Date | string): string {
+    if (!value) return '';
+    const d = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString();
   }
 
   isStepActive(stepIndex: number): boolean {

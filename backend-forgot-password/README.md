@@ -14,6 +14,10 @@ This folder contains the **controller**, **service**, and **repository** layers 
    - Validates code for that email (and expiry), updates user password (hashed), then deletes/invalidates the code.  
    - Returns: `{ "success": true }` or `{ "success": false, "message": "..." }`.
 
+3. **POST /api/Users/send-order-confirmation** – Body includes checkout summary (email, order code/date, items, total).  
+   - Sends a confirmation email with the full order details (same content style as checkout step 4).  
+   - Returns: `{ "sent": true }` or `{ "sent": false, "message": "..." }`.
+
 ## Integration Steps
 
 ### 1. Add NuGet packages (in your Web API project)
@@ -90,6 +94,9 @@ builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 // Forgot-password service
 builder.Services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
+
+// Order confirmation email service
+builder.Services.AddScoped<IOrderConfirmationEmailService, OrderConfirmationEmailService>();
 ```
 
 Ensure your `DbContext` is registered and includes `DbSet<PasswordResetCode>` if you use the EF-based repository.

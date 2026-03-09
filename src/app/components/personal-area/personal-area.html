@@ -121,21 +121,23 @@
                   <div>
                     <h3>הזמנה #{{ order.id }}</h3>
                     <p class="order-date">
-                      @if (order.date) {
-                        {{ order.date | date: 'dd/MM/yyyy HH:mm' }}
+                      @if (getOrderDisplayDate(order); as orderDate) {
+                        {{ orderDate | date: 'dd/MM/yyyy HH:mm' }}
                       } @else {
                         ללא תאריך
                       }
                     </p>
                   </div>
-                  <span class="order-status" [class.pending]="order.status === 1">
-                    {{ orderStatusLabel(order.status) }}
-                  </span>
+                  <img
+                    class="order-show-thumb"
+                    [src]="getOrderPreviewImage(order)"
+                    [alt]="getShowTitle(order.items[0]?.showId ?? 0)"
+                  />
                 </div>
 
                 <div class="order-meta">
                   <span>{{ order.items.length }} פריטים</span>
-                  <strong>{{ order.totalPrice }}₪</strong>
+                  <strong>{{ getOrderDisplayTotal(order) }}₪</strong>
                 </div>
 
                 <div class="order-preview">
@@ -283,8 +285,8 @@
         <div>
           <h3>פרטי הזמנה #{{ order.id }}</h3>
           <p>
-            @if (order.date) {
-              {{ order.date | date: 'dd/MM/yyyy HH:mm' }}
+            @if (getOrderDisplayDate(order); as orderDate) {
+              {{ orderDate | date: 'dd/MM/yyyy HH:mm' }}
             } @else {
               ללא תאריך
             }
@@ -296,19 +298,32 @@
       <div class="modal-items">
         @for (item of order.items; track item.id) {
           <div class="modal-item">
-            <div>
+            <img
+              class="modal-item-thumb"
+              [src]="getShowImage(item.showId)"
+              [alt]="getShowTitle(item.showId)"
+            />
+            <div class="modal-item-content">
               <h4>{{ getShowTitle(item.showId) }}</h4>
               <p>מקום: שורה {{ item.row + 1 }}, כיסא {{ item.col + 1 }}</p>
+              @if (getShowDate(item.showId); as showDate) {
+                <p>
+                  תאריך מופע: {{ showDate | date: 'dd/MM/yyyy' }}
+                  @if (getShowTime(item.showId)) {
+                    בשעה {{ getShowTime(item.showId) }}
+                  }
+                </p>
+              }
               <p>סטטוס: {{ orderStatusLabel(item.status) }}</p>
             </div>
-            <strong>{{ item.price }}₪</strong>
+            <strong>{{ getItemDisplayPrice(item) }}₪</strong>
           </div>
         }
       </div>
 
       <div class="modal-footer">
         <span>סה"כ הזמנה:</span>
-        <strong>{{ order.totalPrice }}₪</strong>
+        <strong>{{ getOrderDisplayTotal(order) }}₪</strong>
       </div>
     </div>
   </div>

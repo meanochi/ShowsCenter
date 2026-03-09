@@ -260,6 +260,11 @@
         @if (orderCreatedAt(); as createdAt) {
           <p class="confirmation-meta">תאריך ושעת יצירת ההזמנה: <strong>{{ createdAt | date: 'dd/MM/yyyy' }} בשעה {{ createdAt | date: 'HH:mm' }}</strong></p>
         }
+        @if (emailStatusMessage()) {
+          <p class="email-status-msg" [class.success]="emailStatus() === 'success'" [class.error]="emailStatus() === 'error'">
+            {{ emailStatusMessage() }}
+          </p>
+        }
         <div class="confirmation-summary">
           <h3>פרטי ההזמנה</h3>
           @for (item of confirmationItems(); track item.showTitle + item.row + item.col + item.section) {
