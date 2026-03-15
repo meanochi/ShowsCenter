@@ -84,6 +84,48 @@
   gap: 1.25rem;
 }
 
+.cart-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.cart-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 0.65rem 0.85rem;
+}
+
+.cart-section-title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.cart-section-count {
+  min-width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  border: 1px solid #c7d7ef;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.cart-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
 // Each item is a PrimeNG card – match picture: image, details, price, actions, status
 ::ng-deep .cart-item-card.p-card {
   border-radius: var(--radius-lg);

@@ -2,7 +2,7 @@
   <div class="show-hero grid grid-nogutter overflow-hidden">
     <div class="show-image-wrap col-12 md:col-6 p-0 relative">
       <img
-        [src]="showProd.imgUrl ? 'https://localhost:44304/'+ showProd.imgUrl : 'timeBank.png'"
+        [src]="showProd.imgUrl ? 'https://localhost:44304/' + showProd.imgUrl : 'default.png'"
         alt="תמונת מופע"
         class="show-image w-full h-full object-cover"
       />
@@ -16,14 +16,14 @@
     <div class="col-12 md:col-6 p-4 flex flex-column justify-content-between">
       <div class="text-center md:text-right mb-4">
         <h2 class="show-category text-xl font-semi-bold mb-0">
-          {{ showProd.categoryName}}
+          {{ showProd.categoryName }}
         </h2>
         <h1 class="show-title text-4xl font-bold mb-2 mt-1">{{ showProd.title }}</h1>
         <div class="show-date text-xl font-bold mb-1">
           <i class="pi pi-calendar ml-2"></i>{{ showProd.date | date: 'dd.MM.yyyy' }}
         </div>
         <div class="show-time text-lg mb-2">
-          <i class="pi pi-clock ml-2"></i>{{ showProd.beginTime  }} -
+          <i class="pi pi-clock ml-2"></i>{{ showProd.beginTime }} -
           {{ showProd.endTime }}
         </div>
         <div class="show-description mb-3">{{ showProd.description }}</div>
@@ -32,9 +32,7 @@
           class="show-tags flex align-items-center justify-content-center md:justify-content-start gap-3 font-bold"
         >
           <span>מתאים ל:</span>
-          <span class="tag">{{
-            showProd.audience
-          }}</span>
+          <span class="tag">{{ showProd.audience }}</span>
           <span class="tag">{{ showProd.sector }}</span>
         </div>
 
@@ -67,9 +65,15 @@
               @for (section of sectionAvailability; track section.sectionId) {
                 <div
                   class="availability-card"
-                  [class.availability-card-soldout]="getAvailabilitySeverity(section.availableSeats) === 'soldout'"
-                  [class.availability-card-warning]="getAvailabilitySeverity(section.availableSeats) === 'warning'"
-                  [class.availability-card-critical]="getAvailabilitySeverity(section.availableSeats) === 'critical'"
+                  [class.availability-card-soldout]="
+                    getAvailabilitySeverity(section.availableSeats) === 'soldout'
+                  "
+                  [class.availability-card-warning]="
+                    getAvailabilitySeverity(section.availableSeats) === 'warning'
+                  "
+                  [class.availability-card-critical]="
+                    getAvailabilitySeverity(section.availableSeats) === 'critical'
+                  "
                 >
                   <div class="availability-name">{{ section.sectionLabel }}:</div>
                   <div class="availability-price">{{ section.price }}₪</div>
@@ -89,10 +93,16 @@
         }
       </div>
 
-      <div class="provider-row flex align-items-center justify-content-center md:justify-content-start mb-4">
+      <div
+        class="provider-row flex align-items-center justify-content-center md:justify-content-start mb-4"
+      >
         <span class="font-bold ml-2">מאת:</span>
         <p-avatar
-          [image]="(showProd.providerProfileImgUrl ? 'https://localhost:44304/' + showProd.providerProfileImgUrl : 'log.png')"
+          [image]="
+            showProd.providerProfileImgUrl
+              ? 'https://localhost:44304/' + showProd.providerProfileImgUrl
+              : 'logo.png'
+          "
           shape="circle"
           size="large"
           class="ml-2"
@@ -113,7 +123,11 @@
               [disabled]="true"
             ></button>
             <span class="show-cta-note mt-2 text-sm text-500">
-              {{ showProd.isPast ? 'לא ניתן להזמין כרטיסים למופע שהסתיים.' : 'כרגע אין מקומות פנויים למופע זה.' }}
+              {{
+                showProd.isPast
+                  ? 'לא ניתן להזמין כרטיסים למופע שהסתיים.'
+                  : 'כרגע אין מקומות פנויים למופע זה.'
+              }}
             </span>
           } @else {
             <div class="show-countdown text-2xl font-bold mb-2 font-mono">{{ countdownLabel }}</div>
@@ -141,9 +155,7 @@
   </div>
 
   <div class="related-block mt-6">
-    <h2 class="text-2xl font-bold mb-3 pr-2">
-      עוד בקטגוריה
-    </h2>
+    <h2 class="text-2xl font-bold mb-3 pr-2">עוד בקטגוריה</h2>
 
     <p-carousel
       [value]="relatedEvents"
@@ -156,7 +168,7 @@
         <div class="related-card m-2 text-center p-3 h-full flex flex-column">
           <div class="related-thumb mb-3 relative">
             <img
-              [src]="(item.imgUrl ? 'https://localhost:44304/' + item.imgUrl : 'timeBank.png')"
+              [src]="item.imgUrl ? 'https://localhost:44304/' + item.imgUrl : 'default.png'"
               class="w-full h-full object-cover"
             />
           </div>

@@ -156,13 +156,18 @@
       </div>
       <div class="flex items-center gap-2 mb-2">
         <p-floatlabel variant="on">
-          <p-inputnumber id="hallmap" prefix="₪" formControlName="hallMapPrice" autocomplete="off" />
+          <p-inputnumber
+            id="hallmap"
+            prefix="₪"
+            formControlName="hallMapPrice"
+            autocomplete="off"
+          />
           <label for="hallmap">מחיר מקום באולם</label>
         </p-floatlabel>
       </div>
       <div class="flex items-center gap-2 mb-2">
         <div class="card flex justify-center align-items-center">
-          <p-toggleswitch [(ngModel)]="checked[1]" [ngModelOptions]="{standalone: true}" />
+          <p-toggleswitch [(ngModel)]="checked[1]" [ngModelOptions]="{ standalone: true }" />
         </div>
         <p-floatlabel variant="on">
           <p-inputnumber
@@ -177,7 +182,7 @@
       </div>
       <div class="flex items-center gap-2 mb-2">
         <div class="card flex justify-center align-items-center">
-          <p-toggleswitch [(ngModel)]="checked[2]" [ngModelOptions]="{standalone: true}" />
+          <p-toggleswitch [(ngModel)]="checked[2]" [ngModelOptions]="{ standalone: true }" />
         </div>
         <p-floatlabel variant="on">
           <p-inputnumber
@@ -192,7 +197,7 @@
       </div>
       <div class="flex items-center gap-2 mb-2">
         <div class="card flex justify-center align-items-center">
-          <p-toggleswitch [(ngModel)]="checked[3]" [ngModelOptions]="{standalone: true}" />
+          <p-toggleswitch [(ngModel)]="checked[3]" [ngModelOptions]="{ standalone: true }" />
         </div>
         <p-floatlabel variant="on">
           <p-inputnumber
@@ -221,7 +226,7 @@
                   [src]="
                     selectedOption?.profileImgUrl
                       ? 'https://localhost:44304/' + selectedOption.profileImgUrl
-                      : 'timeBank.png'
+                      : 'default.png'
                   "
                   style="width: 18px"
                 />
@@ -234,7 +239,7 @@
                   [src]="
                     provider?.profileImgUrl
                       ? 'https://localhost:44304/' + provider.profileImgUrl
-                      : 'timeBank.png'
+                      : 'default.png'
                   "
                   style="width: 18px"
                 />

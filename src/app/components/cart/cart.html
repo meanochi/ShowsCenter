@@ -5,7 +5,7 @@
       <p class="cart-empty-msg">אין לך כרטיסים בסל</p>
       <a routerLink="/login" class="cart-empty-login">הכנס כדי לראות את הכרטיסים שלך</a>
     </div>
-  } @else if (displayCartItems.length === 0) {
+  } @else if (!hasAnyCartItems) {
     <div class="cart-empty">
       <p class="cart-empty-oops">אופסס</p>
       <p class="cart-empty-msg">אין לך כרטיסים בסל</p>
@@ -31,48 +31,98 @@
       </aside>
 
       <main class="cart-items">
-        @for (seat of displayCartItems; track seat.id ?? seatKey(seat)) {
-          @let show = getShow(seat.showId);
-          <p-card styleClass="cart-item-card">
-            <div class="cart-item-body">
-              <div class="cart-item-image">
-                <img
-                  [src]="show?.imgUrl ? 'https://localhost:44304/' + (show?.imgUrl ?? '') : 'timeBank.png'"
-                  alt=""
-                />
-              </div>
-              <div class="cart-item-details">
-                <p class="cart-item-title">{{ show?.title ?? 'שם מופע' }}</p>
-                <p class="cart-item-meta">מקום: {{ seat.section }}</p>
-                <p class="cart-item-meta">{{ show?.date | date: 'dd/MM/yyyy' }}</p>
-                <p class="cart-item-seat">שורה: {{ seat.row + 1 }} כיסא: {{ seat.col + 1 }}</p>
-              </div>
-              <div
-                class="cart-item-status"
-                [class.status-saved]="getSeatStatus(seat) === 'saved'"
-                [class.status-paid]="getSeatStatus(seat) === 'paid'"
-              >
-                <span class="status-dot"></span>
-                @switch (getSeatStatus(seat)) {
-                  @case ('saved') {
-                    <span class="status-text">שמור לך!</span>
-                    <span class="status-hint">הזדרז להזמין...</span>
-                  }
-                  @case ('paid') {
-                    <span class="status-text">שולם</span>
-                    <span class="status-hint">כרטיס קיים, לא לרכישה חוזרת</span>
-                  }
-                }
-              </div>
-              <div class="cart-item-price">{{ getSeatPrice(seat) }}₪</div>
-              <div class="cart-item-actions">
-                @if (!isPaidSeat(seat)) {
-                  <button type="button" class="cart-btn cart-btn-remove" (click)="removeSeat(seat)" title="הסר מהסל">✕</button>
-                }
-              </div>
-              
+        @if (unpaidCartItems().length > 0) {
+          <section class="cart-section">
+            <div class="cart-section-head">
+              <h2 class="cart-section-title">כרטיסים לתשלום</h2>
+              <span class="cart-section-count">{{ unpaidCartItems().length }}</span>
             </div>
-          </p-card>
+            <div class="cart-section-list">
+              @for (seat of unpaidCartItems(); track seat.id ?? seatKey(seat)) {
+                @let show = getShow(seat.showId);
+                <p-card styleClass="cart-item-card">
+                  <div class="cart-item-body">
+                    <div class="cart-item-image">
+                      <img
+                        [src]="
+                          show?.imgUrl
+                            ? 'https://localhost:44304/' + (show?.imgUrl ?? '')
+                            : 'default.png'
+                        "
+                        alt=""
+                      />
+                    </div>
+                    <div class="cart-item-details">
+                      <p class="cart-item-title">{{ show?.title ?? 'שם מופע' }}</p>
+                      <p class="cart-item-meta">מקום: {{ seat.section }}</p>
+                      <p class="cart-item-meta">{{ show?.date | date: 'dd/MM/yyyy' }}</p>
+                      <p class="cart-item-seat">
+                        שורה: {{ seat.row + 1 }} כיסא: {{ seat.col + 1 }}
+                      </p>
+                    </div>
+                    <div class="cart-item-status status-saved">
+                      <span class="status-dot"></span>
+                      <span class="status-text">שמור לך!</span>
+                      <span class="status-hint">הזדרז להזמין...</span>
+                    </div>
+                    <div class="cart-item-price">{{ getSeatPrice(seat) }}₪</div>
+                    <div class="cart-item-actions">
+                      <button
+                        type="button"
+                        class="cart-btn cart-btn-remove"
+                        (click)="removeSeat(seat)"
+                        title="הסר מהסל"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                </p-card>
+              }
+            </div>
+          </section>
+        }
+
+        @if (paidUpcomingItems.length > 0) {
+          <section class="cart-section">
+            <div class="cart-section-head">
+              <h2 class="cart-section-title">כרטיסים ששולמו (מופעים קרובים)</h2>
+              <span class="cart-section-count">{{ paidUpcomingItems.length }}</span>
+            </div>
+            <div class="cart-section-list">
+              @for (seat of paidUpcomingItems; track seat.id ?? seatKey(seat)) {
+                @let show = getShow(seat.showId);
+                <p-card styleClass="cart-item-card">
+                  <div class="cart-item-body">
+                    <div class="cart-item-image">
+                      <img
+                        [src]="
+                          show?.imgUrl
+                            ? 'https://localhost:44304/' + (show?.imgUrl ?? '')
+                            : 'default.png'
+                        "
+                        alt=""
+                      />
+                    </div>
+                    <div class="cart-item-details">
+                      <p class="cart-item-title">{{ show?.title ?? 'שם מופע' }}</p>
+                      <p class="cart-item-meta">מקום: {{ seat.section }}</p>
+                      <p class="cart-item-meta">{{ show?.date | date: 'dd/MM/yyyy' }}</p>
+                      <p class="cart-item-seat">
+                        שורה: {{ seat.row + 1 }} כיסא: {{ seat.col + 1 }}
+                      </p>
+                    </div>
+                    <div class="cart-item-status status-paid">
+                      <span class="status-dot"></span>
+                      <span class="status-text">שולם</span>
+                      <span class="status-hint">כרטיס קיים, לא לרכישה חוזרת</span>
+                    </div>
+                    <div class="cart-item-price">{{ getSeatPrice(seat) }}₪</div>
+                  </div>
+                </p-card>
+              }
+            </div>
+          </section>
         }
       </main>
     </div>

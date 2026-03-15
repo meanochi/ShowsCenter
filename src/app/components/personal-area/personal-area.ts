@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
-import { computed} from '@angular/core';
+import { computed } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -96,7 +96,9 @@ export class PersonalAreaComponent implements OnInit {
   @ViewChild('addProviderRef') addProviderRef!: AddProvider;
 
   orderCount = computed(() => this.orders().length);
-  orderedItemsCount = computed(() => this.orders().reduce((acc, order) => acc + order.items.length, 0));
+  orderedItemsCount = computed(() =>
+    this.orders().reduce((acc, order) => acc + order.items.length, 0),
+  );
   totalSpent = computed(() => {
     this.showInfoMap();
     return this.orders().reduce((acc, order) => acc + this.getOrderDisplayTotal(order), 0);
@@ -251,7 +253,7 @@ export class PersonalAreaComponent implements OnInit {
     this.categorySrv.updateCategory({ ...category, name: updatedName }).subscribe({
       next: (updated) => {
         this.categories.update((current) =>
-          current.map((item) => (item.id === updated.id ? updated : item))
+          current.map((item) => (item.id === updated.id ? updated : item)),
         );
         this.categoryDraftById[updated.id] = updated.name ?? '';
         this.toast.success('הקטגוריה עודכנה בהצלחה.');
@@ -297,14 +299,15 @@ export class PersonalAreaComponent implements OnInit {
     const payload: Provider = {
       ...provider,
       name: updatedName,
-      profileimgUrl: (provider as Provider & { profileImgUrl?: string }).profileimgUrl
-        ?? (provider as Provider & { profileImgUrl?: string }).profileImgUrl
-        ?? '',
+      profileimgUrl:
+        (provider as Provider & { profileImgUrl?: string }).profileimgUrl ??
+        (provider as Provider & { profileImgUrl?: string }).profileImgUrl ??
+        '',
     };
     this.providerSrv.updateProvider(payload).subscribe({
       next: (updated) => {
         this.providers.update((current) =>
-          current.map((item) => (item.id === updated.id ? updated : item))
+          current.map((item) => (item.id === updated.id ? updated : item)),
         );
         this.providerDraftById[updated.id] = updated.name ?? '';
         this.toast.success('פרטי המפיק עודכנו.');
@@ -342,7 +345,7 @@ export class PersonalAreaComponent implements OnInit {
   getProviderImage(provider: Provider): string {
     const p = provider as Provider & { profileImgUrl?: string };
     const path = p.profileimgUrl ?? p.profileImgUrl ?? '';
-    return path ? `https://localhost:44304/${path}` : 'timeBank.png';
+    return path ? `https://localhost:44304/${path}` : 'default.png';
   }
 
   private refreshCategories(): void {
@@ -382,10 +385,10 @@ export class PersonalAreaComponent implements OnInit {
   }
 
   getShowImage(showId: number): string {
-    if (showId <= 0) return 'timeBank.png';
+    if (showId <= 0) return 'default.png';
     const show = this.showInfoMap()[showId]?.show as { imgUrl?: string | null } | undefined;
     const path = show?.imgUrl ?? '';
-    return path ? `https://localhost:44304/${path}` : 'timeBank.png';
+    return path ? `https://localhost:44304/${path}` : 'default.png';
   }
 
   getOrderPreviewImage(order: PersonalOrder): string {
@@ -429,9 +432,9 @@ export class PersonalAreaComponent implements OnInit {
   }
 
   private loadShowTitles(orders: PersonalOrder[]): void {
-    const uniqueShowIds = [...new Set(orders.flatMap((order) => order.items.map((item) => item.showId)))].filter(
-      (id) => id > 0
-    );
+    const uniqueShowIds = [
+      ...new Set(orders.flatMap((order) => order.items.map((item) => item.showId))),
+    ].filter((id) => id > 0);
     if (uniqueShowIds.length === 0) return;
 
     const requests = uniqueShowIds.map((id) =>
@@ -450,9 +453,9 @@ export class PersonalAreaComponent implements OnInit {
             date: null,
             time: '',
             show: null,
-          })
-        )
-      )
+          }),
+        ),
+      ),
     );
 
     forkJoin(requests).subscribe((results) => {
@@ -474,15 +477,20 @@ export class PersonalAreaComponent implements OnInit {
 
     return rawOrders
       .map((rawOrder: any, index: number): PersonalOrder => {
-        const rawItems = this.toArray(rawOrder?.orderedSeats ?? rawOrder?.OrderedSeats ?? rawOrder?.seats);
+        const rawItems = this.toArray(
+          rawOrder?.orderedSeats ?? rawOrder?.OrderedSeats ?? rawOrder?.seats,
+        );
         const items = rawItems
           .map((rawItem: any) => this.normalizeOrderItem(rawItem))
           .filter((item): item is PersonalOrderItem => item != null);
 
         const amountFromServer = this.toNumber(
-          rawOrder?.price ?? rawOrder?.Price ?? rawOrder?.totalPrice ?? rawOrder?.TotalPrice
+          rawOrder?.price ?? rawOrder?.Price ?? rawOrder?.totalPrice ?? rawOrder?.TotalPrice,
         );
-        const totalPrice = amountFromServer > 0 ? amountFromServer : items.reduce((sum, item) => sum + item.price, 0);
+        const totalPrice =
+          amountFromServer > 0
+            ? amountFromServer
+            : items.reduce((sum, item) => sum + item.price, 0);
         const orderStatus = this.toNumber(rawOrder?.status ?? rawOrder?.Status);
         const hasSoldItems = items.some((item) => item.status === 2);
         const isCompleted = orderStatus === 2 || hasSoldItems || totalPrice > 0;
@@ -499,7 +507,7 @@ export class PersonalAreaComponent implements OnInit {
               rawOrder?.paymentDate ??
               rawOrder?.PaymentDate ??
               rawOrder?.createdAt ??
-              rawOrder?.CreatedAt
+              rawOrder?.CreatedAt,
           ),
           status: orderStatus,
           totalPrice,
@@ -522,9 +530,13 @@ export class PersonalAreaComponent implements OnInit {
     if (showId <= 0 || row < 0 || col < 0) return null;
 
     return {
-      id: this.toNumber(rawItem?.id ?? rawItem?.Id ?? rawItem?.orderedSeatId ?? rawItem?.OrderedSeatId),
+      id: this.toNumber(
+        rawItem?.id ?? rawItem?.Id ?? rawItem?.orderedSeatId ?? rawItem?.OrderedSeatId,
+      ),
       showId,
-      sectionId: this.toNumber(rawItem?.sectionSectionType ?? rawItem?.sectionId ?? rawItem?.SectionId),
+      sectionId: this.toNumber(
+        rawItem?.sectionSectionType ?? rawItem?.sectionId ?? rawItem?.SectionId,
+      ),
       row,
       col,
       status: this.toNumber(rawItem?.status ?? rawItem?.Status),

@@ -9,8 +9,6 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ConfirmationService } from 'primeng/api';
 
-export type CartSeatStatus = 'saved' | 'paid';
-
 @Component({
   selector: 'app-cart',
   standalone: true,
@@ -41,10 +39,12 @@ export class CartComponent implements OnInit {
     return this.unpaidCartItems().length > 0;
   }
 
-  get displayCartItems(): Seat[] {
-    const unpaid = this.unpaidCartItems();
-    const paidUpcoming = this.paidCartItems().filter((seat) => this.isSeatShowUpcoming(seat));
-    return [...unpaid, ...paidUpcoming];
+  get paidUpcomingItems(): Seat[] {
+    return this.paidCartItems().filter((seat) => this.isSeatShowUpcoming(seat));
+  }
+
+  get hasAnyCartItems(): boolean {
+    return this.unpaidCartItems().length > 0 || this.paidUpcomingItems.length > 0;
   }
 
   getShow(showId: number | undefined): Show | undefined {
@@ -73,11 +73,6 @@ export class CartComponent implements OnInit {
         this.cartSrv.removeSeat(seat);
       },
     });
-  }
-
-  /** Status for display: saved = reserved and not paid, paid = already paid. */
-  getSeatStatus(seat: Seat): CartSeatStatus {
-    return this.isPaidSeat(seat) ? 'paid' : 'saved';
   }
 
   isPaidSeat(seat: Seat): boolean {
