@@ -123,6 +123,30 @@ export class ShowsService {
     this.loadShows({ skip: 200, position: 1 }, true);
   }
 
+  /** Load all shows without filters so the UI can validate scheduling conflicts. */
+  public loadAllShows(): Observable<Show[]> {
+    const params = new HttpParams()
+      .set('skip', '1000')
+      .set('position', '1')
+      .set('sortField', 'Date')
+      .set('sortOrder', '1');
+
+    return this.http.get<any[]>('/api/Shows', { params }).pipe(
+      map((data) => data.map((item) => this.mapShowFromApi(item))),
+      tap((shows) => {
+        this.showsLoadErrorSubject.next(null);
+        this.shows = shows;
+        this.showsSubject.next(shows);
+      }),
+      catchError((error) => {
+        console.error('Error loading all shows:', error);
+        const msg = error?.error?.message || error?.message || 'טעינת כל המופעים נכשלה';
+        this.showsLoadErrorSubject.next(msg);
+        throw error;
+      })
+    );
+  }
+
   private loadShows(filters: any = {}, forUpcoming: boolean = false) {
     let params = new HttpParams();
     if (filters.description) {

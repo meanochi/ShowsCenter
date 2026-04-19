@@ -11,6 +11,7 @@ import {
 import { Section, SECTION_TO_ID, Sector, Show, TargetAudience } from '../../../models/show-model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { CategorySrvice } from '../../../services/category-srvice';
 import { Category } from '../../../models/category-model';
 import { Dialog } from 'primeng/dialog';
@@ -19,7 +20,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { AvatarModule } from 'primeng/avatar';
 import { Select } from 'primeng/select';
 import { FloatLabelModule } from 'primeng/floatlabel';
-import { forkJoin } from 'rxjs';
 import {
   FileUpload,
   FileUploadEvent,
@@ -83,6 +83,7 @@ export class AddShow {
   showsSrv: ShowsService = inject(ShowsService);
   submitLoading = false;
   submitError: string | null = null;
+  existingShows: Show[] = [];
   id: number = 0;
   title: string = '';
   date: Date = new Date();
@@ -114,6 +115,7 @@ export class AddShow {
   showDialog() {
     this.loadCategories();
     this.loadProviders(); // ensure providers are loaded when dialog opens (in case ngOnInit load was slow or failed)
+    this.loadExistingShows();
     this.visible = true;
   }
   ngOnInit() {
@@ -142,57 +144,90 @@ export class AddShow {
   ngOnChanges() {}
   addShow() {
     this.submitError = null;
-    this.show.minPrice = this.hallMap.price ?? 0;
-    if (
-      (this.leftBalMap.price ?? 0) > 0 &&
-      (this.show.minPrice === 0 || this.leftBalMap.price! < this.show.minPrice)
-    ) {
-      this.show.minPrice = this.leftBalMap.price!;
+
+    const submit = () => {
+      this.submitLoading = true;
+      this.show.minPrice = this.hallMap.price ?? 0;
+      if (
+        (this.leftBalMap.price ?? 0) > 0 &&
+        (this.show.minPrice === 0 || this.leftBalMap.price! < this.show.minPrice)
+      ) {
+        this.show.minPrice = this.leftBalMap.price!;
+      }
+      if (
+        (this.rightBalMap.price ?? 0) > 0 &&
+        (this.show.minPrice === 0 || this.rightBalMap.price! < this.show.minPrice)
+      ) {
+        this.show.minPrice = this.rightBalMap.price!;
+      }
+      if (
+        (this.centerBalMap.price ?? 0) > 0 &&
+        (this.show.minPrice === 0 || this.centerBalMap.price! < this.show.minPrice)
+      ) {
+        this.show.minPrice = this.centerBalMap.price!;
+      }
+      this.show.title = this.title;
+      this.show.date = this.date;
+      this.show.beginTime = this.beginTime;
+      this.show.endTime = this.endTime;
+      this.show.audience = this.audience ?? TargetAudience.ADULTS;
+      this.show.sector = this.sector ?? Sector.WOMEN;
+      this.show.description = this.description;
+      this.show.providerId = this.providerId;
+      this.show.categoryId = this.categoryId;
+      this.show.hallMap = this.hallMap;
+      this.show.leftBalMap = this.leftBalMap;
+      this.show.rightBalMap = this.rightBalMap;
+      this.show.centerBalMap = this.centerBalMap;
+
+      if (this.selectedFile) {
+        this.imageSrv.upload(this.selectedFile).subscribe({
+          next: (res) => {
+            this.show.imgUrl = res.path;
+            this.sendShowToServer();
+          },
+          error: (err) => {
+            console.error('שגיאה בהעלאה', err);
+            this.submitLoading = false;
+            const msg = err?.error?.message ?? err?.message ?? 'העלאת התמונה נכשלה';
+            this.submitError = msg;
+            this.toast.error(msg);
+          },
+        });
+      } else {
+        this.show.imgUrl = null;
+        this.sendShowToServer();
+      }
+    };
+
+    const validationError = this.getValidationError();
+    if (validationError) {
+      this.submitError = validationError;
+      this.toast.error(validationError);
+      return;
     }
-    if (
-      (this.rightBalMap.price ?? 0) > 0 &&
-      (this.show.minPrice === 0 || this.rightBalMap.price! < this.show.minPrice)
-    ) {
-      this.show.minPrice = this.rightBalMap.price!;
+
+    if (this.existingShows.length > 0) {
+      submit();
+      return;
     }
-    if (
-      (this.centerBalMap.price ?? 0) > 0 &&
-      (this.show.minPrice === 0 || this.centerBalMap.price! < this.show.minPrice)
-    ) {
-      this.show.minPrice = this.centerBalMap.price!;
-    }
-    this.show.title = this.title;
-    this.show.date = this.date;
-    this.show.beginTime = this.beginTime;
-    this.show.endTime = this.endTime;
-    this.show.audience = this.audience ?? TargetAudience.ADULTS;
-    this.show.sector = this.sector ?? Sector.WOMEN;
-    this.show.description = this.description;
-    this.show.providerId = this.providerId;
-    this.show.categoryId = this.categoryId;
-    this.show.hallMap = this.hallMap;
-    this.show.leftBalMap = this.leftBalMap;
-    this.show.rightBalMap = this.rightBalMap;
-    this.show.centerBalMap = this.centerBalMap;
-    this.submitLoading = true;
-    if (this.selectedFile) {
-      this.imageSrv.upload(this.selectedFile).subscribe({
-        next: (res) => {
-          this.show.imgUrl = res.path;
-          this.sendShowToServer();
-        },
-        error: (err) => {
-          console.error('שגיאה בהעלאה', err);
-          this.submitLoading = false;
-          const msg = err?.error?.message ?? err?.message ?? 'העלאת התמונה נכשלה';
-          this.submitError = msg;
-          this.toast.error(msg);
-        },
-      });
-    } else {
-      this.show.imgUrl = null;
-      this.sendShowToServer();
-    }
+
+    this.showsSrv.loadAllShows().subscribe({
+      next: (shows: Show[]) => {
+        this.existingShows = shows;
+        const error = this.getValidationError();
+        if (error) {
+          this.submitError = error;
+          this.toast.error(error);
+          return;
+        }
+        submit();
+      },
+      error: () => {
+        this.submitError = 'לא ניתן לאמת זמינות מופעים כעת. נסה שוב מאוחר יותר.';
+        this.toast.error(this.submitError);
+      },
+    });
   }
 
   private sendShowToServer(): void {
@@ -253,6 +288,81 @@ export class AddShow {
     this.visible = false;
     this.submitLoading = false;
     this.toast.success('המופע נוסף בהצלחה.');
+  }
+
+  private getValidationError(): string | null {
+    if (!this.date || !this.beginTime || !this.endTime) {
+      return 'אנא בחר תאריך ושעות חוקיות למופע.';
+    }
+
+    if (this.isSaturday(this.date)) {
+      return 'לא ניתן להוסיף מופע ביום שבת.';
+    }
+
+    const start = this.combineDateAndTime(this.date, this.beginTime);
+    const end = this.combineDateAndTime(this.date, this.endTime);
+
+    if (start.getTime() >= end.getTime()) {
+      return 'שעת ההתחלה חייבת להיות מוקדמת יותר משעת הסיום.';
+    }
+
+    const conflict = this.existingShows.some((existingShow) => {
+      if (!this.isSameDay(this.date, existingShow.date)) {
+        return false;
+      }
+
+      const existingStart = this.combineDateAndTime(existingShow.date, existingShow.beginTime);
+      const existingEnd = this.combineDateAndTime(existingShow.date, existingShow.endTime);
+      return this.timesOverlap(start, end, existingStart, existingEnd);
+    });
+
+    if (conflict) {
+      return 'לא ניתן להוסיף מופע ביום ובשעות אלה. כבר קיים מופע אחר באותו יום ובטווח זמן חופף.';
+    }
+
+    return null;
+  }
+
+  private isSaturday(date: Date): boolean {
+    return date.getDay() === 6;
+  }
+
+  private combineDateAndTime(date: Date, time: Date | string): Date {
+    const combined = new Date(date.getTime());
+    if (typeof time === 'string') {
+      const [hours, minutes] = time.split(':').map((value) => Number(value));
+      combined.setHours(hours || 0, minutes || 0, 0, 0);
+    } else {
+      combined.setHours(time.getHours(), time.getMinutes(), 0, 0);
+    }
+    return combined;
+  }
+
+  private isSameDay(a: Date, b: Date): boolean {
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  }
+
+  private timesOverlap(startA: Date, endA: Date, startB: Date, endB: Date): boolean {
+    return startA < endB && startB < endA;
+  }
+
+  private loadExistingShows(): void {
+    if (this.existingShows.length > 0) {
+      return;
+    }
+
+    this.showsSrv.loadAllShows().subscribe({
+      next: (shows: Show[]) => {
+        this.existingShows = shows;
+      },
+      error: (err) => {
+        console.error('Error loading existing shows for validation', err);
+      },
+    });
   }
 
   cancelDialog(): void {
